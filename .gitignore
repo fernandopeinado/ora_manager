@@ -1,6 +1,10 @@
 *.class
-
+.settings
+rebel.xml
 # Package Files #
 *.jar
 *.war
 *.ear
+/build
+/target
+/bin
