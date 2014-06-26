@@ -17,6 +17,8 @@ abstract class Agent implements Runnable {
 	protected long interval
 	protected int storageSize
 	protected CircularList<Snapshot> circList
+	boolean slave
+	
 	
 	@Autowired
 	protected Snapshots snapshots	
@@ -36,6 +38,10 @@ abstract class Agent implements Runnable {
 	
 	List<Snapshot> getData() {
 		return circList.asList()
-	}	
+	}
+	
+	Snapshot getLastData() {
+		return (Snapshot) circList.last
+	}
 	
 }

@@ -28,15 +28,23 @@ class OracleService {
 			FROM (
 			SELECT 'CLASS' AS COL, n.wait_class, sum(e.time_waited) / 1 time_secs
 			FROM v$system_event e, v$event_name n
-			WHERE n.NAME = e.event AND n.wait_class <> 'Idle' AND e.time_waited > 0 group by 'CLASS', n.wait_class UNION
+			WHERE n.NAME = e.event AND n.wait_class <> 'Idle' AND e.time_waited > 0 group by 'CLASS', n.wait_class 
+			UNION
 			SELECT 'CLASS', 'CPU', SUM (VALUE / 10000)
 			FROM v$sys_time_model
-			WHERE stat_name IN ('background cpu time', 'DB CPU') UNION
-			SELECT n.name, n.wait_class, e.time_waited
-			FROM v$system_event e, v$event_name n
-			WHERE n.NAME = e.event AND n.wait_class <> 'Idle' AND e.time_waited > 0 UNION
-			SELECT 'TIME', to_char(SYSDATE,'YYYYMMDD:HH24:MI:SS'), 0
-			FROM dual ) order by 1,2
+			WHERE stat_name IN ('background cpu time', 'DB CPU'))
+			'''
+		List<Map<String,Object>> result = tmpl.queryForList(query, params);
+		return result;
+	}
+
+	public List<Map<String,Object>> getSqlCpu() {
+		NamedParameterJdbcTemplate tmpl = jdbc
+		Map params = new HashMap<String, Object>();
+		String query = '''
+			SELECT SQL_ID, SQL_TEXT AS SQL, APPLICATION_WAIT_TIME, CONCURRENCY_WAIT_TIME, CLUSTER_WAIT_TIME, USER_IO_WAIT_TIME, CPU_TIME, 
+				(APPLICATION_WAIT_TIME + CONCURRENCY_WAIT_TIME + CLUSTER_WAIT_TIME + USER_IO_WAIT_TIME + CPU_TIME) AS TOTAL_TIME 
+			FROM V$SQL
 			'''
 		List<Map<String,Object>> result = tmpl.queryForList(query, params);
 		return result;

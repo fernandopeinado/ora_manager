@@ -10,16 +10,19 @@ import br.com.cas10.oraman.analitics.Snapshots
 import br.com.cas10.oraman.service.OracleService;
 
 @Component
-class WaitAnalisysAgent extends Agent {
+class TopSQLAgent extends Agent {
 
+	private Map<String, String> sqls = new HashMap<String, String>();
+	
 	@Autowired
 	private OracleService service;
 	
-	@Autowired
-	private TopSQLAgent topSQL;
+	TopSQLAgent() {
+		super("topSql", 60000L, 60)
+	}
 	
-	WaitAnalisysAgent() {
-		super("wait", 15000L, 240)
+	String getSql(String sqlId) {
+		return sqls[sqlId]
 	}
 	
 	@Override
@@ -27,13 +30,13 @@ class WaitAnalisysAgent extends Agent {
 		Snapshot s = new Snapshot()
 		s.type = this.type
 		s.timestamp = System.currentTimeMillis()
-		List<Map<String,Object>> list = service.getWaits()
+		List<Map<String,Object>> list = service.getSqlCpu()
 		list.each { row ->
 			row.each { Entry<String, Object> entry ->
-				s.observations[row.waitclass] = (Long) row.time
+				s.observations[row.SQL_ID] = (Long) row.TOTAL_TIME
+				this.sqls[row.SQL_ID] = row.SQL
 			}
 		}
 		snapshots.add(s)
 	}
-		
 }

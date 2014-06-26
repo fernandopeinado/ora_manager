@@ -20,7 +20,10 @@ class AgentsService {
 	@PostConstruct
 	void init() {
 		for (Agent agent in agents) {
-			taskScheduler.scheduleAtFixedRate(agent, agent.interval);
+			if (!agent.slave) {
+				println "Agendando: ${agent.class}" 
+				taskScheduler.scheduleAtFixedRate(agent, agent.interval);
+			}
 		}
 	}
 	

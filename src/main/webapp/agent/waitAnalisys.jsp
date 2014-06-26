@@ -35,8 +35,8 @@
 			       	axes: {
 			    		yaxis: {
 			    			min: 0,
-			    			max: 2,
-			    			tickInterval: 0.2
+			    			//max: 2,
+			    			tickInterval: 0.25
 			    	  	},
 			           	xaxis: {
 			            	renderer: $.jqplot.DateAxisRenderer,
