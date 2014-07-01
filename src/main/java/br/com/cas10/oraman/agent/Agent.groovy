@@ -1,15 +1,14 @@
 package br.com.cas10.oraman.agent
 
-import groovy.transform.CompileStatic;
-import groovy.util.logging.Log4j;
+import groovy.util.logging.Log4j
 
-import javax.annotation.PostConstruct;
+import javax.annotation.PostConstruct
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Autowired
 
-import br.com.cas10.oraman.analitics.CircularList;
-import br.com.cas10.oraman.analitics.Snapshot;
-import br.com.cas10.oraman.analitics.Snapshots;
+import br.com.cas10.oraman.analitics.CircularList
+import br.com.cas10.oraman.analitics.Snapshot
+import br.com.cas10.oraman.analitics.Snapshots
 
 @Log4j
 abstract class Agent implements Runnable {
@@ -17,12 +16,10 @@ abstract class Agent implements Runnable {
 	protected long interval
 	protected int storageSize
 	protected CircularList<Snapshot> circList
-	boolean slave
-	
-	
+
 	@Autowired
-	protected Snapshots snapshots	
-	
+	protected Snapshots snapshots
+
 	Agent(String type, long interval, int storageSize) {
 		this.type = type
 		this.interval = interval
@@ -35,13 +32,8 @@ abstract class Agent implements Runnable {
 		log.info("Agent $type - ${interval} milisec (${time} min) starting")
 		circList = snapshots.getStorage(type, storageSize);
 	}
-	
+
 	List<Snapshot> getData() {
 		return circList.asList()
 	}
-	
-	Snapshot getLastData() {
-		return (Snapshot) circList.last
-	}
-	
 }

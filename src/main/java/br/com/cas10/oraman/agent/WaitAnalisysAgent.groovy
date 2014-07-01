@@ -7,21 +7,18 @@ import org.springframework.stereotype.Component
 
 import br.com.cas10.oraman.analitics.Snapshot
 import br.com.cas10.oraman.analitics.Snapshots
-import br.com.cas10.oraman.service.OracleService;
+import br.com.cas10.oraman.service.OracleService
 
 @Component
 class WaitAnalisysAgent extends Agent {
 
 	@Autowired
 	private OracleService service;
-	
-	@Autowired
-	private TopSQLAgent topSQL;
-	
+
 	WaitAnalisysAgent() {
 		super("wait", 15000L, 240)
 	}
-	
+
 	@Override
 	public void run() {
 		Snapshot s = new Snapshot()
@@ -35,5 +32,4 @@ class WaitAnalisysAgent extends Agent {
 		}
 		snapshots.add(s)
 	}
-		
 }
