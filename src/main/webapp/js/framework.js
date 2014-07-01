@@ -97,7 +97,7 @@ framework.timedSeries = framework.timedSeries ||
 			labels: labels,
 			minTime: minTime,
 			maxTime: maxTime
-		}
+		};
 	}
 	
 
@@ -105,3 +105,36 @@ framework.timedSeries = framework.timedSeries ||
 		decompose: decompose,
 	};
 })();
+
+framework.aas = framework.aas
+		|| (function() {
+
+			function aasAxisOptions(matrix, cpuCores, cpuThreads) {
+				var maxValue = 0;
+				matrix.forEach(function(snapshot) {
+					var total = 0;
+					$.each(snapshot, function(index, value) {
+						if (index != 0 && !isNaN(value))
+							total += value;
+					});
+					maxValue = Math.max(maxValue, total);
+				});
+
+				// top padding
+				maxValue = maxValue * 1.2;
+
+				var max = (maxValue > cpuCores) ? Math
+						.max(maxValue, cpuThreads) : cpuCores;
+				var tickInterval = (max / 10).toFixed(1);
+				max = tickInterval * 10;
+
+				return {
+					max : max,
+					tickInterval : tickInterval
+				};
+			}
+
+			return {
+				aasAxisOptions : aasAxisOptions
+			};
+		})();

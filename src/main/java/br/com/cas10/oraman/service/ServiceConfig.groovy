@@ -1,25 +1,20 @@
 package br.com.cas10.oraman.service
 
-import java.beans.beancontext.BeanContext;
-
-import br.com.cas10.oraman.worker.WorkerConfig;
-import br.com.cas10.oraman.agent.AgentConfig;
-import br.com.cas10.oraman.analitics.Snapshots;
-
 import javax.sql.DataSource
 
-import org.quartz.Scheduler;
-import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.Scheduler
+import org.quartz.impl.StdSchedulerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Import;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.context.annotation.Import
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jndi.JndiTemplate
-import org.springframework.orm.jpa.JpaTransactionManager
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.transaction.annotation.EnableTransactionManagement
+
+import br.com.cas10.oraman.agent.AgentConfig
+import br.com.cas10.oraman.worker.WorkerConfig
 
 @Configuration
 @ComponentScan(basePackages=["br.com.cas10.oraman.service"])
@@ -49,10 +44,5 @@ class ServiceConfig {
 	@Bean(initMethod="start", destroyMethod="shutdown")
 	Scheduler quartzScheduler() {
 		StdSchedulerFactory.getDefaultScheduler();
-	}
-
-	@Bean
-	Snapshots snapshots() {
-		return new Snapshots()
 	}
 }

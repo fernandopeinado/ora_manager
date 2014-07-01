@@ -1,10 +1,11 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib tagdir="/WEB-INF/tags" prefix="t"%>
 <t:graph-portlet title="Dashboard">
 	<jsp:attribute name="content">
-		<div style="padding-left: 20px; padding-right: 150px">
+		<div style="padding-left: 20px; padding-right: 150px; padding-top: 20px;">
 			<div id="cpu_chart_div" style="width: 100%; height: 320px;"></div>
 		</div>
 	</jsp:attribute>
@@ -13,13 +14,31 @@
 		<script type="text/javascript">
 			var matrixData = [[ 'timestamp', 'CPU', 'Scheduler', 'User I/O', 'System I/O', 'Concurrency', 'Application', 'Commit', 'Configuration', 'Administrative', 'Network', 'Other' ]
 				<c:forEach var="snap" items="${snapshots}">
-					<c:if test="${snap.deltaObs['CLASS;Administrative'] >= 0}">
-						, [ '${snap.dateTime}', ${snap.deltaObs['CLASS;CPU']/1500}, ${snap.deltaObs['CLASS;Scheduler']/1500}, ${snap.deltaObs['CLASS;User I/O']/1500}, ${snap.deltaObs['CLASS;System I/O']/1500}, ${snap.deltaObs['CLASS;Concurrency']/1500}, ${snap.deltaObs['CLASS;Application']/1500}, ${snap.deltaObs['CLASS;Commit']/1500}, ${snap.deltaObs['CLASS;Configuration']/1500}, ${snap.deltaObs['CLASS;Administrative']/1500}, ${snap.deltaObs['CLASS;Network']/1500}, ${snap.deltaObs['CLASS;Other']/1500} ]
+					<c:if test="${not empty snap.deltaObs['CPU']}">
+						, [ '${snap.dateTime}', ${snap.deltaObs['CPU']}, ${snap.deltaObs['Scheduler']}, ${snap.deltaObs['User I/O']}, ${snap.deltaObs['System I/O']}, ${snap.deltaObs['Concurrency']}, ${snap.deltaObs['Application']}, ${snap.deltaObs['Commit']}, ${snap.deltaObs['Configuration']}, ${snap.deltaObs['Administrative']}, ${snap.deltaObs['Network']}, ${snap.deltaObs['Other']} ]
 					</c:if>
 				</c:forEach>
 			];
 			
-			console.log(matrixData.length);
+			var cpuCores = ${cpuCores};
+			var cpuThreads = ${cpuThreads};
+			var aasAxisOptions = framework.aas.aasAxisOptions(matrixData, cpuCores, cpuThreads);
+
+			var cpuCoresLine = {
+					dashedHorizontalLine: {
+						color: 'red',
+						lineWidth: 1,
+						y: cpuCores
+					}
+			}
+			var cpuThreadsLine = {
+					horizontalLine: {
+						color: 'red',
+						lineWidth: 1,
+						y: cpuThreads
+					}
+			}
+			var cpuLines = (cpuCores == cpuThreads) ? [ cpuThreadsLine ] : [ cpuCoresLine, cpuThreadsLine ];
 			
 			$(document).ready(function(){
 				var cpu = framework.timedSeries.decompose(matrixData);
@@ -35,8 +54,8 @@
 			       	axes: {
 			    		yaxis: {
 			    			min: 0,
-			    			//max: 2,
-			    			tickInterval: 0.25
+			    			max: aasAxisOptions.max,
+			    			tickInterval: aasAxisOptions.tickInterval
 			    	  	},
 			           	xaxis: {
 			            	renderer: $.jqplot.DateAxisRenderer,
@@ -52,7 +71,7 @@
 			           	}
 			       	},
 			       	title: {
-			       		text: 'Principal Atividade'
+			       		text: 'Average Active Sessions'
 			       	},
 			       	legend: {
 			            show: true,
@@ -64,11 +83,13 @@
 			        	shadow: false,
 			        	background: '#FFFFFF',
 			        	gridLineColor: '#E5E5E5'
+			        },
+			        canvasOverlay: {
+						show: true,
+						objects: cpuLines
 			        }
 				});
 			});
 		</script>
 	</jsp:attribute>
 </t:graph-portlet>
-
-

@@ -1,5 +1,6 @@
 package br.com.cas10.oraman.service
 
+import javax.annotation.PostConstruct
 import javax.sql.DataSource
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,26 +14,45 @@ class OracleService {
 
 	private NamedParameterJdbcTemplate jdbc
 
+	int cpuCores
+	int cpuThreads
+
 	@Autowired
 	public void setDataSource(DataSource dataSource) {
 		jdbc = new NamedParameterJdbcTemplate(dataSource);
 	}
 
+	@PostConstruct
+	public void init() {
+		String xeQuery = "select count(1) from v\$version where banner like 'Oracle Database%Express Edition%'"
+		int isXe = jdbc.queryForObject(xeQuery, Collections.emptyMap(), Integer.class)
+		if (isXe) {
+			cpuCores = 1
+			cpuThreads = 1
+			return
+		}
+		String osstatQuery = "select stat_name, value from v\$osstat where stat_name in ('NUM_CPUS', 'NUM_CPU_CORES')"
+		List<Map<String, Object>> result = jdbc.queryForList(osstatQuery, Collections.emptyMap())
+		for (row in result) {
+			if (row.stat_name == 'NUM_CPUS'){
+				cpuThreads = row.value
+				cpuCores = cpuCores ?: row.value
+			} else if (row.stat_name == 'NUM_CPU_CORES') {
+				cpuCores = row.value
+			}
+		}
+	}
+
 	public List<Map<String,Object>> getWaits() {
-		NamedParameterJdbcTemplate tmpl = jdbc
-		Map params = new HashMap<String, Object>();
 		String query = '''
-			SELECT COL || ';' || wait_class waitclass, ROUND (time_secs) time
-			FROM (
-			SELECT 'CLASS' AS COL, n.wait_class, sum(e.time_waited) / 1 time_secs
-			FROM v$system_event e, v$event_name n
-			WHERE n.NAME = e.event AND n.wait_class <> 'Idle' AND e.time_waited > 0 group by 'CLASS', n.wait_class
-			UNION
-			SELECT 'CLASS', 'CPU', SUM (VALUE / 10000)
-			FROM v$sys_time_model
-			WHERE stat_name IN ('background cpu time', 'DB CPU'))
+			select wait_class as eventclass, sum(time_waited_micro) as eventtime
+			from v$system_event where wait_class <> 'Idle' group by wait_class
+
+			union all
+
+			select 'CPU', sum(value) from v$sys_time_model where stat_name in ('DB CPU', 'background cpu time')
 			'''
-		List<Map<String,Object>> result = tmpl.queryForList(query, params);
+		List<Map<String,Object>> result = jdbc.queryForList(query, Collections.emptyMap());
 		return result;
 	}
 }
