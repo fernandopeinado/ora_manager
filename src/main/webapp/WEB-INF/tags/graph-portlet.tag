@@ -11,25 +11,25 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
-<link href="${contextPath}/css/bootstrap.css" rel="stylesheet">
-<link href="${contextPath}/css/bootstrap-responsive.css" rel="stylesheet">
-<link href="${contextPath}/css/jqplot.css" rel="stylesheet">
+<link href="${contextPath}/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="${contextPath}/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+<link href="${contextPath}/lib/jqplot/css/jqplot.css" rel="stylesheet">
 <jsp:invoke fragment="styles" />
 </head>
 <body data-contextpath="${contextPath}">
 	<jsp:invoke fragment="content" />
-	<script src="${contextPath}/js/jquery.js"></script>
-	<script src="${contextPath}/js/jquery-migrate.js"></script>
-	<script src="${contextPath}/js/bootstrap.js"></script>
+	<script src="${contextPath}/lib/jquery/jquery.js"></script>
+	<script src="${contextPath}/lib/jquery/jquery-migrate.js"></script>
+	<script src="${contextPath}/lib/bootstrap/js/bootstrap.js"></script>
 	<script src="${contextPath}/js/framework.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.logAxisRenderer.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.canvasOverlay.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.canvasTextRenderer.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.canvasAxisLabelRenderer.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.canvasAxisTickRenderer.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.dateAxisRenderer.js"></script>
-	<script src="${contextPath}/js/jqplot/jqplot.categoryAxisRenderer.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.logAxisRenderer.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.canvasOverlay.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.canvasTextRenderer.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.canvasAxisLabelRenderer.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.canvasAxisTickRenderer.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.dateAxisRenderer.js"></script>
+	<script src="${contextPath}/lib/jqplot/js/jqplot.categoryAxisRenderer.js"></script>
 	<jsp:invoke fragment="scripts" />
 </body>
 </html>

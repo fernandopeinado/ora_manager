@@ -11,14 +11,14 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
-<link href="${contextPath}/css/bootstrap.css" rel="stylesheet">
-<link href="${contextPath}/css/bootstrap-responsive.css" rel="stylesheet">
+<link href="${contextPath}/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="${contextPath}/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
 <jsp:invoke fragment="styles" />
 </head>
 <body data-contextpath="${contextPath}" style="padding-left: 0px; padding-right: 0px;">
 	<jsp:invoke fragment="content" />
-	<script src="${contextPath}/js/jquery.js"></script>
-	<script src="${contextPath}/js/bootstrap.js"></script>
+	<script src="${contextPath}/lib/jquery/jquery.js"></script>
+	<script src="${contextPath}/lib/bootstrap/js/bootstrap.js"></script>
 	<script src="${contextPath}/js/framework.js"></script>
 	<jsp:invoke fragment="scripts" />
 </body>
