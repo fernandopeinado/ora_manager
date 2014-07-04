@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="mainApp">
+<head>
+<meta charset="utf-8">
+<title>OraManager</title>
+<link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
+<link rel="stylesheet" href="lib/bootstrap/css/bootstrap-responsive.css">
+<link rel="stylesheet" href="lib/jqplot/css/jqplot.css">
+<script src="lib/jquery/jquery.js"></script>
+<script src="lib/jquery/jquery-migrate.js"></script>
+<script src="lib/angular/angular.min.js"></script>
+<script src="lib/angular/angular-route.min.js"></script>
+<script src="lib/bootstrap/js/bootstrap.js"></script>
+<script src="lib/jqplot/js/jqplot.js"></script>
+<script src="lib/jqplot/js/jqplot.canvasAxisLabelRenderer.js"></script>
+<script src="lib/jqplot/js/jqplot.canvasAxisTickRenderer.js"></script>
+<script src="lib/jqplot/js/jqplot.canvasOverlay.js"></script>
+<script src="lib/jqplot/js/jqplot.canvasTextRenderer.js"></script>
+<script src="lib/jqplot/js/jqplot.categoryAxisRenderer.js"></script>
+<script src="lib/jqplot/js/jqplot.dateAxisRenderer.js"></script>
+<script src="lib/jqplot/js/jqplot.logAxisRenderer.js"></script>
+<script src="app/components/jqplot-helper-service.js"></script>
+<script src="app/components/average-active-sessions-service.js"></script>
+<script src="app/ash/ash-controller.js"></script>
+<script src="app/home/home-controller.js"></script>
+<script src="app/system/system-controller.js"></script>
+<script src="app/app.js"></script>
+</head>
+<body style="padding-top: 60px">
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="brand" href="#">OraManager</a>
+				<ul class="nav">
+					<li role="presentation"><a role="menuitem" href="#/home">Home</a></li>
+					<li role="presentation"><a role="menuitem" href="#/ash">ASH</a></li>
+					<li role="presentation"><a role="menuitem" href="#/system">System</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div ng-view></div>
+</body>
+</html>

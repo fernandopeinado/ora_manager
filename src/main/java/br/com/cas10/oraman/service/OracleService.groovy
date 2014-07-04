@@ -19,7 +19,7 @@ class OracleService {
 
 	@Autowired
 	public void setDataSource(DataSource dataSource) {
-		jdbc = new NamedParameterJdbcTemplate(dataSource);
+		jdbc = new NamedParameterJdbcTemplate(dataSource)
 	}
 
 	@PostConstruct
@@ -52,8 +52,8 @@ class OracleService {
 
 			select 'CPU', sum(value) from v$sys_time_model where stat_name in ('DB CPU', 'background cpu time')
 			'''
-		List<Map<String,Object>> result = jdbc.queryForList(query, Collections.emptyMap());
-		return result;
+		List<Map<String,Object>> result = jdbc.queryForList(query, Collections.emptyMap())
+		return result
 	}
 
 	public List<Map<String, Object>> getActiveSessions() {
@@ -64,15 +64,15 @@ class OracleService {
 				decode(type, 'BACKGROUND', substr(program, -5, 4), username) as username,
 				sql_id,
 				sql_child_number,
-				decode(wait_time, 0, event, 'CPU') as event,
-				decode(wait_time, 0, wait_class, 'CPU') as wait_class
+				decode(wait_time, 0, event, 'CPU + CPU Wait') as event,
+				decode(wait_time, 0, wait_class, 'CPU + CPU Wait') as wait_class
 			from
 				v\$session
 			where
-				program <> 'OraManager'
+				(program <> 'OraManager' or program is null)
 				and ((wait_time <> 0 and status = 'ACTIVE') or wait_class <> 'Idle')
 			'''
-		List<Map<String, Object>> result = jdbc.queryForList(query, [:])
+		List<Map<String, Object>> result = jdbc.queryForList(query, Collections.emptyMap())
 		return result
 	}
 }

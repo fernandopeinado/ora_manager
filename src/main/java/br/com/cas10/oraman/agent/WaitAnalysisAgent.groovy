@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 import br.com.cas10.oraman.analitics.Snapshot
+import br.com.cas10.oraman.oracle.WaitClass
 import br.com.cas10.oraman.service.OracleService
 
 @Component
@@ -14,20 +15,23 @@ class WaitAnalysisAgent extends Agent {
 	private static final long SAMPLING_INTERVAL = TimeUnit.SECONDS.toMillis(15)
 
 	@Autowired
-	private OracleService service;
+	private OracleService service
 
 	WaitAnalysisAgent() {
-		super("wait", SAMPLING_INTERVAL, 240)
+		super(SAMPLING_INTERVAL, TimeUnit.HOURS.toMillis(1) / SAMPLING_INTERVAL)
 	}
 
 	@Override
 	public void run() {
 		Snapshot s = new WaitAnalysisSnapshot()
-		s.type = this.type
 		s.timestamp = System.currentTimeMillis()
-		List<Map<String,Object>> list = service.getWaits()
-		list.each { row ->
+		for (row in service.getWaits()) {
 			s.observations[row.eventclass] = (Long) row.eventtime
+		}
+		for (waitClass in WaitClass.VALUES) {
+			if (s.observations[waitClass.waitClassName] == null) {
+				s.observations[waitClass.waitClassName] = 0
+			}
 		}
 		snapshots.add(s)
 	}
@@ -35,13 +39,9 @@ class WaitAnalysisAgent extends Agent {
 	private static class WaitAnalysisSnapshot extends Snapshot {
 
 		@Override
-		public void calculateDelta(Snapshot prev) {
-			for (obs in observations.entrySet()) {
-				Long delta = delta(prev.observations[obs.key], obs.value)
-				if (delta != null) {
-					deltaObs[obs.key] = (double) delta / TimeUnit.MILLISECONDS.toMicros(SAMPLING_INTERVAL)
-				}
-			}
+		protected Object delta(Object prev, Object curr) {
+			Long difference = prev ? curr - prev : 0
+			return difference / TimeUnit.MILLISECONDS.toMicros(SAMPLING_INTERVAL)
 		}
 	}
 }

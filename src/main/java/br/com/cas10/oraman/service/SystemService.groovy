@@ -1,136 +1,116 @@
 package br.com.cas10.oraman.service
 
-import groovy.transform.CompileStatic;
+import groovy.util.logging.Log4j
 
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.regex.Matcher
 
-import javax.sql.DataSource
-
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Log4j
 class SystemService {
-	
-	public Map<String, String> getBasicInfo() {
+
+	Map<String, String> getBasicInfo() {
+		String release = execute('cat /etc/debian_version /etc/redhat-release')
 		return [
-			"name" : "uname -n".execute().text,
-			"kernel" : "uname -o -r -m -v".execute().text,
-			"release" : "cat /etc/debian_version || cat /etc/redhat-release".execute().text	
-		]
-	}	
-	
-	public Map<String, Object> getProcessorInfo() {
-		String text = "cat /proc/cpuinfo".execute().text
-		Map<String, Integer> cpus = new LinkedHashMap()
-		Map<String, String> caches = new LinkedHashMap()
-		int groupid = 0;
-		String lastModel = null
-		text.eachLine { String line ->
-			if (line.trim() == "") {
-				groupid++
-			}
-			else {
-				String[] data = line.split("\\s*\\:\\s*")
-				if (data[0] == "model name") {
-					lastModel = data[1];
-					Integer i = cpus[data[1]];
-					if (i == null) {
-						cpus[data[1]] = 1
-					}
-					else {
-						cpus[data[1]] = cpus[data[1]] + 1
-					}
-				}
-				if (data[0] == "cache size") {
-					caches[lastModel] = data[1];
-				}
-			}
-		}
-		return [
-			"cpus" : cpus,
-			"caches" : caches
+			'name' : execute('uname -n'),
+			'kernel' : execute('uname -omrv'),
+			'release' : release ?: 'Unknown'
 		]
 	}
 
-	public Map<String, Object> getMemoryInfo() {
-		String text = "cat /proc/meminfo".execute().text
-		String total = null
-		String swap = null
-		text.eachLine { String line ->
-			String[] data = line.split("\\:\\s*")
-			if (data[0] == "MemTotal") {
-				total = data[1]
-			}
-			if (data[0] == "SwapTotal") {
-				swap = data[1]
+	List<Map<String, String>> getProcessorInfo() {
+		Map<String, String> processorsMap = new LinkedHashMap()
+		Map<String, String> processor = [:]
+		execute('cat /proc/cpuinfo').eachLine { line ->
+			if (line.trim()) {
+				def (key, value) = split(line, ':')
+				processor[key] = value
+			} else {
+				// only one sibling is necessary for each physical processor
+				processorsMap[processor['physical id']] = processor
+				processor = [:]
 			}
 		}
+		return processorsMap.values().collect() {
+			[
+				'model': it['model name'],
+				'cores' : it['cpu cores'],
+				'siblings': it['siblings'],
+				'cache' : it['cache size']
+			]
+		}
+	}
+
+	Map<String, String> getMemoryInfo() {
+		Map<String, String> data = [:]
+		execute('cat /proc/meminfo').eachLine { String line ->
+			def (key, value) = split(line, ':')
+			data[key] = value
+		}
 		return [
-			"total" : total,
-			"swap" : swap
+			'total' : data['MemTotal'],
+			'swap' : data['SwapTotal']
 		]
 	}
-	
-	public Map<String, Object> getNetworkInfo() {
-		String text = "/sbin/ifconfig".execute().text
-		Map<String, Object> interfaces = new LinkedHashMap()
-		text.eachLine() { String line ->
-			Matcher m = line =~ /^(\w+)\s+(.+HWaddr\s+)(.*)/
+
+	List<Map<String, String>> getNetworkInfo() {
+		List<Map<String, String>> interfaces = []
+		execute('/sbin/ifconfig').eachLine { line ->
+			Matcher m = line =~ /^(\w+)\s+.+HWaddr\s+(.*)/
 			if (m.matches()) {
-				interfaces[m.group(1)] = new LinkedHashMap<String, Object>()
-				interfaces[m.group(1)]['mac'] = m.group(3).trim()
+				interfaces.add([
+					'name' : m.group(1),
+					'mac' : m.group(2).trim()
+				])
 			}
 		}
-		interfaces.keySet().each { String iface ->
-			String ethtoolText = "ethtool ${iface}".execute().text
-			ethtoolText.eachLine { String line ->
-				Matcher m = line =~ /^\s+Speed:\s*(.*)/
-				Matcher m2 = line =~ /^\s+Duplex:\s*(.*)/
-				if (m.matches()) {
-					interfaces[iface]['speed'] = m.group(1)
-				}
-				else if (m2.matches()) {
-					interfaces[iface]['duplex'] = m2.group(1)
+		for (iface in interfaces) {
+			execute("ethtool ${iface.name}").eachLine {
+				String line = it.trim()
+				if (line.startsWith('Speed:') || line.startsWith('Duplex:')) {
+					def (key, value) = split(line, ':')
+					iface[key.toLowerCase()] = value
 				}
 			}
-		}		
-		return [
-			"interfaces" : interfaces
-		]
+		}
+		return interfaces
 	}
 
-	public Map<String, Object> getStorageInfo() {
-		String text = "lsblk -d".execute().text
-		Map<String, Object> devices = new LinkedHashMap()
-		text.eachLine() { String line ->
-			String[] data = line.split("\\s+");
-			if (data[5] == "disk") {
-				devices[data[0]] = data[3]
+	List<Map<String, String>> getStorageInfo() {
+		List<Map<String, String>> devices = []
+		execute('lsblk -d -o NAME,TYPE,SIZE').eachLine { line ->
+			def (name, type, size) = line.split()
+			if (type == 'disk') {
+				devices.add(['name' : name, 'size' : size])
 			}
 		}
-		return [
-			"devices" : devices
-		]
-	}
-	
-	public Map<String, Object> getSysctl() {
-		String text = "sysctl -a".execute().text
-		Map<String, Object> props = new LinkedHashMap()
-		text.eachLine() { String line ->
-			println line
-			String[] data = line.split("\\s=\\s")
-			if (data.length == 2) {
-				props[data[0]] = data[1]
-			}
-		}
-		return [
-			"props" : props
-		]
+		return devices
 	}
 
+	List<List<String>> getSysctl() {
+		List<List<String>> props = []
+		execute('sysctl -a').eachLine { line ->
+			def (key, value) = split(line, '=')
+			props.add([key, value])
+		}
+		return props
+	}
+
+	private String execute(String command) {
+		StringBuffer out = new StringBuffer()
+		StringBuffer err = new StringBuffer()
+		Process process = command.execute()
+		process.waitForProcessOutput(out, err)
+		if (log.isDebugEnabled() && err)
+			log.debug(err.toString())
+		return out.toString().trim()
+	}
+
+	private split(String line, String separator) {
+		int separatorIndex = line.indexOf(separator)
+		String key = line.substring(0, separatorIndex).trim()
+		String value = line.substring(separatorIndex + 1).trim()
+		return [key, value]
+	}
 }

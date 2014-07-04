@@ -1,0 +1,79 @@
+<div class="container">
+	<div class="row">
+		<div class="span12">
+			<h4>Basic Information</h4>
+			<dl class="dl-horizontal">
+				<dt>Name</dt>
+				<dd>{{info.basic.name}}</dd>
+				<dt>Kernel</dt>
+				<dd>{{info.basic.kernel}}</dd>
+				<dt>Release</dt>
+				<dd>{{info.basic.release}}</dd>
+			</dl>
+		</div>
+	</div>
+	<div class="row">
+		<div class="span6">
+			<h4>Processor</h4>
+			<dl class="dl-horizontal" ng-repeat="processor in info.processor">
+				<dt>Model</dt>
+				<dd>{{processor.siblings}} x {{processor.model}}</dd>
+				<dt>Cores</dt>
+				<dd>{{processor.cores}}</dd>
+				<dt>Cache</dt>
+				<dd>{{processor.cache}}</dd>
+			</dl>
+		</div>
+		<div class="span6">
+			<h4>Memory</h4>
+			<dl class="dl-horizontal">
+				<dt>Total</dt>
+				<dd>{{info.memory.total}}</dd>
+				<dt>Swap</dt>
+				<dd>{{info.memory.swap}}</dd>
+			</dl>
+		</div>
+	</div>
+	<div class="row">
+		<div class="span6">
+			<h4>Network</h4>
+			<dl class="dl-horizontal">
+				<dt ng-repeat-start="interface in info.network">{{interface.name}}</dt>
+				<dd ng-repeat-end>({{interface.mac}}) {{interface.speed}} {{interface.duplex}}</dd>
+			</dl>
+		</div>
+		<div class="span6">
+			<h4>Storage</h4>
+			<dl class="dl-horizontal">
+				<dt ng-repeat-start="device in info.storage">{{device.name}}</dt>
+				<dd ng-repeat-end>{{device.size}}</dd>
+			</dl>
+		</div>
+	</div>
+	<div class="row">
+		<div class="span12">
+			<div class="accordion" id="sysctl">
+				<div class="accordion-group">
+					<div class="accordion-heading">
+						<a class="accordion-toggle" data-toggle="collapse" data-parent="#sysctl" data-target="#sysctlContent">Kernel
+							Parameters</a>
+					</div>
+					<div id="sysctlContent" class="accordion-body collapse">
+						<table class="table table-condensed table-striped">
+							<thead>
+								<th>Property</th>
+								<th>Value</th>
+							</thead>
+							<tbody>
+								<tr ng-repeat="prop in info.sysctl">
+									<td>{{prop[0]}}</td>
+									<td>{{prop[1]}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
