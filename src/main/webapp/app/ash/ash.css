@@ -1,0 +1,33 @@
+.active-session-history .average-active-sessions {
+	border: 1px solid #ccc;
+	padding: 20px;
+}
+
+.average-active-sessions>div {
+	width: calc(100% - 150px);
+	height: 350px;
+}
+
+.top-sql {
+	border: 1px solid #ccc;
+	border-top: 0;
+	padding: 10px;
+}
+
+.top-sql>table {
+	margin-bottom: 0;
+}
+
+.top-sql>table>caption {
+	padding-bottom: 10px;
+	font-size: 12pt;
+	font-weight: bold;
+}
+
+.top-sql-activity-bar {
+	width: 180px;
+}
+
+.top-sql-activity-bar>div {
+	float: left;
+}

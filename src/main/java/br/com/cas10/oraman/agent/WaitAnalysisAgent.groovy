@@ -13,16 +13,17 @@ import br.com.cas10.oraman.service.OracleService
 class WaitAnalysisAgent extends Agent {
 
 	private static final long SAMPLING_INTERVAL = TimeUnit.SECONDS.toMillis(15)
+	private static final int STORAGE_SIZE = TimeUnit.HOURS.toMillis(1) / SAMPLING_INTERVAL
 
 	@Autowired
 	private OracleService service
 
 	WaitAnalysisAgent() {
-		super(SAMPLING_INTERVAL, TimeUnit.HOURS.toMillis(1) / SAMPLING_INTERVAL)
+		super(SAMPLING_INTERVAL, STORAGE_SIZE)
 	}
 
 	@Override
-	public void run() {
+	void run() {
 		Snapshot s = new WaitAnalysisSnapshot()
 		s.timestamp = System.currentTimeMillis()
 		for (row in service.getWaits()) {
@@ -30,7 +31,7 @@ class WaitAnalysisAgent extends Agent {
 		}
 		for (waitClass in WaitClass.VALUES) {
 			if (s.observations[waitClass.waitClassName] == null) {
-				s.observations[waitClass.waitClassName] = 0
+				s.observations[waitClass.waitClassName] = 0L
 			}
 		}
 		snapshots.add(s)

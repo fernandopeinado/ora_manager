@@ -1,7 +1,32 @@
-<div class="container">
+<div class="container active-session-history" ng-controller="AshCtrl">
 	<div class="row">
-		<div class="span12">
-			<div id="ash_aas" style="width: calc(100% - 150px); height: 350px"></div>
+		<div class="span12 average-active-sessions">
+			<div id="ash_aas"></div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="span6 top-sql">
+			<table class="table table-bordered table-condensed table-striped">
+				<caption>Top SQL</caption>
+				<thead>
+					<tr>
+						<th>SQL ID</th>
+						<th colspan="2">Activity</th>
+						<th>AAS</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="sql in topSql">
+						<td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
+							<a title="{{sql.sqlText}}" ng-switch-default>{{sql.sqlId}}</a></td>
+						<td class="top-sql-activity-bar">
+							<div ng-style="element" ng-repeat="element in sql.activityBar">&nbsp;</div>
+						</td>
+						<td>{{sql.percentageFixed}}%</td>
+						<td>{{sql.aasFixed}}</td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 	</div>
 </div>

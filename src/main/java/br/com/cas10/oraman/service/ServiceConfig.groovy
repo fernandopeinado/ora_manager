@@ -17,20 +17,20 @@ import br.com.cas10.oraman.agent.AgentConfig
 import br.com.cas10.oraman.worker.WorkerConfig
 
 @Configuration
-@ComponentScan(basePackages=["br.com.cas10.oraman.service"])
+@ComponentScan(basePackages=['br.com.cas10.oraman.service'])
 @Import([ AgentConfig.class, WorkerConfig.class ])
 @EnableTransactionManagement(proxyTargetClass = true)
 class ServiceConfig {
 
 	@Bean
 	DataSource dataSource() {
-		JndiTemplate jndi = new JndiTemplate();
-		return jndi.lookup("java:comp/env/jdbc/oraman", DataSource.class)
+		JndiTemplate jndi = new JndiTemplate()
+		return jndi.lookup('java:comp/env/jdbc/oraman', DataSource.class)
 	}
 
 	@Bean
 	DataSourceTransactionManager transactionManager() {
-		return new DataSourceTransactionManager(dataSource())
+		new DataSourceTransactionManager(dataSource())
 	}
 
 	@Bean
@@ -41,8 +41,8 @@ class ServiceConfig {
 		return taskScheduler
 	}
 
-	@Bean(initMethod="start", destroyMethod="shutdown")
+	@Bean(initMethod = 'start', destroyMethod = 'shutdown')
 	Scheduler quartzScheduler() {
-		StdSchedulerFactory.getDefaultScheduler();
+		StdSchedulerFactory.getDefaultScheduler()
 	}
 }

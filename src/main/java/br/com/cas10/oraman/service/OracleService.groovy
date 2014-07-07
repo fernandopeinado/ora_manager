@@ -18,12 +18,12 @@ class OracleService {
 	int cpuThreads
 
 	@Autowired
-	public void setDataSource(DataSource dataSource) {
+	void setDataSource(DataSource dataSource) {
 		jdbc = new NamedParameterJdbcTemplate(dataSource)
 	}
 
 	@PostConstruct
-	public void init() {
+	void init() {
 		String xeQuery = "select count(1) from v\$version where banner like 'Oracle Database%Express Edition%'"
 		int isXe = jdbc.queryForObject(xeQuery, Collections.emptyMap(), Integer.class)
 		if (isXe) {
@@ -43,7 +43,7 @@ class OracleService {
 		}
 	}
 
-	public List<Map<String,Object>> getWaits() {
+	List<Map<String,Object>> getWaits() {
 		String query = '''
 			select wait_class as eventclass, sum(time_waited_micro) as eventtime
 			from v$system_event where wait_class <> 'Idle' group by wait_class
@@ -56,7 +56,7 @@ class OracleService {
 		return result
 	}
 
-	public List<Map<String, Object>> getActiveSessions() {
+	List<Map<String, Object>> getActiveSessions() {
 		String query = '''
 			select
 				sid,
@@ -74,5 +74,11 @@ class OracleService {
 			'''
 		List<Map<String, Object>> result = jdbc.queryForList(query, Collections.emptyMap())
 		return result
+	}
+
+	String getSqlText(String sqlId) {
+		String query = 'select sql_text	from v$sql where sql_id = :id and rownum < 2'
+		List<String> result = jdbc.queryForList(query, ['id' : sqlId], String.class)
+		return result ? result[0] : null
 	}
 }
