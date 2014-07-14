@@ -1,40 +1,68 @@
 package br.com.cas10.oraman.service
 
+import java.util.concurrent.TimeUnit
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
+import br.com.cas10.oraman.agent.AshAgent
 import br.com.cas10.oraman.analitics.AshSnapshot
+import br.com.cas10.oraman.analitics.SessionActivity
 import br.com.cas10.oraman.analitics.SqlActivity
 
 @Component
 @Transactional
 class AshService {
 
+	private static final long FIVE_MINUTES = TimeUnit.MINUTES.toMillis(5)
+
+	@Autowired
+	private AshAgent agent
 	@Autowired
 	private OracleService service
 
-	List<SqlActivity> topSql(List<AshSnapshot> snapshots) {
+	Map getData() {
+		List<AshSnapshot> agentData = agent.data
+		long lastTimestamp = agentData ? agentData[-1].timestamp : 0
+		return ['snapshots' : agentData] << intervalData(agentData, lastTimestamp - FIVE_MINUTES, lastTimestamp)
+	}
+
+	private Map intervalData(List<AshSnapshot> snapshots, long start, long end) {
+		List<AshSnapshot> intervalSnapshots = snapshots.findAll {
+			it.timestamp >= start && it.timestamp <= end
+		}
+
 		int totalSamples = 0
 		List<Map> activeSessions = []
-		for (snapshot in snapshots) {
+		for (snapshot in intervalSnapshots) {
 			totalSamples += snapshot.samples
 			activeSessions.addAll(snapshot.activeSessions)
 		}
 		int totalActivity = activeSessions.size()
 
-		Map<String, List<Map>> statements = activeSessions.groupBy { it.sql_id }
-		List<Map.Entry> sortedStatements = statements.entrySet().sort { a, b ->
-			b.value.size() <=> a.value.size()
+		List topSql = topActivity(activeSessions, 'sql_id').collect {
+			Map activeSession = it.first()
+			String sqlText = service.getSqlText(activeSession.sql_id)
+			new SqlActivity(activeSession.sql_id, sqlText, it, totalActivity, totalSamples)
 		}
-		List<Map.Entry> topStatements = sortedStatements
-		if (topStatements.size() > 10) {
-			topStatements = topStatements[0..9]
+		List topSessions = topActivity(activeSessions, 'serial_number').collect {
+			Map activeSession = it.first()
+			new SessionActivity((long) activeSession.sid, activeSession.username, activeSession.program,
+					it, totalActivity, totalSamples)
 		}
 
-		return topStatements.collect {
-			String sqlText = service.getSqlText(it.key)
-			new SqlActivity(it.key, sqlText, it.value, totalActivity, totalSamples)
+		return [
+			'topSql' : topSql,
+			'topSessions' : topSessions
+		]
+	}
+
+	private List<List<Map>> topActivity(List<Map> activeSessions, String groupKey) {
+		Map<String, List<Map>> groups = activeSessions.groupBy { it[groupKey] }
+		List<List<Map>> sortedGroups = groups.values().sort { a, b ->
+			b.size() <=> a.size()
 		}
+		return (sortedGroups.size() > 10) ? sortedGroups[0..9] : sortedGroups
 	}
 }

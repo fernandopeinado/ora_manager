@@ -15,8 +15,9 @@
 				});
 			});
 
-			var minTimestamp = data ? data[0][0] : null;
-			var maxTimestamp = data ? data[data.length - 1][0] : null;
+			var minTimestamp = (data.length > 0) ? data[0][0] : null;
+			var maxTimestamp = (data.length > 0) ? data[data.length - 1][0]
+					: null;
 
 			return {
 				data : transData,

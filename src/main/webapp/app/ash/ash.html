@@ -1,11 +1,13 @@
-<div class="container active-session-history" ng-controller="AshCtrl">
-	<div class="row">
-		<div class="span12 average-active-sessions">
-			<div id="ash_aas"></div>
+<div class="container-fluid" ng-controller="AshCtrl">
+	<div class="row-fluid">
+		<div class="span12">
+			<div class="ash-graph-container">
+				<div id="ash_aas"></div>
+			</div>
 		</div>
 	</div>
-	<div class="row">
-		<div class="span6 top-sql">
+	<div class="row-fluid ash-top-activity">
+		<div class="span6">
 			<table class="table table-bordered table-condensed table-striped">
 				<caption>Top SQL</caption>
 				<thead>
@@ -19,11 +21,35 @@
 					<tr ng-repeat="sql in topSql">
 						<td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
 							<a title="{{sql.sqlText}}" ng-switch-default>{{sql.sqlId}}</a></td>
-						<td class="top-sql-activity-bar">
+						<td class="ash-activity-bar">
 							<div ng-style="element" ng-repeat="element in sql.activityBar">&nbsp;</div>
 						</td>
 						<td>{{sql.percentageFixed}}%</td>
 						<td>{{sql.aasFixed}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="span6">
+			<table class="table table-bordered table-condensed table-striped">
+				<caption>Top Sessions</caption>
+				<thead>
+					<tr>
+						<th>SID</th>
+						<th>User</th>
+						<th>Program</th>
+						<th colspan="2">Activity</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="sess in topSessions">
+						<td>{{sess.sessionId}}</td>
+						<td>{{sess.username}}</td>
+						<td>{{sess.program}}</td>
+						<td class="ash-activity-bar">
+							<div ng-style="element" ng-repeat="element in sess.activityBar">&nbsp;</div>
+						</td>
+						<td>{{sess.percentageFixed}}%</td>
 					</tr>
 				</tbody>
 			</table>

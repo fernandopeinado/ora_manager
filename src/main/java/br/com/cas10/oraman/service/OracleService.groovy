@@ -62,6 +62,7 @@ class OracleService {
 				sid,
 				serial# as serial_number,
 				decode(type, 'BACKGROUND', substr(program, -5, 4), username) as username,
+				program,
 				sql_id,
 				sql_child_number,
 				decode(wait_time, 0, event, 'CPU + CPU Wait') as event,

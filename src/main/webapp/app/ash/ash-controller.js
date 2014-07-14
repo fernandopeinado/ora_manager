@@ -23,7 +23,7 @@
 	}
 
 	function updateTopSql(data, $scope) {
-		var top = data[0].activity;
+		var top = (data.length > 0) ? data[0].activity : null;
 		data.forEach(function(sql) {
 			sql.percentageFixed = sql.percentageTotalActivity.toFixed(0);
 			sql.aasFixed = sql.averageActiveSessions.toFixed(2);
@@ -32,7 +32,19 @@
 		$scope.topSql = data;
 	}
 
+	function updateTopSessions(data, $scope) {
+		var top = (data.length > 0) ? data[0].activity : null;
+		data.forEach(function(sess) {
+			sess.percentageFixed = sess.percentageTotalActivity.toFixed(0);
+			sess.activityBar = activityBar(sess.activityByWaitClass, top);
+		});
+		$scope.topSessions = data;
+	}
+
 	function updateAasPlot(data, $scope, AverageActiveSessions, JqPlotHelper) {
+		if (data.data.length < 2) {
+			return;
+		}
 		var targetId = 'ash_aas';
 		var params = [ data, series, targetId ];
 		JqPlotHelper.plot($scope, targetId, AverageActiveSessions.plotGraph,
@@ -48,6 +60,7 @@
 						updateAasPlot(json.averageActiveSessions, $scope,
 								AverageActiveSessions, JqPlotHelper);
 						updateTopSql(json.topSql, $scope);
+						updateTopSessions(json.topSessions, $scope);
 					});
 		}
 
