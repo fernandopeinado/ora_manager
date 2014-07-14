@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 
 import br.com.cas10.oraman.analitics.AshSnapshot
@@ -27,7 +28,6 @@ class AshController {
 		Map data = ashService.getData()
 		Map response = [:]
 
-		// Average Active Sessions
 		List<AshSnapshot> snapshots = data.snapshots
 		List<String> aasKeys = snapshots ? snapshots[0].observations.keySet().toList() : []
 		response.averageActiveSessions = [
@@ -39,9 +39,29 @@ class AshController {
 			}
 		]
 
-		// Top SQL
-		List<SqlActivity> topSql = data.topSql
-		response.topSql = topSql.collect {
+		response.topSql = convertSql(data.topSql)
+		response.topSessions = convertSessions(data.topSessions)
+		response.intervalStart = data.intervalStart
+		response.intervalEnd = data.intervalEnd
+
+		return new JsonBuilder(response).toString()
+	}
+
+	@RequestMapping(value = '/ash/ash-interval', method = RequestMethod.GET)
+	@ResponseBody String ashInterval(@RequestParam("start") Long start, @RequestParam("end") Long end) {
+		Map data = ashService.getIntervalData(start, end)
+
+		Map response = [:]
+		response.topSql = convertSql(data.topSql)
+		response.topSessions = convertSessions(data.topSessions)
+		response.intervalStart = data.intervalStart
+		response.intervalEnd = data.intervalEnd
+
+		return new JsonBuilder(response).toString()
+	}
+
+	private List<Map> convertSql(List<SqlActivity> topSql) {
+		return topSql.collect {
 			[
 				'sqlId' : it.sqlId ?: 'Unknown',
 				'sqlText' : it.sqlText ?: 'Unavailable',
@@ -51,10 +71,10 @@ class AshController {
 				'activityByWaitClass' : it.activityByWaitClass
 			]
 		}
+	}
 
-		// Top Sessions
-		List<SessionActivity> topSessions = data.topSessions
-		response.topSessions = topSessions.collect {
+	private List<Map> convertSessions(List<SessionActivity> topSessions) {
+		return topSessions.collect {
 			[
 				'sessionId' : it.sessionId,
 				'username' : it.username,
@@ -64,7 +84,5 @@ class AshController {
 				'activityByWaitClass' : it.activityByWaitClass
 			]
 		}
-
-		return new JsonBuilder(response).toString()
 	}
 }

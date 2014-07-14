@@ -20,7 +20,7 @@
 					function(json) {
 						JqPlotHelper.plot($scope, targetId,
 								AverageActiveSessions.plotGraph, [ json,
-										series, targetId ]);
+										series, {}, targetId ]);
 					});
 		}
 

@@ -63,9 +63,14 @@
 			}
 			var plot = plotFunction.apply(null, plotFunctionArgs);
 			$scope.plots[targetId] = plot;
+			return plot;
 		}
 
 		function destroyPlot(plot) {
+			// unbind events: jqplot pull request #68
+			for (e in $._data(plot.target[0], 'events')) {
+				plot.target.unbind(e);
+			}
 			plot.destroy();
 		}
 

@@ -28,6 +28,11 @@ class AshService {
 		return ['snapshots' : agentData] << intervalData(agentData, lastTimestamp - FIVE_MINUTES, lastTimestamp)
 	}
 
+	Map getIntervalData(long start, long end) {
+		List<AshSnapshot> agentData = agent.data
+		return intervalData(agentData, start, end)
+	}
+
 	private Map intervalData(List<AshSnapshot> snapshots, long start, long end) {
 		List<AshSnapshot> intervalSnapshots = snapshots.findAll {
 			it.timestamp >= start && it.timestamp <= end
@@ -54,7 +59,9 @@ class AshService {
 
 		return [
 			'topSql' : topSql,
-			'topSessions' : topSessions
+			'topSessions' : topSessions,
+			'intervalStart' : start,
+			'intervalEnd' : end
 		]
 	}
 

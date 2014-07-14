@@ -34,7 +34,7 @@
 			};
 		}
 
-		function plotGraph(json, series, divId) {
+		function plotGraph(json, series, options, divId) {
 			var trans = JqPlotHelper.transform(json.keys, json.data);
 
 			var plotData = series.map(function(s) {
@@ -48,7 +48,7 @@
 			});
 			var yAxis = yAxisOptions(json.data, json.cpuCores, json.cpuThreads);
 
-			var options = JqPlotHelper.buildOptions({
+			var baseOptions = {
 				title : 'Average Active Sessions',
 				seriesDefaults : {
 					fill : true
@@ -88,9 +88,11 @@
 						}
 					} ]
 				}
-			});
+			};
+			var mergedOptions = JqPlotHelper.buildOptions($.extend(true,
+					baseOptions, options));
 
-			return $.jqplot(divId, plotData, options);
+			return $.jqplot(divId, plotData, mergedOptions);
 		}
 
 		return {
