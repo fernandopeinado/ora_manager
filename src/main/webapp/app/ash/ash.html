@@ -23,7 +23,8 @@
 				<tbody>
 					<tr ng-repeat="sql in topSql">
 						<td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
-							<a title="{{sql.sqlText}}" ng-switch-default>{{sql.sqlId}}</a></td>
+							<a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
+							ng-switch-default>{{sql.sqlId}}</a></td>
 						<td class="ash-activity-bar">
 							<div ng-style="element" ng-repeat="element in sql.activityBar">&nbsp;</div>
 						</td>

@@ -82,4 +82,23 @@ class OracleService {
 		List<String> result = jdbc.queryForList(query, ['id' : sqlId], String.class)
 		return result ? result[0] : null
 	}
+
+	List<Map> getExecutionPlans(String sqlId) {
+		String childrenQuery = '''
+			select plan_hash_value, min(child_number) as child_number from v$sql_plan
+			where sql_id = :id group by plan_hash_value order by child_number
+			'''
+		List<Map> children = jdbc.queryForList(childrenQuery, ['id' : sqlId])
+
+		List<Map> plans = []
+		String planQuery = 'select * from table(dbms_xplan.display_cursor(:id, :child))'
+		for (child in children) {
+			List<String> lines = jdbc.queryForList(planQuery, ['id' : sqlId, 'child' : child.child_number], String.class)
+			plans.add([
+				'planHashValue' : child.plan_hash_value,
+				'planText' : lines.join('\n')
+			])
+		}
+		return plans
+	}
 }

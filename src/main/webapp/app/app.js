@@ -1,6 +1,6 @@
 (function() {
 
-	var mainApp = angular.module('mainApp', [ 'home', 'ash', 'system',
+	var mainApp = angular.module('mainApp', [ 'home', 'ash', 'sql', 'system',
 			'ngRoute' ]);
 
 	mainApp.config([ '$routeProvider', function($routeProvider) {
@@ -12,6 +12,9 @@
 		}).when('/ash', {
 			templateUrl : 'app/ash/ash.html',
 			controller : 'AshCtrl'
+		}).when('/sql/:sqlId', {
+			templateUrl : 'app/sql/sql.html',
+			controller : 'SqlCtrl'
 		}).when('/system', {
 			templateUrl : 'app/system/system.html',
 			controller : 'SystemCtrl'
