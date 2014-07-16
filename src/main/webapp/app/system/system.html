@@ -1,8 +1,8 @@
 <div class="container">
 	<div class="row">
-		<div class="span12">
+		<div class="col-md-12">
 			<h4>Basic Information</h4>
-			<dl class="dl-horizontal">
+			<dl>
 				<dt>Name</dt>
 				<dd>{{info.basic.name}}</dd>
 				<dt>Kernel</dt>
@@ -13,9 +13,9 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="span6">
+		<div class="col-md-6">
 			<h4>Processor</h4>
-			<dl class="dl-horizontal" ng-repeat="processor in info.processor">
+			<dl ng-repeat="processor in info.processor">
 				<dt>Model</dt>
 				<dd>{{processor.siblings}} x {{processor.model}}</dd>
 				<dt>Cores</dt>
@@ -24,9 +24,9 @@
 				<dd>{{processor.cache}}</dd>
 			</dl>
 		</div>
-		<div class="span6">
+		<div class="col-md-6">
 			<h4>Memory</h4>
-			<dl class="dl-horizontal">
+			<dl>
 				<dt>Total</dt>
 				<dd>{{info.memory.total}}</dd>
 				<dt>Swap</dt>
@@ -35,46 +35,50 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="span6">
+		<div class="col-md-6">
 			<h4>Network</h4>
-			<dl class="dl-horizontal">
+			<dl>
 				<dt ng-repeat-start="interface in info.network">{{interface.name}}</dt>
 				<dd ng-repeat-end>({{interface.mac}}) {{interface.speed}}
 					{{interface.duplex}}</dd>
 			</dl>
 		</div>
-		<div class="span6">
+		<div class="col-md-6">
 			<h4>Storage</h4>
-			<dl class="dl-horizontal">
+			<dl>
 				<dt ng-repeat-start="device in info.storage">{{device.name}}</dt>
 				<dd ng-repeat-end>{{device.size}}</dd>
 			</dl>
 		</div>
 	</div>
 	<div class="row">
-		<div class="span12">
-			<div class="accordion" id="sysctl">
-				<div class="accordion-group">
-					<div class="accordion-heading">
-						<a class="accordion-toggle" data-toggle="collapse"
-							data-parent="#sysctl" data-target="#sysctlContent">Kernel
-							Parameters</a>
+		<div class="col-md-12">
+			<div class="panel-group">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<a data-toggle="collapse" data-target="#sysctl" href="">Kernel
+								Parameters</a>
+						</h4>
 					</div>
-					<div id="sysctlContent" class="accordion-body collapse">
-						<table class="table table-condensed table-striped">
-							<thead>
-								<tr>
-									<th>Property</th>
-									<th>Value</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr ng-repeat="prop in info.sysctl">
-									<td>{{prop[0]}}</td>
-									<td>{{prop[1]}}</td>
-								</tr>
-							</tbody>
-						</table>
+					<div id="sysctl" class="panel-collapse collapse">
+						<div class="panel-body">
+							<table class="table table-bordered table-condensed table-striped"
+								style="font-size: 13px">
+								<thead>
+									<tr>
+										<th>Property</th>
+										<th>Value</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="prop in info.sysctl">
+										<td>{{prop[0]}}</td>
+										<td>{{prop[1]}}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</div>
 			</div>

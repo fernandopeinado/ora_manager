@@ -2,16 +2,18 @@
 <html lang="en" ng-app="mainApp">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OraManager</title>
-<link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
-<link rel="stylesheet" href="lib/bootstrap/css/bootstrap-responsive.css">
+<link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.min.css">
 <link rel="stylesheet" href="lib/jqplot/css/jqplot.css">
 <link rel="stylesheet" href="app/ash/ash.css">
 <script src="lib/jquery/jquery.js"></script>
 <script src="lib/jquery/jquery-migrate.js"></script>
 <script src="lib/angular/angular.min.js"></script>
 <script src="lib/angular/angular-route.min.js"></script>
-<script src="lib/bootstrap/js/bootstrap.js"></script>
+<script src="lib/bootstrap/js/bootstrap.min.js"></script>
 <script src="lib/jqplot/js/jqplot.js"></script>
 <script src="lib/jqplot/js/jqplot.canvasAxisLabelRenderer.js"></script>
 <script src="lib/jqplot/js/jqplot.canvasAxisTickRenderer.js"></script>
@@ -30,18 +32,26 @@
 <script src="app/app.js"></script>
 </head>
 <body style="padding-top: 60px">
-	<div class="navbar navbar-fixed-top">
-		<div class="navbar-inner">
-			<div class="container">
-				<a class="brand" href="#">OraManager</a>
-				<ul class="nav">
-					<li role="presentation"><a role="menuitem" href="#/home">Home</a></li>
-					<li role="presentation"><a role="menuitem" href="#/ash">ASH</a></li>
-					<li role="presentation"><a role="menuitem" href="#/system">System</a></li>
+	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target="#oraman-navbar">
+					<span class="sr-only">Toggle Navigation</span><span
+						class="icon-bar"></span><span class="icon-bar"></span><span
+						class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="#">OraManager</a>
+			</div>
+			<div class="navbar-collapse collapse" id="oraman-navbar">
+				<ul class="nav navbar-nav">
+					<li><a href="#/home">Home</a></li>
+					<li><a href="#/ash">ASH</a></li>
+					<li><a href="#/system">System</a></li>
 				</ul>
 			</div>
 		</div>
-	</div>
+	</nav>
 	<div ng-view></div>
 </body>
 </html>
