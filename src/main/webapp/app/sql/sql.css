@@ -1,0 +1,21 @@
+#sql-details-pills {
+	margin-bottom: 10px;
+}
+
+#sql-full-text>pre {
+	white-space: normal;
+}
+
+.sql-statistics tr {
+	font-size: 13px;
+}
+
+.sql-statistics caption {
+	font-size: 15px;
+	font-weight: bold;
+	padding-bottom: 10px;
+}
+
+.activity-bar>div {
+	float: left;
+}

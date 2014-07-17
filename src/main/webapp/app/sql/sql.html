@@ -1,19 +1,156 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-md-12">
-			<div class="panel-group">
-				<div class="panel panel-default" ng-repeat="plan in executionPlans">
-					<div class="panel-heading">
-						<h4 class="panel-title">
-							<a data-toggle="collapse"
-								data-target="#plan{{plan.planHashValue}}" href="">{{plan.planHashValue}}</a>
-						</h4>
-					</div>
-					<div class="panel-collapse collapse"
-						id="plan{{plan.planHashValue}}">
-						<div panel-body>
-							<div style="padding: 10px; padding-bottom: 0">
-								<pre>{{plan.planText}}</pre>
+			<ul id="sql-details-pills" class="nav nav-pills" role="tablist">
+				<li class="active"><a href="" role="tab" data-toggle="pill"
+					data-target="#sql-full-text">SQL Full Text</a></li>
+				<li class="dropdown"><a href="" class="dropdown-toggle"
+					data-toggle="dropdown">Execution Plans<span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+						<li ng-repeat="plan in sql.executionPlans"><a href=""
+							data-toggle="pill" data-target="#plan{{plan.planHashValue}}">{{plan.planHashValue}}</a></li>
+						<li ng-hide="sql.executionPlans.length"><a href="">Not
+								Available</a></li>
+					</ul></li>
+			</ul>
+			<div class="tab-content">
+				<div id="sql-full-text" class="tab-pane active">
+					<pre>{{sql.fullText}}</pre>
+				</div>
+				<div class="tab-pane" id="plan{{plan.planHashValue}}"
+					ng-repeat="plan in sql.executionPlans">
+					<div class="panel-group" id="plan{{plan.planHashValue}}-accordion">
+						<div class="panel panel-primary">
+							<div class="panel-heading">
+								<h4 class="panel-title">
+									<a href="" data-toggle="collapse"
+										data-parent="#plan{{plan.planHashValue}}-accordion"
+										data-target="#plan{{plan.planHashValue}}-statistics">Statistics</a>
+								</h4>
+							</div>
+							<div id="plan{{plan.planHashValue}}-statistics"
+								class="panel-collapse collapse in">
+								<div class="panel-body sql-statistics">
+									<div class="row">
+										<div class="col-md-4">
+											<table class="table table-condensed table-bordered">
+												<caption>Cursors</caption>
+												<tr>
+													<th>Child Cursors</th>
+													<td>{{plan.cursors}}</td>
+												</tr>
+												<tr>
+													<th>Parse Calls</th>
+													<td>{{plan.parseCalls}}</td>
+												</tr>
+												<tr>
+													<th>Invalidations</th>
+													<td>{{plan.invalidations}}</td>
+												</tr>
+												<tr>
+													<th>First Load Time</th>
+													<td>{{plan.firstLoadTime}}</td>
+												</tr>
+												<tr>
+													<th>Last Load Time</th>
+													<td>{{plan.lastLoadTime}}</td>
+												</tr>
+											</table>
+										</div>
+										<div class="col-md-4">
+											<table class="table table-condensed table-bordered">
+												<caption>Executions</caption>
+												<tr>
+													<td></td>
+													<th>Total</th>
+													<th>Per Execution</th>
+												</tr>
+												<tr>
+													<th>Executions</th>
+													<td>{{plan.executions}}</td>
+													<td>{{plan.executions | perExecution:plan.executions}}</td>
+												</tr>
+												<tr>
+													<th>Rows Processed</th>
+													<td>{{plan.rowsProcessed}}</td>
+													<td>{{plan.rowsProcessed |
+														perExecution:plan.executions}}</td>
+												</tr>
+												<tr>
+													<th>Disk Reads</th>
+													<td>{{plan.diskReads}}</td>
+													<td>{{plan.diskReads | perExecution:plan.executions}}</td>
+												</tr>
+												<tr>
+													<th>Direct Writes</th>
+													<td>{{plan.directWrites}}</td>
+													<td>{{plan.directWrites |
+														perExecution:plan.executions}}</td>
+												</tr>
+												<tr>
+													<th>Buffer Gets</th>
+													<td>{{plan.bufferGets}}</td>
+													<td>{{plan.bufferGets | perExecution:plan.executions}}</td>
+												</tr>
+												<tr>
+													<th>Fetches</th>
+													<td>{{plan.fetches}}</td>
+													<td>{{plan.fetches | perExecution:plan.executions}}</td>
+												</tr>
+											</table>
+										</div>
+										<div class="col-md-4">
+											<table class="table table-condensed table-bordered">
+												<caption>Activity (seconds)</caption>
+												<tr>
+													<th>Elapsed Time</th>
+													<td>{{plan.elapsedTime | microsToSeconds}}</td>
+												</tr>
+												<tr>
+													<th>CPU Time</th>
+													<td>{{plan.cpuTime | microsToSeconds}}</td>
+												</tr>
+												<tr>
+													<th>User I/O Wait Time</th>
+													<td>{{plan.userIoWaitTime | microsToSeconds}}</td>
+												</tr>
+												<tr>
+													<th>Concurrency Wait Time</th>
+													<td>{{plan.concurrencyWaitTime | microsToSeconds}}</td>
+												</tr>
+												<tr>
+													<th>Application Wait Time</th>
+													<td>{{plan.applicationWaitTime | microsToSeconds}}</td>
+												</tr>
+												<tr>
+													<th>Cluster Wait Time</th>
+													<td>{{plan.clusterWaitTime | microsToSeconds}}</td>
+												</tr>
+												<tr>
+													<td colspan="2" class="activity-bar">
+														<div title="{{element.title}}" ng-style="element.style"
+															ng-repeat="element in plan.activityBar">&nbsp;</div>
+													</td>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="panel panel-primary">
+							<div class="panel-heading">
+								<h4 class="panel-title">
+									<a data-toggle="collapse"
+										data-parent="#plan{{plan.planHashValue}}-accordion"
+										data-target="#plan{{plan.planHashValue}}-plan-text" href="">Plan</a>
+								</h4>
+							</div>
+							<div id="plan{{plan.planHashValue}}-plan-text"
+								class="panel-collapse collapse">
+								<div class="panel-body">
+									<pre>{{plan.planText}}</pre>
+								</div>
 							</div>
 						</div>
 					</div>

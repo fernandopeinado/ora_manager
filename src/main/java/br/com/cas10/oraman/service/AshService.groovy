@@ -12,7 +12,7 @@ import br.com.cas10.oraman.analitics.SessionActivity
 import br.com.cas10.oraman.analitics.SqlActivity
 
 @Component
-@Transactional
+@Transactional(readOnly = true)
 class AshService {
 
 	private static final long FIVE_MINUTES = TimeUnit.MINUTES.toMillis(5)
