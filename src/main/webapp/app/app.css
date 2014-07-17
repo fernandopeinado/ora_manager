@@ -1,0 +1,14 @@
+table.jqplot-table-legend {
+	border: 0;
+}
+
+td.jqplot-table-legend-swatch {
+	width: 16px;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+.jqplot-legend-row-highlighted {
+	background-color: #777;
+	color: white;
+}

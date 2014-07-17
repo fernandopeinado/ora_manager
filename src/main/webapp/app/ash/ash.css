@@ -9,6 +9,11 @@
 	height: 350px;
 }
 
+.ash-graph-container table.jqplot-table-legend {
+	width: 115px;
+	height: 260px;
+}
+
 .ash-top-activity table>caption {
 	font-size: 15px;
 	font-weight: bold;

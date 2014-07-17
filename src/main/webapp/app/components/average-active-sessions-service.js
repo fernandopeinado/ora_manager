@@ -92,7 +92,23 @@
 			var mergedOptions = JqPlotHelper.buildOptions($.extend(true,
 					baseOptions, options));
 
-			return $.jqplot(divId, plotData, mergedOptions);
+			var plot = $.jqplot(divId, plotData, mergedOptions);
+
+			var legendRowSelector = 'tr.jqplot-table-legend';
+			var highlightedClass = 'jqplot-legend-row-highlighted';
+
+			plot.target.bind('jqplotDataHighlight', function(ev, seriesIndex,
+					pointIndex, data) {
+				var idx = (series.length - 1) - seriesIndex;
+				$(legendRowSelector).removeClass(highlightedClass);
+				$(legendRowSelector).eq(idx).addClass(highlightedClass);
+			});
+			plot.target.bind('jqplotDataUnhighlight', function(ev, seriesIndex,
+					pointIndex, data) {
+				$(legendRowSelector).removeClass(highlightedClass);
+			});
+
+			return plot;
 		}
 
 		return {

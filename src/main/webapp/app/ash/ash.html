@@ -28,7 +28,8 @@
 							<a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
 							ng-switch-default>{{sql.sqlId}}</a></td>
 						<td class="ash-activity-bar">
-							<div ng-style="element" ng-repeat="element in sql.activityBar">&nbsp;</div>
+							<div title="{{element.title}}" ng-style="element.style"
+								ng-repeat="element in sql.activityBar">&nbsp;</div>
 						</td>
 						<td>{{sql.percentageFixed}}%</td>
 						<td>{{sql.aasFixed}}</td>
@@ -53,7 +54,8 @@
 						<td>{{sess.username}}</td>
 						<td>{{sess.program}}</td>
 						<td class="ash-activity-bar">
-							<div ng-style="element" ng-repeat="element in sess.activityBar">&nbsp;</div>
+							<div title="{{element.title}}" ng-style="element.style"
+								ng-repeat="element in sess.activityBar">&nbsp;</div>
 						</td>
 						<td>{{sess.percentageFixed}}%</td>
 					</tr>

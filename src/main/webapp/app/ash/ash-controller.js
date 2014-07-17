@@ -26,8 +26,11 @@
 			var width = Math.floor((activityMap[s[0]] * 100) / topActivity);
 			if (width > 0) {
 				result.push({
-					'width' : width + '%',
-					'background-color' : s[1]
+					title : s[0],
+					style : {
+						'width' : width + '%',
+						'background-color' : s[1]
+					}
 				});
 			}
 		});
