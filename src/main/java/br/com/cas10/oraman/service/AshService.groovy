@@ -53,8 +53,8 @@ class AshService {
 		}
 		List topSessions = topActivity(activeSessions, 'serial_number').collect {
 			Map activeSession = it.first()
-			new SessionActivity((long) activeSession.sid, activeSession.username, activeSession.program,
-					it, totalActivity, totalSamples)
+			new SessionActivity((long) activeSession.sid, (long) activeSession.serial_number, activeSession.username,
+					activeSession.program, it, totalActivity, totalSamples)
 		}
 
 		return [

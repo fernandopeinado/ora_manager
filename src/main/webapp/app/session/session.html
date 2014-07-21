@@ -1,0 +1,47 @@
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<div ng-show="message">
+				<div class="alert" ng-class="messageClass">{{message}}</div>
+			</div>
+			<div ng-show="!message">
+				<table class="table table-bordered table-condensed">
+					<thead>
+						<tr>
+							<th>SID</th>
+							<th>Serial Number</th>
+							<th>User</th>
+							<th>Program</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>{{sid}}</td>
+							<td>{{serialNumber}}</td>
+							<td>{{user}}</td>
+							<td>{{program}}</td>
+						</tr>
+					</tbody>
+				</table>
+				<button type="button" class="btn btn-danger"
+					ng-class="sessionTerminationEnabled ? '' : 'disabled'"
+					data-toggle="modal" data-target="#kill-session-modal">Kill
+					Session</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="kill-session-modal" class="modal fade">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">Are you sure?</h4>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-danger" data-dismiss="modal"
+					ng-click="killSession()">Kill Session</button>
+			</div>
+		</div>
+	</div>
+</div>

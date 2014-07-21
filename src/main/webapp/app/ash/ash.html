@@ -50,7 +50,8 @@
 				</thead>
 				<tbody>
 					<tr ng-repeat="sess in topSessions">
-						<td>{{sess.sessionId}}</td>
+						<td><a
+							href="#session?sid={{sess.sessionId}}&serialNumber={{sess.serialNumber}}">{{sess.sessionId}}</a></td>
 						<td>{{sess.username}}</td>
 						<td>{{sess.program}}</td>
 						<td class="ash-activity-bar">

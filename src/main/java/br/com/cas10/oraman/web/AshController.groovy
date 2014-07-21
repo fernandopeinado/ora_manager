@@ -77,6 +77,7 @@ class AshController {
 		return topSessions.collect {
 			[
 				'sessionId' : it.sessionId,
+				'serialNumber' : it.serialNumber,
 				'username' : it.username,
 				'program' : it.program,
 				'activity' : it.activity,

@@ -1,9 +1,11 @@
 package br.com.cas10.oraman.service
 
+import javax.naming.NamingException
 import javax.sql.DataSource
 
 import org.quartz.Scheduler
 import org.quartz.impl.StdSchedulerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -18,19 +20,31 @@ import br.com.cas10.oraman.worker.WorkerConfig
 
 @Configuration
 @ComponentScan(basePackages=['br.com.cas10.oraman.service'])
-@Import([ AgentConfig.class, WorkerConfig.class ])
+@Import([ AgentConfig, WorkerConfig])
 @EnableTransactionManagement(proxyTargetClass = true)
 class ServiceConfig {
 
 	@Bean
-	DataSource dataSource() {
+	@Qualifier('monitoring')
+	DataSource monitoringDataSource() {
 		JndiTemplate jndi = new JndiTemplate()
-		return jndi.lookup('java:comp/env/jdbc/oraman', DataSource.class)
+		return jndi.lookup('java:comp/env/jdbc/oraman', DataSource)
 	}
 
 	@Bean
-	DataSourceTransactionManager transactionManager() {
-		new DataSourceTransactionManager(dataSource())
+	DataSourceTransactionManager monitoringTransactionManager() {
+		new DataSourceTransactionManager(monitoringDataSource())
+	}
+
+	@Bean
+	@Qualifier('admin')
+	DataSource adminDataSource() {
+		JndiTemplate jndi = new JndiTemplate()
+		try {
+			return jndi.lookup('java:comp/env/jdbc/oramanAdmin', DataSource)
+		} catch (NamingException e) {
+			return null
+		}
 	}
 
 	@Bean

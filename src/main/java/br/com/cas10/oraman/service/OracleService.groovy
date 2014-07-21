@@ -4,6 +4,7 @@ import javax.annotation.PostConstruct
 import javax.sql.DataSource
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,6 +19,7 @@ class OracleService {
 	int cpuThreads
 
 	@Autowired
+	@Qualifier('monitoring')
 	void setDataSource(DataSource dataSource) {
 		jdbc = new NamedParameterJdbcTemplate(dataSource)
 	}
@@ -80,6 +82,12 @@ class OracleService {
 	String getSqlText(String sqlId) {
 		String query = 'select sql_text	from v$sql where sql_id = :id and rownum < 2'
 		List<String> result = jdbc.queryForList(query, ['id' : sqlId], String.class)
-		return result ? result[0] : null
+		return result ? result.first() : null
+	}
+
+	Map getSession(Long sid, Long serialNumber) {
+		String query = 'select username, program from v$session where sid = :sid and serial# = :serialNumber'
+		List<Map> result = jdbc.queryForList(query, ['sid' : sid, 'serialNumber' : serialNumber])
+		return result ? result.first() : null
 	}
 }

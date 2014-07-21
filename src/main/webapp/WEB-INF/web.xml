@@ -13,6 +13,10 @@
 		</auth-constraint>
 	</security-constraint>
 
+	<security-role>
+		<role-name>oraman</role-name>
+	</security-role>
+
 	<login-config>
 		<auth-method>BASIC</auth-method>
 	</login-config>
