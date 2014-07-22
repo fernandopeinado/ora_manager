@@ -4,6 +4,8 @@
 			<ul id="sql-details-pills" class="nav nav-pills" role="tablist">
 				<li class="active"><a href="" role="tab" data-toggle="pill"
 					data-target="#sql-full-text">SQL Full Text</a></li>
+				<li><a href="" role="tab" data-toggle="pill"
+					data-target="#sql-activity">Activity</a></li>
 				<li class="dropdown"><a href="" class="dropdown-toggle"
 					data-toggle="dropdown">Execution Plans<span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu">
@@ -16,6 +18,24 @@
 			<div class="tab-content">
 				<div id="sql-full-text" class="tab-pane active">
 					<pre>{{sql.fullText}}</pre>
+				</div>
+				<div id="sql-activity" class="tab-pane">
+					<table class="table table-bordered table-condensed table-striped">
+						<thead>
+							<tr>
+								<th>Event</th>
+								<th>Wait Class</th>
+								<th>Activity</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="row in sql.activity">
+								<td>{{row.event}}</td>
+								<td>{{row.waitClass}}</td>
+								<td>{{row.activity}}</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 				<div class="tab-pane" id="plan{{plan.planHashValue}}"
 					ng-repeat="plan in sql.executionPlans">

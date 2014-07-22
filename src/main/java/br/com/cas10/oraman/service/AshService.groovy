@@ -33,6 +33,26 @@ class AshService {
 		return intervalData(agentData, start, end)
 	}
 
+	List<Map> getSqlData(String sqlId) {
+		List<AshSnapshot> agentData = agent.data
+
+		List<Map> activeSessions = []
+		for (snapshot in agentData) {
+			for (activeSession in snapshot.activeSessions) {
+				if (activeSession.sql_id == sqlId) {
+					activeSessions.add(activeSession)
+				}
+			}
+		}
+
+		Map<String, List<Map>> groups = activeSessions.groupBy { it.event }
+		List<List<Map>> sortedGroups = groups.values().sort { a, b -> b.size() <=> a.size() }
+		return sortedGroups.collect {
+			Map first = it.first()
+			return ['event' : first.event, 'waitClass': first.wait_class, 'activity' : it.size()]
+		}
+	}
+
 	private Map intervalData(List<AshSnapshot> snapshots, long start, long end) {
 		List<AshSnapshot> intervalSnapshots = snapshots.findAll {
 			it.timestamp >= start && it.timestamp <= end
