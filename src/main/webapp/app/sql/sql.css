@@ -1,9 +1,13 @@
-#sql-details-pills {
-	margin-bottom: 10px;
+#sql-full-text pre {
+	white-space: normal;
+	background-color: #fff;
+	padding: 0;
+	margin: 0;
+	border: 0;
 }
 
-#sql-full-text>pre {
-	white-space: normal;
+#sql-details-tabs {
+	margin-bottom: 10px;
 }
 
 .sql-statistics tr {
