@@ -6,7 +6,8 @@
 	border: 0;
 }
 
-#sql-details-tabs {
+.sql-details-header {
+	border-bottom: 1px solid #ddd;
 	margin-bottom: 10px;
 }
 
@@ -18,8 +19,4 @@
 	font-size: 15px;
 	font-weight: bold;
 	padding-bottom: 10px;
-}
-
-.activity-bar>div {
-	float: left;
 }
