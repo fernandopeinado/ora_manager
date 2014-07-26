@@ -1,16 +1,25 @@
 package br.com.cas10.oraman.service
 
+import groovy.transform.CompileStatic
+
+import java.sql.ResultSet
+import java.sql.SQLException
+
 import javax.annotation.PostConstruct
 import javax.sql.DataSource
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
+import br.com.cas10.oraman.analitics.ActiveSession
+
 @Service
 @Transactional(readOnly = true)
+@CompileStatic
 class OracleService {
 
 	private NamedParameterJdbcTemplate jdbc
@@ -37,10 +46,10 @@ class OracleService {
 		List<Map<String, Object>> result = jdbc.queryForList(osstatQuery, Collections.emptyMap())
 		for (row in result) {
 			if (row.stat_name == 'NUM_CPUS'){
-				cpuThreads = row.value
-				cpuCores = cpuCores ?: row.value
+				cpuThreads = (int) row.value
+				cpuCores = cpuCores ?: (int) row.value
 			} else if (row.stat_name == 'NUM_CPU_CORES') {
-				cpuCores = row.value
+				cpuCores = (int) row.value
 			}
 		}
 	}
@@ -58,11 +67,11 @@ class OracleService {
 		return result
 	}
 
-	List<Map<String, Object>> getActiveSessions() {
+	List<ActiveSession> getActiveSessions() {
 		String query = '''
 			select
 				sid,
-				serial# as serial_number,
+				serial#,
 				decode(type, 'BACKGROUND', substr(program, -5, 4), username) as username,
 				program,
 				sql_id,
@@ -75,7 +84,20 @@ class OracleService {
 				(program <> 'OraManager' or program is null)
 				and ((wait_time <> 0 and status = 'ACTIVE') or wait_class <> 'Idle')
 			'''
-		List<Map<String, Object>> result = jdbc.queryForList(query, Collections.emptyMap())
+		List<ActiveSession> result = jdbc.query(query, Collections.emptyMap(), new RowMapper<ActiveSession>() {
+					ActiveSession mapRow(ResultSet rs, int rowNum) throws SQLException {
+						ActiveSession s = new ActiveSession()
+						s.sid = rs.getString('sid').intern()
+						s.serialNumber = rs.getString('serial#').intern()
+						s.username = rs.getString('username')?.intern()
+						s.program = rs.getString('program')?.intern()
+						s.sqlId = rs.getString('sql_id')?.intern()
+						s.sqlChildNumber = rs.getString('sql_child_number')?.intern()
+						s.event = rs.getString('event').intern()
+						s.waitClass = rs.getString('wait_class').intern()
+						return s
+					}
+				})
 		return result
 	}
 

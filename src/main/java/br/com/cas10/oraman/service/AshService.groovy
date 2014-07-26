@@ -1,5 +1,7 @@
 package br.com.cas10.oraman.service
 
+import groovy.transform.CompileStatic
+
 import java.util.concurrent.TimeUnit
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -7,12 +9,14 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 import br.com.cas10.oraman.agent.AshAgent
+import br.com.cas10.oraman.analitics.ActiveSession
 import br.com.cas10.oraman.analitics.AshSnapshot
 import br.com.cas10.oraman.analitics.SessionActivity
 import br.com.cas10.oraman.analitics.SqlActivity
 
 @Component
 @Transactional(readOnly = true)
+@CompileStatic
 class AshService {
 
 	private static final long FIVE_MINUTES = TimeUnit.MINUTES.toMillis(5)
@@ -25,7 +29,7 @@ class AshService {
 	Map getData() {
 		List<AshSnapshot> agentData = agent.data
 		long lastTimestamp = agentData ? agentData[-1].timestamp : 0
-		return ['snapshots' : agentData] << intervalData(agentData, lastTimestamp - FIVE_MINUTES, lastTimestamp)
+		return ((Map<String, Object>) ['snapshots' : agentData]) << intervalData(agentData, lastTimestamp - FIVE_MINUTES, lastTimestamp)
 	}
 
 	Map getIntervalData(long start, long end) {
@@ -36,44 +40,44 @@ class AshService {
 	List<Map> getSqlData(String sqlId) {
 		List<AshSnapshot> agentData = agent.data
 
-		List<Map> activeSessions = []
+		List<ActiveSession> activeSessions = []
 		for (snapshot in agentData) {
 			for (activeSession in snapshot.activeSessions) {
-				if (activeSession.sql_id == sqlId) {
+				if (activeSession.sqlId == sqlId) {
 					activeSessions.add(activeSession)
 				}
 			}
 		}
 
-		Map<String, List<Map>> groups = activeSessions.groupBy { it.event }
-		List<List<Map>> sortedGroups = groups.values().sort { a, b -> b.size() <=> a.size() }
-		return sortedGroups.collect {
-			Map first = it.first()
-			return ['event' : first.event, 'waitClass': first.wait_class, 'activity' : it.size()]
+		Map<String, List<ActiveSession>> groups = activeSessions.groupBy { ActiveSession it -> it.event }
+		List<List<ActiveSession>> sortedGroups = groups.values().sort { List a, List b -> b.size() <=> a.size() }
+		return sortedGroups.collect { List<ActiveSession> it ->
+			ActiveSession first = it.first()
+			return ['event' : first.event, 'waitClass': first.waitClass, 'activity' : it.size()]
 		}
 	}
 
 	private Map intervalData(List<AshSnapshot> snapshots, long start, long end) {
-		List<AshSnapshot> intervalSnapshots = snapshots.findAll {
+		Collection<AshSnapshot> intervalSnapshots = snapshots.findAll { AshSnapshot it ->
 			it.timestamp >= start && it.timestamp <= end
 		}
 
 		int totalSamples = 0
-		List<Map> activeSessions = []
+		List<ActiveSession> activeSessions = []
 		for (snapshot in intervalSnapshots) {
 			totalSamples += snapshot.samples
 			activeSessions.addAll(snapshot.activeSessions)
 		}
 		int totalActivity = activeSessions.size()
 
-		List topSql = topActivity(activeSessions, 'sql_id').collect {
-			Map activeSession = it.first()
-			String sqlText = service.getSqlText(activeSession.sql_id)
-			new SqlActivity(activeSession.sql_id, sqlText, it, totalActivity, totalSamples)
+		List topSql = topActivity(activeSessions, 'sqlId').collect { List<ActiveSession> it ->
+			ActiveSession activeSession = it.first()
+			String sqlText = service.getSqlText(activeSession.sqlId)
+			new SqlActivity(activeSession.sqlId, sqlText, it, totalActivity, totalSamples)
 		}
-		List topSessions = topActivity(activeSessions, 'serial_number').collect {
-			Map activeSession = it.first()
-			new SessionActivity((long) activeSession.sid, (long) activeSession.serial_number, activeSession.username,
+		List topSessions = topActivity(activeSessions, 'serialNumber').collect { List<ActiveSession> it ->
+			ActiveSession activeSession = it.first()
+			new SessionActivity(activeSession.sid, activeSession.serialNumber, activeSession.username,
 					activeSession.program, it, totalActivity, totalSamples)
 		}
 
@@ -85,9 +89,9 @@ class AshService {
 		]
 	}
 
-	private List<List<Map>> topActivity(List<Map> activeSessions, String groupKey) {
-		Map<String, List<Map>> groups = activeSessions.groupBy { it[groupKey] }
-		List<List<Map>> sortedGroups = groups.values().sort { a, b ->
+	private List<List<ActiveSession>> topActivity(List<ActiveSession> activeSessions, String groupKey) {
+		Map<Object, List<ActiveSession>> groups = activeSessions.groupBy { it[groupKey] }
+		List<List<ActiveSession>> sortedGroups = groups.values().sort { List a, List b ->
 			b.size() <=> a.size()
 		}
 		return (sortedGroups.size() > 10) ? sortedGroups[0..9] : sortedGroups

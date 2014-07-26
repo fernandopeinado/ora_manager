@@ -1,17 +1,20 @@
 package br.com.cas10.oraman.analitics
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class SessionActivity {
 
-	final long sessionId
-	final long serialNumber
+	final String sessionId
+	final String serialNumber
 	final String username
 	final String program
 	final int activity
 	final BigDecimal percentageTotalActivity
-	final Map<String, BigDecimal> activityByWaitClass
+	final Map<String, Integer> activityByWaitClass
 
-	SessionActivity(long sessionId, long serialNumber, String username, String program, List<Map> activeSessions,
-	int totalActivity, int totalSamples) {
+	SessionActivity(String sessionId, String serialNumber, String username, String program,
+	List<ActiveSession> activeSessions, int totalActivity, int totalSamples) {
 
 		this.sessionId = sessionId
 		this.serialNumber = serialNumber
@@ -20,9 +23,9 @@ class SessionActivity {
 		this.activity = activeSessions.size()
 		this.percentageTotalActivity = (activity * 100) / totalActivity
 
-		Map<String, List<Map>> waitClassGroups = activeSessions.groupBy { it.wait_class }
-		activityByWaitClass = waitClassGroups.collectEntries { key, value ->
+		Map<String, List<ActiveSession>> waitClassGroups = activeSessions.groupBy { ActiveSession it -> it.waitClass }
+		activityByWaitClass = ((Map<String, Integer>) waitClassGroups.collectEntries { String key, List value ->
 			[key, value.size()]
-		}.asImmutable()
+		}).asImmutable()
 	}
 }

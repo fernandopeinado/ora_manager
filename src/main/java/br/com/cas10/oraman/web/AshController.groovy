@@ -1,6 +1,7 @@
 package br.com.cas10.oraman.web
 
 import groovy.json.JsonBuilder
+import groovy.transform.CompileStatic
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
@@ -16,6 +17,7 @@ import br.com.cas10.oraman.service.AshService
 import br.com.cas10.oraman.service.OracleService
 
 @Controller
+@CompileStatic
 class AshController {
 
 	@Autowired
@@ -28,19 +30,24 @@ class AshController {
 		Map data = ashService.getData()
 		Map response = [:]
 
-		List<AshSnapshot> snapshots = data.snapshots
-		List<String> aasKeys = snapshots ? snapshots[0].observations.keySet().toList() : []
-		response.averageActiveSessions = [
+		List<AshSnapshot> snapshots = (List<AshSnapshot>) data.snapshots
+		List<String> aasKeys = Collections.emptyList()
+		if (snapshots) {
+			aasKeys =  snapshots[0].observations.keySet().toList()
+		}
+
+		Map averageActiveSessions = [
 			'cpuCores' : oracleService.cpuCores,
 			'cpuThreads' : oracleService.cpuThreads,
 			'keys' : aasKeys,
-			'data' : snapshots.collect { snapshot ->
-				[snapshot.timestamp]<< (aasKeys.collect() { key -> snapshot.observations[key] })
+			'data' : snapshots.collect { AshSnapshot snapshot ->
+				((List<Object>) [snapshot.timestamp]) << (aasKeys.collect() { String key -> snapshot.observations[key] })
 			}
 		]
+		response.averageActiveSessions = averageActiveSessions
 
-		response.topSql = convertSql(data.topSql)
-		response.topSessions = convertSessions(data.topSessions)
+		response.topSql = convertSql((List<SqlActivity>) data.topSql)
+		response.topSessions = convertSessions((List<SessionActivity>) data.topSessions)
 		response.intervalStart = data.intervalStart
 		response.intervalEnd = data.intervalEnd
 
@@ -52,8 +59,8 @@ class AshController {
 		Map data = ashService.getIntervalData(start, end)
 
 		Map response = [:]
-		response.topSql = convertSql(data.topSql)
-		response.topSessions = convertSessions(data.topSessions)
+		response.topSql = convertSql((List<SqlActivity>) data.topSql)
+		response.topSessions = convertSessions((List<SessionActivity>) data.topSessions)
 		response.intervalStart = data.intervalStart
 		response.intervalEnd = data.intervalEnd
 
@@ -61,7 +68,7 @@ class AshController {
 	}
 
 	private List<Map> convertSql(List<SqlActivity> topSql) {
-		return topSql.collect {
+		return topSql.collect { SqlActivity it ->
 			[
 				'sqlId' : it.sqlId ?: 'Unknown',
 				'sqlText' : it.sqlText ?: 'Unavailable',
@@ -74,7 +81,7 @@ class AshController {
 	}
 
 	private List<Map> convertSessions(List<SessionActivity> topSessions) {
-		return topSessions.collect {
+		return topSessions.collect { SessionActivity it ->
 			[
 				'sessionId' : it.sessionId,
 				'serialNumber' : it.serialNumber,
