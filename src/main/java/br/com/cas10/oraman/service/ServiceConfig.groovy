@@ -3,8 +3,6 @@ package br.com.cas10.oraman.service
 import javax.naming.NamingException
 import javax.sql.DataSource
 
-import org.quartz.Scheduler
-import org.quartz.impl.StdSchedulerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
@@ -48,15 +46,17 @@ class ServiceConfig {
 	}
 
 	@Bean
-	ThreadPoolTaskScheduler taskScheduler() {
+	@Qualifier('agents')
+	ThreadPoolTaskScheduler agentsTaskScheduler() {
 		ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler()
 		int threads = Math.ceil(Runtime.runtime.availableProcessors() / 2.0d)
 		taskScheduler.setPoolSize(threads)
 		return taskScheduler
 	}
 
-	@Bean(initMethod = 'start', destroyMethod = 'shutdown')
-	Scheduler quartzScheduler() {
-		StdSchedulerFactory.getDefaultScheduler()
+	@Bean
+	@Qualifier('workers')
+	ThreadPoolTaskScheduler workersTaskScheduler() {
+		new ThreadPoolTaskScheduler()
 	}
 }
