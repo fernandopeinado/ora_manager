@@ -1,10 +1,6 @@
-*.class
+.classpath
+.project
 .settings
+bin/
 rebel.xml
-# Package Files #
-*.jar
-*.war
-*.ear
-/build
-/target
-/bin
+target/
