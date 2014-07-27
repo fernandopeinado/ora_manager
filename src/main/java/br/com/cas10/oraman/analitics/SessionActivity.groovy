@@ -14,18 +14,47 @@ class SessionActivity {
 	final Map<String, Integer> activityByWaitClass
 
 	SessionActivity(String sessionId, String serialNumber, String username, String program,
-	List<ActiveSession> activeSessions, int totalActivity, int totalSamples) {
+	int activity, Map<String, Integer> activityByWaitClass, int totalActivity) {
 
 		this.sessionId = sessionId
 		this.serialNumber = serialNumber
 		this.username = username
 		this.program = program
-		this.activity = activeSessions.size()
+		this.activity = activity
 		this.percentageTotalActivity = (activity * 100) / totalActivity
+		this.activityByWaitClass = activityByWaitClass
+	}
 
-		Map<String, List<ActiveSession>> waitClassGroups = activeSessions.groupBy { ActiveSession it -> it.waitClass }
-		activityByWaitClass = ((Map<String, Integer>) waitClassGroups.collectEntries { String key, List value ->
-			[key, value.size()]
-		}).asImmutable()
+	static class Builder {
+
+		private final String sessionId
+		private final String serialNumber
+		private final String username
+		private final String program
+
+		private int activity = 0
+		private Map<String, Integer> activityByWaitClass = new HashMap()
+
+		Builder(String sessionId, String serialNumber, String username, String program) {
+			this.sessionId = sessionId
+			this.serialNumber = serialNumber
+			this.username = username
+			this.program = program
+		}
+
+		int getActivity() {
+			activity
+		}
+
+		void add(ActiveSession activeSession) {
+			activity++
+			int waitClassActivity = activityByWaitClass[activeSession.waitClass] ?: 0
+			activityByWaitClass[activeSession.waitClass] = waitClassActivity + 1
+		}
+
+		SessionActivity build(int totalActivity) {
+			new SessionActivity(sessionId, serialNumber, username, program, activity,
+					activityByWaitClass.asImmutable(), totalActivity)
+		}
 	}
 }

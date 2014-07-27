@@ -8,11 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.support.CronTrigger
+import org.springframework.stereotype.Service
 
 import br.com.cas10.oraman.worker.Worker
 
-//FIXME
-//@Service
+@Service
 @CompileStatic
 class WorkersService {
 

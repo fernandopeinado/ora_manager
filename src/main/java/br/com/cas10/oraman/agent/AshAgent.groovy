@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component
 
 import br.com.cas10.oraman.analitics.ActiveSession
 import br.com.cas10.oraman.analitics.AshSnapshot
+import br.com.cas10.oraman.service.AshArchive
 import br.com.cas10.oraman.service.OracleService
 
 @Component
@@ -25,6 +26,8 @@ class AshAgent extends Agent {
 	private List<List<ActiveSession>> samples = []
 
 	@Autowired
+	private AshArchive ashArchive
+	@Autowired
 	private OracleService service
 
 	AshAgent() {
@@ -36,12 +39,17 @@ class AshAgent extends Agent {
 		long timestamp = System.currentTimeMillis()
 		List<ActiveSession> sample = service.getActiveSessions()
 
+		AshSnapshot snapshot = null
 		synchronized(samples) {
 			samples.add(sample)
 			if (samples.size() == SNAPSHOT_SAMPLES) {
-				snapshots.add(new AshSnapshot(samples, timestamp))
+				snapshot = new AshSnapshot(samples, timestamp)
 				samples = []
 			}
+		}
+		if (snapshot) {
+			snapshots.add(snapshot)
+			ashArchive.archive(snapshot)
 		}
 	}
 }

@@ -3,7 +3,7 @@ package br.com.cas10.oraman.analitics
 import groovy.transform.CompileStatic
 
 @CompileStatic
-class ActiveSession {
+class ActiveSession implements Serializable {
 
 	String sid
 	String serialNumber

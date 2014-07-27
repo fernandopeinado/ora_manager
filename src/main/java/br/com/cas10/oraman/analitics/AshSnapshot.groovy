@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import br.com.cas10.oraman.oracle.WaitClass
 
 @CompileStatic
-class AshSnapshot extends Snapshot {
+class AshSnapshot extends Snapshot implements Serializable {
 
 	final int samples
 	final List<ActiveSession> activeSessions = []

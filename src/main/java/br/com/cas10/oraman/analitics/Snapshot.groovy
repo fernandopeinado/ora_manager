@@ -1,6 +1,6 @@
 package br.com.cas10.oraman.analitics
 
-class Snapshot {
+class Snapshot implements Serializable {
 
 	long timestamp
 	Map<String, Object> observations = [:]

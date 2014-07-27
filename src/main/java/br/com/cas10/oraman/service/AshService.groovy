@@ -29,12 +29,15 @@ class AshService {
 	Map getData() {
 		List<AshSnapshot> agentData = agent.data
 		long lastTimestamp = agentData ? agentData[-1].timestamp : 0
-		return ((Map<String, Object>) ['snapshots' : agentData]) << intervalData(agentData, lastTimestamp - FIVE_MINUTES, lastTimestamp)
+
+		Map<String, Object> result = (Map<String, Object>) ['snapshots' : agentData]
+		result << intervalData(agentData.iterator(), lastTimestamp - FIVE_MINUTES, lastTimestamp)
+		return result
 	}
 
 	Map getIntervalData(long start, long end) {
 		List<AshSnapshot> agentData = agent.data
-		return intervalData(agentData, start, end)
+		return intervalData(agentData.iterator(), start, end)
 	}
 
 	List<Map> getSqlData(String sqlId) {
@@ -57,29 +60,57 @@ class AshService {
 		}
 	}
 
-	private Map intervalData(List<AshSnapshot> snapshots, long start, long end) {
-		Collection<AshSnapshot> intervalSnapshots = snapshots.findAll { AshSnapshot it ->
-			it.timestamp >= start && it.timestamp <= end
-		}
-
+	Map intervalData(Iterator<AshSnapshot> snapshots, long start, long end) {
 		int totalSamples = 0
-		List<ActiveSession> activeSessions = []
-		for (snapshot in intervalSnapshots) {
-			totalSamples += snapshot.samples
-			activeSessions.addAll(snapshot.activeSessions)
-		}
-		int totalActivity = activeSessions.size()
+		int totalActivity = 0
+		Map<String, SqlActivity.Builder> sqlMap = new HashMap()
+		Map<String, SessionActivity.Builder> sessionsMap = new HashMap()
 
-		List topSql = topActivity(activeSessions, 'sqlId').collect { List<ActiveSession> it ->
-			ActiveSession activeSession = it.first()
-			String sqlText = service.getSqlText(activeSession.sqlId)
-			new SqlActivity(activeSession.sqlId, sqlText, it, totalActivity, totalSamples)
+		while (snapshots.hasNext()) {
+			AshSnapshot snapshot = snapshots.next()
+
+			if (snapshot.timestamp < start || snapshot.timestamp > end) {
+				continue
+			}
+
+			totalSamples += snapshot.samples
+			for (s in snapshot.activeSessions) {
+				totalActivity++
+
+				SqlActivity.Builder sqlBuilder = sqlMap[s.sqlId]
+				if (!sqlBuilder) {
+					sqlBuilder = new SqlActivity.Builder(s.sqlId)
+					sqlMap[s.sqlId] = sqlBuilder
+				}
+				sqlBuilder.add(s)
+
+				String sessionKey = s.sid + '-' + s.serialNumber
+				SessionActivity.Builder sessionBuilder = sessionsMap[sessionKey]
+				if (!sessionBuilder) {
+					sessionBuilder = new SessionActivity.Builder(s.sid, s.serialNumber, s.username, s.program)
+					sessionsMap[sessionKey] = sessionBuilder
+				}
+				sessionBuilder.add(s)
+			}
 		}
-		List topSessions = topActivity(activeSessions, 'serialNumber').collect { List<ActiveSession> it ->
-			ActiveSession activeSession = it.first()
-			new SessionActivity(activeSession.sid, activeSession.serialNumber, activeSession.username,
-					activeSession.program, it, totalActivity, totalSamples)
-		}
+
+		List<SqlActivity> topSql = sqlMap.values()
+				.sort { SqlActivity.Builder a, SqlActivity.Builder b ->
+					b.activity <=> a.activity
+				}
+				.take(10)
+				.collect { SqlActivity.Builder builder ->
+					String sqlText = service.getSqlText(builder.sqlId)
+					return builder.build(sqlText, totalActivity, totalSamples)
+				}
+		List<SessionActivity> topSessions = sessionsMap.values()
+				.sort { SessionActivity.Builder a, SessionActivity.Builder b ->
+					b.activity <=> a.activity
+				}
+				.take(10)
+				.collect { SessionActivity.Builder builder ->
+					return builder.build(totalActivity)
+				}
 
 		return [
 			'topSql' : topSql,
@@ -87,13 +118,5 @@ class AshService {
 			'intervalStart' : start,
 			'intervalEnd' : end
 		]
-	}
-
-	private List<List<ActiveSession>> topActivity(List<ActiveSession> activeSessions, String groupKey) {
-		Map<Object, List<ActiveSession>> groups = activeSessions.groupBy { it[groupKey] }
-		List<List<ActiveSession>> sortedGroups = groups.values().sort { List a, List b ->
-			b.size() <=> a.size()
-		}
-		return (sortedGroups.size() > 10) ? sortedGroups[0..9] : sortedGroups
 	}
 }
