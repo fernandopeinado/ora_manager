@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service
 
 import br.com.cas10.oraman.agent.AshAgent
 import br.com.cas10.oraman.analitics.AshSnapshot
+import br.com.cas10.oraman.analitics.Snapshot
 
 @Service
 @Log4j
@@ -61,9 +62,67 @@ class AshArchive {
 		}
 	}
 
+	Map getArchivedData(int year, int month, int dayOfMonth, int hourOfDay) {
+		Date date = new GregorianCalendar(year, month - 1, dayOfMonth, hourOfDay, 0).getTime()
+		File inFile = new File(archiveDirectory, date.format(FILENAME_DATE_PATTERN))
+		if (inFile.exists()) {
+			try {
+				return inFile.withObjectInputStream { ObjectInputStream is ->
+					ArchiveFileIterator iterator = new ArchiveFileIterator(is)
+					Map<String, Object> data = (Map<String, Object>) ['snapshots' : iterator.snapshots]
+					data << service.intervalData(iterator, Long.MIN_VALUE, Long.MAX_VALUE)
+					data.intervalStart = iterator.snapshots ? iterator.snapshots[0].timestamp : null
+					data.intervalEnd = iterator.snapshots ? iterator.snapshots[-1].timestamp : null
+					return data
+				}
+			} catch (Exception e) {
+				log.error('Failed to load archived data', e)
+			}
+		}
+		return ['snapshots' : [], 'topSql' : [], 'topSessions' : [], 'intervalStart' : null, 'intervalEnd' : null]
+	}
+
 	private String getArchiveDirectory() {
 		File dir = new File(System.getProperty('java.io.tmpdir'), 'oraman')
 		dir.mkdir()
 		return dir.getAbsolutePath()
+	}
+
+	private static class ArchiveFileIterator implements Iterator<AshSnapshot> {
+
+		final List<Snapshot> snapshots = []
+		final ObjectInputStream is
+		int counter
+
+		ArchiveFileIterator(ObjectInputStream is) {
+			this.is = is
+			this.counter = is.readInt()
+		}
+
+		@Override
+		boolean hasNext() {
+			counter > 0
+		}
+
+		@Override
+		AshSnapshot next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException()
+			}
+			counter--
+			AshSnapshot original = (AshSnapshot) is.readObject()
+
+			Snapshot copy = new Snapshot()
+			copy.timestamp = original.timestamp
+			copy.observations << original.observations
+			snapshots.add(copy)
+
+			return original
+		}
+
+		@Override
+		void remove() {
+			throw new UnsupportedOperationException()
+		}
 	}
 }

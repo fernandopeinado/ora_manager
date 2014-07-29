@@ -5,14 +5,16 @@ import groovy.transform.CompileStatic
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 
-import br.com.cas10.oraman.analitics.AshSnapshot
 import br.com.cas10.oraman.analitics.SessionActivity
+import br.com.cas10.oraman.analitics.Snapshot
 import br.com.cas10.oraman.analitics.SqlActivity
+import br.com.cas10.oraman.service.AshArchive
 import br.com.cas10.oraman.service.AshService
 import br.com.cas10.oraman.service.OracleService
 
@@ -20,6 +22,8 @@ import br.com.cas10.oraman.service.OracleService
 @CompileStatic
 class AshController {
 
+	@Autowired
+	private AshArchive ashArchive
 	@Autowired
 	private AshService ashService
 	@Autowired
@@ -29,46 +33,48 @@ class AshController {
 	@ResponseBody String ash() {
 		Map data = ashService.getData()
 		Map response = [:]
-
-		List<AshSnapshot> snapshots = (List<AshSnapshot>) data.snapshots
-		List<String> aasKeys = Collections.emptyList()
-		if (snapshots) {
-			aasKeys =  snapshots[0].observations.keySet().toList()
-		}
-
-		Map averageActiveSessions = [
-			'cpuCores' : oracleService.cpuCores,
-			'cpuThreads' : oracleService.cpuThreads,
-			'keys' : aasKeys,
-			'data' : snapshots.collect { AshSnapshot snapshot ->
-				((List<Object>) [snapshot.timestamp]) << (aasKeys.collect() { String key -> snapshot.observations[key] })
-			}
-		]
-		response.averageActiveSessions = averageActiveSessions
-
-		response.topSql = convertSql((List<SqlActivity>) data.topSql)
-		response.topSessions = convertSessions((List<SessionActivity>) data.topSessions)
-		response.intervalStart = data.intervalStart
-		response.intervalEnd = data.intervalEnd
-
+		putAasData(data, response)
+		putIntervalData(data, response)
 		return new JsonBuilder(response).toString()
+	}
+
+	@RequestMapping(value = '/ash/ash-archive/{year}/{month}/{dayOfMonth}/{hourOfDay}', method = RequestMethod.GET)
+	@ResponseBody String ashArchive(@PathVariable('year') Integer year, @PathVariable('month') Integer month,
+			@PathVariable('dayOfMonth') Integer dayOfMonth, @PathVariable('hourOfDay') Integer hourOfDay) {
+		Map data = ashArchive.getArchivedData(year, month, dayOfMonth, hourOfDay)
+		Map response = [:]
+		putAasData(data, response)
+		putIntervalData(data, response)
+		return new JsonBuilder(response).toString();
 	}
 
 	@RequestMapping(value = '/ash/ash-interval', method = RequestMethod.GET)
 	@ResponseBody String ashInterval(@RequestParam("start") Long start, @RequestParam("end") Long end) {
 		Map data = ashService.getIntervalData(start, end)
-
 		Map response = [:]
-		response.topSql = convertSql((List<SqlActivity>) data.topSql)
-		response.topSessions = convertSessions((List<SessionActivity>) data.topSessions)
-		response.intervalStart = data.intervalStart
-		response.intervalEnd = data.intervalEnd
-
+		putIntervalData(data, response)
 		return new JsonBuilder(response).toString()
 	}
 
-	private List<Map> convertSql(List<SqlActivity> topSql) {
-		return topSql.collect { SqlActivity it ->
+	private void putAasData(Map data, Map response) {
+		List<Snapshot> snapshots = (List<Snapshot>) data.snapshots
+		List<String> aasKeys = Collections.emptyList()
+		if (snapshots) {
+			aasKeys =  snapshots.first().observations.keySet().toList()
+		}
+		Map averageActiveSessions = [
+			'cpuCores' : oracleService.cpuCores,
+			'cpuThreads' : oracleService.cpuThreads,
+			'keys' : aasKeys,
+			'data' : snapshots.collect { Snapshot snapshot ->
+				((List<Object>) [snapshot.timestamp]) << (aasKeys.collect() { String key -> snapshot.observations[key] })
+			}
+		]
+		response.averageActiveSessions = averageActiveSessions
+	}
+
+	private void putIntervalData(Map data, Map response) {
+		response.topSql = data.topSql.collect { SqlActivity it ->
 			[
 				'sqlId' : it.sqlId ?: 'Unknown',
 				'sqlText' : it.sqlText ?: 'Unavailable',
@@ -78,10 +84,7 @@ class AshController {
 				'activityByWaitClass' : it.activityByWaitClass
 			]
 		}
-	}
-
-	private List<Map> convertSessions(List<SessionActivity> topSessions) {
-		return topSessions.collect { SessionActivity it ->
+		response.topSessions = data.topSessions.collect { SessionActivity it ->
 			[
 				'sessionId' : it.sessionId,
 				'serialNumber' : it.serialNumber,
@@ -92,5 +95,7 @@ class AshController {
 				'activityByWaitClass' : it.activityByWaitClass
 			]
 		}
+		response.intervalStart = data.intervalStart
+		response.intervalEnd = data.intervalEnd
 	}
 }

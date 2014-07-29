@@ -68,17 +68,27 @@
 
 		function destroyPlot(plot) {
 			// unbind events: jqplot pull request #68
-			for (e in $._data(plot.target[0], 'events')) {
+			for ( var e in $._data(plot.target[0], 'events')) {
 				plot.target.unbind(e);
 			}
 			plot.destroy();
+		}
+
+		function destroyAllPlots($scope) {
+			if ($scope.plots) {
+				for ( var targetId in $scope.plots) {
+					destroyPlot($scope.plots[targetId]);
+				}
+				delete $scope.plots;
+			}
 		}
 
 		return {
 			transform : transform,
 			buildOptions : buildOptions,
 			plot : plot,
-			destroyPlot : destroyPlot
+			destroyPlot : destroyPlot,
+			destroyAllPlots : destroyAllPlots
 		};
 	});
 
