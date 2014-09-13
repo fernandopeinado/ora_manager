@@ -76,12 +76,6 @@ class OracleService {
     return result
   }
 
-  String getSqlText(String sqlId) {
-    String query = 'select sql_text	from v$sql where sql_id = :id and rownum < 2'
-    List<String> result = jdbc.queryForList(query, ['id' : sqlId], String.class)
-    return result ? result.first() : null
-  }
-
   Map getSession(Long sid, Long serialNumber) {
     String query = 'select username, program from v$session where sid = :sid and serial# = :serialNumber'
     List<Map> result = jdbc.queryForList(query, ['sid' : sid, 'serialNumber' : serialNumber])

@@ -55,72 +55,6 @@
 							<div class="row">
 								<div class="col-md-4">
 									<table class="table table-bordered table-condensed">
-										<caption>Cursors</caption>
-										<tr>
-											<th>Child Cursors</th>
-											<td>{{plan.cursors}}</td>
-										</tr>
-										<tr>
-											<th>Parse Calls</th>
-											<td>{{plan.parseCalls}}</td>
-										</tr>
-										<tr>
-											<th>Invalidations</th>
-											<td>{{plan.invalidations}}</td>
-										</tr>
-										<tr>
-											<th>First Load Time</th>
-											<td>{{plan.firstLoadTime}}</td>
-										</tr>
-										<tr>
-											<th>Last Load Time</th>
-											<td>{{plan.lastLoadTime}}</td>
-										</tr>
-									</table>
-								</div>
-								<div class="col-md-4">
-									<table class="table table-bordered table-condensed">
-										<caption>Executions</caption>
-										<tr>
-											<td></td>
-											<th>Total</th>
-											<th>Per Execution</th>
-										</tr>
-										<tr>
-											<th>Executions</th>
-											<td>{{plan.executions}}</td>
-											<td>{{plan.executions | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Rows Processed</th>
-											<td>{{plan.rowsProcessed}}</td>
-											<td>{{plan.rowsProcessed |
-												perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Disk Reads</th>
-											<td>{{plan.diskReads}}</td>
-											<td>{{plan.diskReads | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Direct Writes</th>
-											<td>{{plan.directWrites}}</td>
-											<td>{{plan.directWrites | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Buffer Gets</th>
-											<td>{{plan.bufferGets}}</td>
-											<td>{{plan.bufferGets | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Fetches</th>
-											<td>{{plan.fetches}}</td>
-											<td>{{plan.fetches | perExecution:plan.executions}}</td>
-										</tr>
-									</table>
-								</div>
-								<div class="col-md-4">
-									<table class="table table-bordered table-condensed">
 										<caption>Activity (seconds)</caption>
 										<tr>
 											<th>Elapsed Time</th>
@@ -152,6 +86,69 @@
 													ng-style="element.style"
 													ng-repeat="element in plan.activityBar">&nbsp;</div>
 											</td>
+										</tr>
+									</table>
+								</div>
+								<div class="col-md-4">
+									<table class="table table-bordered table-condensed">
+										<caption>Executions</caption>
+										<tr>
+											<td></td>
+											<th>Total</th>
+											<th>Per Execution</th>
+										</tr>
+										<tr>
+											<th>Parse Calls</th>
+											<td>{{plan.parseCalls}}</td>
+											<td>{{plan.parseCalls | perExecution:plan.executions}}</td>
+										</tr>
+										<tr>
+											<th>Executions</th>
+											<td>{{plan.executions}}</td>
+											<td>{{plan.executions | perExecution:plan.executions}}</td>
+										</tr>
+										<tr>
+											<th>Fetches</th>
+											<td>{{plan.fetches}}</td>
+											<td>{{plan.fetches | perExecution:plan.executions}}</td>
+										</tr>
+										<tr>
+											<th>Rows Processed</th>
+											<td>{{plan.rowsProcessed}}</td>
+											<td>{{plan.rowsProcessed |
+												perExecution:plan.executions}}</td>
+										</tr>
+										<tr>
+											<th>Buffer Gets</th>
+											<td>{{plan.bufferGets}}</td>
+											<td>{{plan.bufferGets | perExecution:plan.executions}}</td>
+										</tr>
+										<tr>
+											<th>Disk Reads</th>
+											<td>{{plan.diskReads}}</td>
+											<td>{{plan.diskReads | perExecution:plan.executions}}</td>
+										</tr>
+										<tr>
+											<th>Direct Writes</th>
+											<td>{{plan.directWrites}}</td>
+											<td>{{plan.directWrites | perExecution:plan.executions}}</td>
+										</tr>
+									</table>
+								</div>
+								<div class="col-md-4">
+									<table class="table table-bordered table-condensed">
+										<caption>Other Statistics</caption>
+										<tr>
+											<th>Child Cursors</th>
+											<td>{{plan.childCursors}}</td>
+										</tr>
+										<tr>
+											<th>Loads</th>
+											<td>{{plan.loads}}</td>
+										</tr>
+										<tr>
+											<th>Invalidations</th>
+											<td>{{plan.invalidations}}</td>
 										</tr>
 									</table>
 								</div>
