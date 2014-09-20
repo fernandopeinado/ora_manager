@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 import br.com.cas10.oraman.agent.AshAgent
-import br.com.cas10.oraman.analitics.ActiveSession
 import br.com.cas10.oraman.analitics.AshSnapshot
 import br.com.cas10.oraman.analitics.SessionActivity
 import br.com.cas10.oraman.analitics.SqlActivity
 import br.com.cas10.oraman.oracle.Cursors
+import br.com.cas10.oraman.oracle.data.ActiveSession
 
 @Component
 @Transactional(readOnly = true)
