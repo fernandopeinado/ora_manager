@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component
 
 import br.com.cas10.oraman.analitics.AshSnapshot
 import br.com.cas10.oraman.oracle.Sessions
+import br.com.cas10.oraman.oracle.Waits
 import br.com.cas10.oraman.oracle.data.ActiveSession
 import br.com.cas10.oraman.service.AshArchive
 
@@ -29,6 +30,8 @@ class AshAgent extends Agent {
   private AshArchive ashArchive
   @Autowired
   private Sessions sessions
+  @Autowired
+  private Waits waits
 
   AshAgent() {
     super(SAMPLING_INTERVAL, storageSize())
@@ -43,7 +46,7 @@ class AshAgent extends Agent {
     synchronized(samples) {
       samples.add(sample)
       if (samples.size() == SNAPSHOT_SAMPLES) {
-        snapshot = new AshSnapshot(samples, timestamp)
+        snapshot = new AshSnapshot(samples, timestamp, waits.getWaitClasses())
         samples = []
       }
     }

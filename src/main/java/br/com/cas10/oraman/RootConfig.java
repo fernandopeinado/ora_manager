@@ -23,7 +23,6 @@ import br.com.cas10.oraman.service.ServiceConfig;
 class RootConfig {
 
   @Bean
-  @Qualifier("monitoring")
   DataSource monitoringDataSource() throws NamingException {
     return new JndiTemplate().lookup("java:comp/env/jdbc/oraman", DataSource.class);
   }
