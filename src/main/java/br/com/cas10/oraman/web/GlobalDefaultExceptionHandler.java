@@ -1,4 +1,4 @@
-package br.com.cas10.oraman;
+package br.com.cas10.oraman.web;
 
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.ControllerAdvice;

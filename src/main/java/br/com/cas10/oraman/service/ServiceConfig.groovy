@@ -7,12 +7,11 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 
-import br.com.cas10.oraman.agent.AgentConfig
 import br.com.cas10.oraman.worker.WorkerConfig
 
 @Configuration
 @ComponentScan(basePackages=['br.com.cas10.oraman.service'])
-@Import([ AgentConfig, WorkerConfig])
+@Import(WorkerConfig)
 class ServiceConfig {
 
   @Bean
