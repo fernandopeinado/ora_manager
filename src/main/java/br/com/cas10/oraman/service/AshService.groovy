@@ -2,13 +2,10 @@ package br.com.cas10.oraman.service
 
 import groovy.transform.CompileStatic
 
-import java.util.concurrent.TimeUnit
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
-import br.com.cas10.oraman.agent.AshAgent
 import br.com.cas10.oraman.analitics.AshSnapshot
 import br.com.cas10.oraman.analitics.SessionActivity
 import br.com.cas10.oraman.analitics.SqlActivity
@@ -20,46 +17,8 @@ import br.com.cas10.oraman.oracle.data.ActiveSession
 @CompileStatic
 class AshService {
 
-  private static final long FIVE_MINUTES = TimeUnit.MINUTES.toMillis(5)
-
-  @Autowired
-  private AshAgent agent
   @Autowired
   private Cursors cursors
-
-  Map getData() {
-    List<AshSnapshot> agentData = agent.data
-    long lastTimestamp = agentData ? agentData[-1].timestamp : 0
-
-    Map<String, Object> result = (Map<String, Object>) ['snapshots' : agentData]
-    result << intervalData(agentData.iterator(), lastTimestamp - FIVE_MINUTES, lastTimestamp)
-    return result
-  }
-
-  Map getIntervalData(long start, long end) {
-    List<AshSnapshot> agentData = agent.data
-    return intervalData(agentData.iterator(), start, end)
-  }
-
-  List<Map> getSqlData(String sqlId) {
-    List<AshSnapshot> agentData = agent.data
-
-    List<ActiveSession> activeSessions = []
-    for (snapshot in agentData) {
-      for (activeSession in snapshot.activeSessions) {
-        if (activeSession.sqlId == sqlId) {
-          activeSessions.add(activeSession)
-        }
-      }
-    }
-
-    Map<String, List<ActiveSession>> groups = activeSessions.groupBy { ActiveSession it -> it.event }
-    List<List<ActiveSession>> sortedGroups = groups.values().sort { List a, List b -> b.size() <=> a.size() }
-    return sortedGroups.collect { List<ActiveSession> it ->
-      ActiveSession first = it.first()
-      return ['event' : first.event, 'waitClass': first.waitClass, 'activity' : it.size()]
-    }
-  }
 
   Map intervalData(Iterator<AshSnapshot> snapshots, long start, long end) {
     int totalSamples = 0

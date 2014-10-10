@@ -7,14 +7,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseBody
 
+import br.com.cas10.oraman.agent.ash.Ash
 import br.com.cas10.oraman.oracle.Cursors
-import br.com.cas10.oraman.service.AshService
 
 @Controller
 class SqlController {
 
   @Autowired
-  private AshService ashService
+  private Ash ash
   @Autowired
   private Cursors cursors
 
@@ -25,7 +25,9 @@ class SqlController {
     }
     return [
       'fullText' : cursors.getSqlFullText(sqlId),
-      'activity' : ashService.getSqlData(sqlId),
+      'activity' : ash.getSqlWaitEvents(sqlId).collect {
+        ['event' : it.event, 'waitClass' : it.waitClass, 'activity' : it.activity]
+      },
       'executionPlans' : cursors.getExecutionPlans(sqlId)
     ]
   }

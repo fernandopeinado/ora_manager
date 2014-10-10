@@ -1,0 +1,53 @@
+package br.com.cas10.oraman.agent.ash;
+
+import static com.google.common.collect.Multisets.unmodifiableMultiset;
+import br.com.cas10.oraman.oracle.data.ActiveSession;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+
+public class SqlActivity {
+
+  public final String sqlId;
+  public final String sqlText;
+  public final int activity;
+  public final double averageActiveSessions;
+  public final double percentageTotalActivity;
+  public final Multiset<String> activityByWaitClass;
+
+  private SqlActivity(String sqlId, String sqlText, Multiset<String> activityByWaitClass,
+      int totalActivity, int totalSamples) {
+    this.sqlId = sqlId;
+    this.sqlText = sqlText;
+    this.activity = activityByWaitClass.size();
+    this.averageActiveSessions = (double) activity / totalSamples;
+    this.percentageTotalActivity = (activity * 100d) / totalActivity;
+    this.activityByWaitClass = unmodifiableMultiset(activityByWaitClass);
+  }
+
+  public static class Builder {
+
+    private final String sqlId;
+    private final Multiset<String> activityByWaitClass = HashMultiset.create();
+
+    public Builder(String sqlId) {
+      this.sqlId = sqlId;
+    }
+
+    public String getSqlId() {
+      return sqlId;
+    }
+
+    public int getActivity() {
+      return activityByWaitClass.size();
+    }
+
+    public void add(ActiveSession activeSession) {
+      activityByWaitClass.add(activeSession.waitClass);
+    }
+
+    public SqlActivity build(String sqlText, int totalActivity, int totalSamples) {
+      return new SqlActivity(sqlId, sqlText, activityByWaitClass, totalActivity, totalSamples);
+    }
+  }
+}

@@ -13,7 +13,7 @@ import br.com.cas10.oraman.oracle.Waits
 import br.com.cas10.oraman.oracle.data.ActiveSession
 import br.com.cas10.oraman.service.AshArchive
 
-@Component
+@Component('groovyAshAgent')
 @CompileStatic
 class AshAgent extends Agent {
 
