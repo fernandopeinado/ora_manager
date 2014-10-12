@@ -34,6 +34,8 @@ class AshAgent {
   private static final String CPU_CLASS = "CPU + CPU Wait";
 
   @Autowired
+  private AshArchive archive;
+  @Autowired
   private Sessions sessions;
   @Autowired
   @Qualifier("ash")
@@ -70,9 +72,12 @@ class AshAgent {
       activeSessions.addAll(sample);
       samples++;
       if (samples == SNAPSHOT_SAMPLES) {
-        snapshots.add(new AshSnapshot(timestamp, activeSessions, samples));
+        AshSnapshot snapshot = new AshSnapshot(timestamp, activeSessions, samples);
+        snapshots.add(snapshot);
         activeSessions = new ArrayList<>();
         samples = 0;
+
+        archive.archiveSnapshot(snapshot);
       }
     }
 

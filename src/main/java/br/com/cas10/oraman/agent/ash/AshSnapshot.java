@@ -1,5 +1,6 @@
 package br.com.cas10.oraman.agent.ash;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,9 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 
-class AshSnapshot {
+class AshSnapshot implements Serializable {
+
+  private static final long serialVersionUID = 5152182232054887467L;
 
   final long timestamp;
   final List<ActiveSession> activeSessions;

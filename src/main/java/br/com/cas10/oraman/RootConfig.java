@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -17,11 +16,9 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import br.com.cas10.oraman.service.ServiceConfig;
-
 @Configuration
-@Import(ServiceConfig.class)
-@ComponentScan({"br.com.cas10.oraman.agent", "br.com.cas10.oraman.oracle"})
+@ComponentScan({"br.com.cas10.oraman.agent", "br.com.cas10.oraman.oracle",
+    "br.com.cas10.oraman.service"})
 @EnableTransactionManagement(proxyTargetClass = true)
 class RootConfig {
 
@@ -61,7 +58,7 @@ class RootConfig {
   @Primary
   TaskScheduler defaultTaskScheduler() {
     ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
-    taskScheduler.setPoolSize(1);
+    taskScheduler.setPoolSize(2);
     return taskScheduler;
   }
 }

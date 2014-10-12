@@ -3,6 +3,10 @@ package br.com.cas10.oraman.agent.ash;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.groupingBy;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.cas10.oraman.agent.ash.AshArchive.ArchivedSnapshotsIterator;
 import br.com.cas10.oraman.oracle.Cursors;
 import br.com.cas10.oraman.oracle.data.ActiveSession;
 import br.com.cas10.oraman.util.Snapshot;
@@ -27,6 +32,8 @@ public class Ash {
 
   @Autowired
   private AshAgent agent;
+  @Autowired
+  private AshArchive archive;
   @Autowired
   private Cursors cursors;
 
@@ -47,16 +54,59 @@ public class Ash {
   }
 
   /**
+   * Returns the activity data for the specified interval.
+   * <p>
+   * The activity data is taken from the ASH snapshots currently in memory whose timestamp is in the
+   * interval {@code [start, end]}. The returned object contains
+   * <ul>
+   * <li>snapshots with the average active sessions by wait class,</li>
+   * <li>top 10 SQL statements in the interval,</li>
+   * <li>top 10 sessions in the interval.</li>
+   * </ul>
+   *
    * @param start interval start.
    * @param end interval end.
-   * @return snapshots with the average active sessions by wait class, calculated from the ASH
-   *         snapshots currently in memory whose timestamp is in the interval {@code [start, end]};
-   *         top 10 SQL statements and sessions of the selected snapshots.
+   * @return the activity data for the specified interval.
    */
   @Transactional(readOnly = true)
   public IntervalActivity getIntervalActivity(long start, long end) {
     List<AshSnapshot> snapshots = agent.getSnapshots();
     return intervalActivity(snapshots.iterator(), start, end);
+  }
+
+
+  /**
+   * Loads and returns from the disk archive the activity data for the 1-hour interval
+   * {@code year/month/dayOfMonth [hour, hour + 1)}.
+   * <p>
+   * The returned object contains
+   * <ul>
+   * <li>snapshots with the average active sessions by wait class,</li>
+   * <li>top 10 SQL statements in the interval,</li>
+   * <li>top 10 sessions in the interval.</li>
+   * </ul>
+   *
+   * @param year the year.
+   * @param month the month-of-year, from 1 to 12.
+   * @param dayOfMonth the day-of-month, from 1 to 31.
+   * @param hour the start of the 1-hour interval, from 0 to 23.
+   * @return the activity data for the specified interval.
+   */
+  @Transactional(readOnly = true)
+  public IntervalActivity getIntervalActivity(int year, int month, int dayOfMonth, int hour) {
+    ZonedDateTime startDateTime =
+        LocalDateTime.of(year, month, dayOfMonth, hour, 0).atZone(ZoneId.systemDefault());
+    ZonedDateTime endDateTime = startDateTime.plusHours(1);
+    if (endDateTime.getHour() == hour) {
+      endDateTime = endDateTime.plusHours(1); // daylight saving time
+    }
+    try (ArchivedSnapshotsIterator it = archive.getArchivedSnapshots(year, month, dayOfMonth, hour)) {
+      long start = startDateTime.toInstant().toEpochMilli();
+      long end = endDateTime.toInstant().toEpochMilli() - 1;
+      return intervalActivity(it, start, end);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private IntervalActivity intervalActivity(Iterator<AshSnapshot> snapshots, long start, long end) {

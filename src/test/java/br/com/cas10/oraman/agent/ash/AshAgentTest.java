@@ -30,6 +30,7 @@ public class AshAgentTest {
     when(sessions.getActiveSessions()).thenReturn(activeSessionsList);
 
     AshAgent agent = new AshAgent();
+    setField(agent, "archive", mock(AshArchive.class));
     setField(agent, "sessions", sessions);
 
     for (int i = 0; i < SNAPSHOT_SAMPLES; i++) {
