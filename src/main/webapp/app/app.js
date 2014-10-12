@@ -1,7 +1,7 @@
 (function() {
 
 	var mainApp = angular.module('mainApp', [ 'home', 'ash', 'ash-archive',
-			'sql', 'session', 'system', 'ngRoute' ]);
+			'sql', 'session', 'ngRoute' ]);
 
 	mainApp.config([ '$routeProvider', function($routeProvider) {
 		$routeProvider.when('/', {
@@ -21,9 +21,6 @@
 		}).when('/session', {
 			templateUrl : 'app/session/session.html',
 			controller : 'SessionCtrl'
-		}).when('/system', {
-			templateUrl : 'app/system/system.html',
-			controller : 'SystemCtrl'
 		}).otherwise({
 			redirectTo : '/'
 		});

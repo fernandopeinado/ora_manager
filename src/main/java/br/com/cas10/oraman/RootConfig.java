@@ -17,8 +17,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@ComponentScan({"br.com.cas10.oraman.agent", "br.com.cas10.oraman.oracle",
-    "br.com.cas10.oraman.service"})
+@ComponentScan({"br.com.cas10.oraman.agent", "br.com.cas10.oraman.oracle"})
 @EnableTransactionManagement(proxyTargetClass = true)
 class RootConfig {
 
