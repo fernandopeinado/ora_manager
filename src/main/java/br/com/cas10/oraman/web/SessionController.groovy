@@ -23,13 +23,50 @@ class SessionController {
 	private OracleService oracleService
 
 	@RequestMapping(value = '/session', method = RequestMethod.GET)
-	@ResponseBody String session(@RequestParam('sid') Long sid, @RequestParam('serialNumber') Long serialNumber) {
-		Map data = oracleService.getSession(sid, serialNumber)
-		Map response = (data == null) ? null : [
-			'user' : data.username,
-			'program' : data.program,
+	@ResponseBody String session(@RequestParam('sid') Long sid, @RequestParam(value = 'serialNumber', required = false) Long serialNumber) {
+		Map session = null
+		List<Map> sessions = []
+
+		if (serialNumber == null) {
+			sessions = oracleService.getSessions(sid)
+			if (sessions.size() == 1) {
+				session = sessions.first()
+			}
+		} else {
+			session = oracleService.getSession(sid, serialNumber)
+		}
+
+		String status
+		if (session) {
+			status = 'sessionFound'
+		} else if (sessions) {
+			status = 'multipleSessionsFound'
+		} else {
+			status = 'sessionNotFound'
+		}
+
+		Map response = [
+			'status' : status,
 			'sessionTerminationEnabled' : adminService.sessionTerminationEnabled()
 		]
+		if (session) {
+			response.session = [
+				'sid' : session.sid,
+				'serialNumber' : session['serial#'],
+				'user' : session.username,
+				'program' : session.program,
+			]
+		} else if (sessions) {
+			response.sessions = sessions.collect {
+				[
+					'sid' : it.sid,
+					'serialNumber' : it['serial#'],
+					'user' : it.username,
+					'program': it.program
+				]
+			}
+		}
+
 		return new JsonBuilder(response).toString()
 	}
 

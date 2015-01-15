@@ -108,8 +108,27 @@ class OracleService {
 	}
 
 	Map getSession(Long sid, Long serialNumber) {
-		String query = 'select username, program from v$session where sid = :sid and serial# = :serialNumber'
+		String query = '''
+			select
+				sid,
+				serial#,
+				username,
+				program
+			from v$session where sid = :sid and serial# = :serialNumber
+			'''
 		List<Map> result = jdbc.queryForList(query, ['sid' : sid, 'serialNumber' : serialNumber])
 		return result ? result.first() : null
+	}
+
+	List<Map> getSessions(Long sid) {
+		String query = '''
+			select
+				sid,
+				serial#,
+				username,
+				program
+			from v$session where sid = :sid
+			'''
+		return jdbc.queryForList(query, ['sid' : sid]);
 	}
 }

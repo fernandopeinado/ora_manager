@@ -5,28 +5,50 @@
 				<div class="alert" ng-class="messageClass">{{message}}</div>
 			</div>
 			<div ng-show="!message">
-				<table class="table table-bordered table-condensed">
-					<thead>
-						<tr>
-							<th>SID</th>
-							<th>Serial Number</th>
-							<th>User</th>
-							<th>Program</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>{{sid}}</td>
-							<td>{{serialNumber}}</td>
-							<td>{{user}}</td>
-							<td>{{program}}</td>
-						</tr>
-					</tbody>
-				</table>
-				<button type="button" class="btn btn-danger"
-					ng-class="sessionTerminationEnabled ? '' : 'disabled'"
-					data-toggle="modal" data-target="#kill-session-modal">Kill
-					Session</button>
+				<div ng-show="status == 'sessionFound'">
+					<table class="table table-bordered table-condensed">
+						<thead>
+							<tr>
+								<th>SID</th>
+								<th>Serial Number</th>
+								<th>User</th>
+								<th>Program</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>{{session.sid}}</td>
+								<td>{{session.serialNumber}}</td>
+								<td>{{session.user}}</td>
+								<td>{{session.program}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<button type="button" class="btn btn-danger"
+						ng-class="sessionTerminationEnabled ? '' : 'disabled'"
+						data-toggle="modal" data-target="#kill-session-modal">Kill
+						Session</button>
+				</div>
+				<div ng-show="status == 'multipleSessionsFound'">
+					<h4>Multiple sessions found (SID {{sid}})</h4>
+					<table class="table table-bordered table-condensed">
+						<thead>
+							<tr>
+								<th>Serial Number</th>
+								<th>User</th>
+								<th>Program</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="s in sessions">
+								<td><a
+									href="#session?sid={{s.sid}}&serialNumber={{s.serialNumber}}">{{s.serialNumber}}</a></td>
+								<td>{{s.user}}</td>
+								<td>{{s.program}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 	</div>
