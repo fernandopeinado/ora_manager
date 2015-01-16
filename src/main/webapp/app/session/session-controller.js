@@ -19,6 +19,7 @@
 
 		$http.get('ws/session?' + params).success(function(json) {
 			$scope.status = json.status;
+			$scope.instanceNumber = json.instanceNumber;
 			if (json.status == 'sessionFound') {
 				$scope.session = json.session;
 			} else if (json.status == 'multipleSessionsFound') {

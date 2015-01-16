@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.ResponseStatus
 
+import br.com.cas10.oraman.oracle.LockMode
 import br.com.cas10.oraman.service.AdminService
 import br.com.cas10.oraman.service.OracleService
 
@@ -47,14 +48,34 @@ class SessionController {
 
 		Map response = [
 			'status' : status,
+			'instanceNumber' : oracleService.instanceNumber,
 			'sessionTerminationEnabled' : adminService.sessionTerminationEnabled()
 		]
 		if (session) {
+			Map blockingSession = null
+			if (session.blocking_session_status == 'VALID') {
+				blockingSession = oracleService.getGlobalSession((Long) session.blocking_instance, (Long) session.blocking_session)
+			} else {
+				blockingSession = [:]
+			}
 			response.session = [
 				'sid' : session.sid,
 				'serialNumber' : session['serial#'],
 				'user' : session.username,
 				'program' : session.program,
+				'blockingSessionStatus' : session.blocking_session_status,
+				'blockingInstance' : session.blocking_instance,
+				'blockingSession' : session.blocking_session,
+				'blockingUser' :blockingSession.username,
+				'blockingProgram' : blockingSession.program,
+				'lockedObjects' : oracleService.getLockedObjects(sid).collect {
+					[
+						'objectOwner' : it.owner,
+						'objectName' : it.object_name,
+						'objectType' : it.object_type,
+						'lockMode' : LockMode.valueOf((int) it.locked_mode).label
+					]
+				}
 			]
 		} else if (sessions) {
 			response.sessions = sessions.collect {

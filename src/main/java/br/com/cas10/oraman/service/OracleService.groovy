@@ -10,6 +10,7 @@ import javax.sql.DataSource
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.dao.support.DataAccessUtils
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
@@ -24,6 +25,7 @@ class OracleService {
 
 	private NamedParameterJdbcTemplate jdbc
 
+	int instanceNumber
 	int cpuCores
 	int cpuThreads
 
@@ -35,6 +37,9 @@ class OracleService {
 
 	@PostConstruct
 	void init() {
+		String instanceNumberQuery = "select instance_number from v\$instance"
+		instanceNumber = jdbc.queryForObject(instanceNumberQuery, Collections.emptyMap(), Integer.class)
+
 		String xeQuery = "select count(1) from v\$version where banner like 'Oracle Database%Express Edition%'"
 		int isXe = jdbc.queryForObject(xeQuery, Collections.emptyMap(), Integer.class)
 		if (isXe) {
@@ -113,7 +118,10 @@ class OracleService {
 				sid,
 				serial#,
 				username,
-				program
+				program,
+				blocking_session_status,
+				blocking_instance,
+				blocking_session
 			from v$session where sid = :sid and serial# = :serialNumber
 			'''
 		List<Map> result = jdbc.queryForList(query, ['sid' : sid, 'serialNumber' : serialNumber])
@@ -126,9 +134,28 @@ class OracleService {
 				sid,
 				serial#,
 				username,
-				program
+				program,
+				blocking_session_status,
+				blocking_instance,
+				blocking_session
 			from v$session where sid = :sid
 			'''
-		return jdbc.queryForList(query, ['sid' : sid]);
+		return jdbc.queryForList(query, ['sid' : sid])
+	}
+
+	Map getGlobalSession(Long instanceNumber, Long sid) {
+		String query = "select username, program from gv\$session where inst_id = :instance and sid = :sid"
+		return DataAccessUtils.requiredSingleResult(jdbc.queryForList(query, ['instance': instanceNumber, 'sid' : sid]))
+	}
+
+	List<Map> getLockedObjects(Long sid) {
+		String query = '''
+			select
+				o.owner, o.object_name, o.object_type, l.locked_mode
+			from v$locked_object l
+			inner join dba_objects o on l.object_id = o.object_id
+			where l.session_id = :sid
+			'''
+		return jdbc.queryForList(query, ['sid' : sid])
 	}
 }

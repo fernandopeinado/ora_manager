@@ -24,6 +24,54 @@
 							</tr>
 						</tbody>
 					</table>
+					<div ng-show="session.blockingSessionStatus == 'VALID'">
+						<div class="session-details-header">
+							<h4>Blocking Session</h4>
+						</div>
+						<table class="table table-bordered table-condensed">
+							<thead>
+								<tr>
+									<th>Instance</th>
+									<th>SID</th>
+									<th>User</th>
+									<th>Program</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>{{session.blockingInstance}}</td>
+									<td><a href="#session?sid={{session.blockingSession}}"
+										ng-show="session.blockingInstance == instanceNumber">{{session.blockingSession}}</a>
+										<span ng-show="session.blockingInstance != instanceNumber">{{session.blockingSession}}</span></td>
+									<td>{{session.blockingUser}}</td>
+									<td>{{session.blockingProgram}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div ng-show="session.lockedObjects">
+						<div class="session-details-header">
+							<h4>Locked Objects</h4>
+						</div>
+						<table class="table table-bordered table-condensed">
+							<thead>
+								<tr>
+									<th>Owner</th>
+									<th>Name</th>
+									<th>Type</th>
+									<th>Lock Mode</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="o in session.lockedObjects">
+									<td>{{o.objectOwner}}</td>
+									<td>{{o.objectName}}</td>
+									<td>{{o.objectType}}</td>
+									<td>{{o.lockMode}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 					<button type="button" class="btn btn-danger"
 						ng-class="sessionTerminationEnabled ? '' : 'disabled'"
 						data-toggle="modal" data-target="#kill-session-modal">Kill
