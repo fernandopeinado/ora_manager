@@ -50,6 +50,19 @@ public class Sessions {
   }
 
   @Transactional(readOnly = true)
+  public List<Session> getSessions(long sessionId) {
+    return jdbc.query("select serial#, username, program from v$session where sid = :sid",
+        ImmutableMap.of("sid", sessionId), (rs, rowNum) -> {
+          Session session = new Session();
+          session.sessionId = sessionId;
+          session.serialNumber = rs.getLong("serial#");
+          session.username = rs.getString("username");
+          session.program = rs.getString("program");
+          return session;
+        });
+  }
+
+  @Transactional(readOnly = true)
   public List<ActiveSession> getActiveSessions() {
     return jdbc.query(activeSessionsSql, (rs, rowNum) -> {
       ActiveSession s = new ActiveSession();
