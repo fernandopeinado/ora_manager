@@ -1,7 +1,5 @@
 package br.com.cas10.oraman.web.controller;
 
-import static java.util.stream.Collectors.toList;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import br.com.cas10.oraman.oracle.DatabaseSystem;
 import br.com.cas10.oraman.oracle.Sessions;
 import br.com.cas10.oraman.oracle.data.Session;
 
@@ -23,6 +22,8 @@ import com.google.common.collect.ImmutableList;
 @Controller
 class SessionController {
 
+  @Autowired
+  private DatabaseSystem system;
   @Autowired
   private Sessions sessions;
 
@@ -43,31 +44,16 @@ class SessionController {
     }
 
     Map<String, Object> response = new HashMap<>();
+    response.put("instanceNumber", system.getInstanceNumber());
     response.put("sessionTerminationEnabled", sessions.sessionTerminationEnabled());
 
     String result;
     if (session != null) {
       result = "sessionFound";
-
-      Map<String, Object> s = new HashMap<>();
-      s.put("sid", session.sessionId);
-      s.put("serialNumber", session.serialNumber);
-      s.put("user", session.username);
-      s.put("program", session.program);
-      response.put("session", s);
-
+      response.put("session", session);
     } else if (!candidates.isEmpty()) {
       result = "multipleSessionsFound";
-
-      response.put("candidates", candidates.stream().map(c -> {
-        Map<String, Object> s = new HashMap<>();
-        s.put("sid", c.sessionId);
-        s.put("serialNumber", c.serialNumber);
-        s.put("user", c.username);
-        s.put("program", c.program);
-        return s;
-      }).collect(toList()));
-
+      response.put("candidates", candidates);
     } else {
       result = "sessionNotFound";
     }

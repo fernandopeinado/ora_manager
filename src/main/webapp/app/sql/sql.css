@@ -6,11 +6,6 @@
 	border: 0;
 }
 
-.sql-details-header {
-	border-bottom: 1px solid #ddd;
-	margin-bottom: 10px;
-}
-
 .sql-statistics tr {
 	font-size: 13px;
 }

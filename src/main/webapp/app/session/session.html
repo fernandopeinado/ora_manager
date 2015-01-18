@@ -19,11 +19,61 @@
 							<tr>
 								<td>{{session.sid}}</td>
 								<td>{{session.serialNumber}}</td>
-								<td>{{session.user}}</td>
+								<td>{{session.username}}</td>
 								<td>{{session.program}}</td>
 							</tr>
 						</tbody>
 					</table>
+					<div ng-show="session.blockingSession">
+						<div class="oraman-details-header">
+							<h4>Blocking Session</h4>
+						</div>
+						<table class="table table-bordered table-condensed">
+							<thead>
+								<tr>
+									<th>Instance</th>
+									<th>SID</th>
+									<th>User</th>
+									<th>Program</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>{{session.blockingSession.instanceNumber}}</td>
+									<td><a href="#session?sid={{session.blockingSession.sid}}"
+										ng-show="session.blockingSession.instanceNumber == instanceNumber">{{session.blockingSession.sid}}</a>
+										<span
+										ng-show="session.blockingSession.instanceNumber != instanceNumber">{{session.blockingSession.sid}}</span>
+									</td>
+									<td>{{session.blockingSession.username}}</td>
+									<td>{{session.blockingSession.program}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div ng-show="session.lockedObjects">
+						<div class="oraman-details-header">
+							<h4>Locked Objects</h4>
+						</div>
+						<table class="table table-bordered table-condensed">
+							<thead>
+								<tr>
+									<th>Owner</th>
+									<th>Name</th>
+									<th>Type</th>
+									<th>Lock Mode</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="o in session.lockedObjects">
+									<td>{{o.owner}}</td>
+									<td>{{o.name}}</td>
+									<td>{{o.type}}</td>
+									<td>{{o.lockMode}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 					<button type="button" class="btn btn-danger"
 						ng-class="sessionTerminationEnabled ? '' : 'disabled'"
 						data-toggle="modal" data-target="#kill-session-modal">Kill
@@ -43,7 +93,7 @@
 							<tr ng-repeat="s in candidates">
 								<td><a
 									href="#session?sid={{s.sid}}&serialNumber={{s.serialNumber}}">{{s.serialNumber}}</a></td>
-								<td>{{s.user}}</td>
+								<td>{{s.username}}</td>
 								<td>{{s.program}}</td>
 							</tr>
 						</tbody>

@@ -12,3 +12,8 @@ td.jqplot-table-legend-swatch {
 	background-color: #777;
 	color: white;
 }
+
+.oraman-details-header {
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 10px;
+}

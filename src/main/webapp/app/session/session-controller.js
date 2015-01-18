@@ -18,6 +18,7 @@
 		});
 
 		$http.get('ws/session?' + params).success(function(json) {
+			$scope.instanceNumber = json.instanceNumber;
 			$scope.sessionTerminationEnabled = json.sessionTerminationEnabled;
 			$scope.result = json.result;
 			switch ($scope.result) {

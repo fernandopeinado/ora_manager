@@ -16,9 +16,14 @@ public class DatabaseSystem {
 
   private int cpuCores;
   private int cpuThreads;
+  private long instanceNumber;
 
   @PostConstruct
   private void init() {
+    instanceNumber =
+        jdbc.getJdbcOperations().queryForObject("select instance_number from v$instance",
+            Long.class);
+
     int xeQueryResult =
         jdbc.getJdbcOperations().queryForObject(
             "select count(1) from v$version where banner like 'Oracle Database%Express Edition%'",
@@ -56,5 +61,13 @@ public class DatabaseSystem {
    */
   public int getCpuThreads() {
     return cpuThreads;
+  }
+
+  /**
+   * @return the ID of the monitored instance, retrieved from {@code v$instance} (column
+   *         {@code INSTANCE_NUMBER}).
+   */
+  public long getInstanceNumber() {
+    return instanceNumber;
   }
 }
