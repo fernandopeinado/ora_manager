@@ -18,6 +18,7 @@
 		});
 
 		$http.get('ws/session?' + params).success(function(json) {
+			$scope.sessionTerminationEnabled = json.sessionTerminationEnabled;
 			$scope.status = json.status;
 			$scope.instanceNumber = json.instanceNumber;
 			if (json.status == 'sessionFound') {
@@ -30,6 +31,10 @@
 		});
 
 		$scope.killSession = function() {
+			var params = $.param({
+				sid : $scope.session.sid,
+				serialNumber : $scope.session.serialNumber
+			});
 			$http.post('ws/session/kill', params, {
 				headers : {
 					'Content-Type' : 'application/x-www-form-urlencoded'
