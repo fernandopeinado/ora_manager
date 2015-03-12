@@ -18,6 +18,7 @@
 				<thead>
 					<tr>
 						<th>SQL ID</th>
+						<th>Command</th>
 						<th colspan="2">Activity</th>
 						<th>AAS</th>
 					</tr>
@@ -27,6 +28,7 @@
 						<td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
 							<a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
 							ng-switch-default>{{sql.sqlId}}</a></td>
+						<td><span title="{{sql.sqlText}}">{{sql.command}}</span></td>
 						<td class="ash-activity-bar">
 							<div title="{{element.title}}" ng-style="element.style"
 								ng-repeat="element in sql.activityBar">&nbsp;</div>

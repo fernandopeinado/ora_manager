@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.cas10.oraman.agent.ash.AshArchive.ArchivedSnapshotsIterator;
 import br.com.cas10.oraman.oracle.Cursors;
 import br.com.cas10.oraman.oracle.data.ActiveSession;
+import br.com.cas10.oraman.oracle.data.Cursor;
 import br.com.cas10.oraman.util.Snapshot;
 
 import com.google.common.collect.HashBasedTable;
@@ -140,8 +141,10 @@ public class Ash {
         Ordering.from((a, b) -> Integer.compare(a.getActivity(), b.getActivity()));
     List<SqlActivity> topSql = new ArrayList<>();
     for (SqlActivity.Builder builder : sqlOrdering.greatestOf(sqlMap.values(), 10)) {
-      String sqlText = builder.getSqlId() == null ? null : cursors.getSqlText(builder.getSqlId());
-      topSql.add(builder.build(sqlText, totalActivity, totalSamples));
+      Cursor cursor = builder.getSqlId() == null ? null : cursors.getCursor(builder.getSqlId());
+      String sqlText = cursor == null ? null : cursor.sqlText;
+      String command = cursor == null ? null : cursor.command;
+      topSql.add(builder.build(sqlText, command, totalActivity, totalSamples));
     }
 
     Ordering<SessionActivity.Builder> sessionsOrdering =

@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.cas10.oraman.oracle.data.Cursor;
 import br.com.cas10.oraman.oracle.data.ExecutionPlan;
 
 import com.google.common.collect.ImmutableMap;
@@ -21,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 public class Cursors {
 
   private final String childCursorsSql = loadSqlStatement("execution_plans.sql");
+  private final String cursorBySqlId = loadSqlStatement("cursor_by_sqlid.sql");
 
   @Autowired
   @Qualifier("monitoring")
@@ -28,14 +30,19 @@ public class Cursors {
 
   /**
    * @param sqlId the identifier of a parent cursor.
-   * @return the first thousand characters of the SQL text for the specified parent cursor (
-   *         {@code v$sqlarea}, {@code sql_text}). Returns {@code null} if the cursor was not found.
+   * @return details of the specified parent cursor. Returns {@code null} if the cursor was not
+   *         found.
    */
-  public String getSqlText(String sqlId) {
+  public Cursor getCursor(String sqlId) {
     checkNotNull(sqlId);
-    List<String> list =
-        jdbc.queryForList("select sql_text from v$sqlarea where sql_id = :sqlId",
-            ImmutableMap.of("sqlId", sqlId), String.class);
+    List<Cursor> list =
+        jdbc.query(cursorBySqlId, ImmutableMap.of("sqlId", sqlId), (rs, rowNum) -> {
+          Cursor cursor = new Cursor();
+          cursor.sqlId = sqlId;
+          cursor.sqlText = rs.getString("sql_text");
+          cursor.command = rs.getString("command_name");
+          return cursor;
+        });
     return DataAccessUtils.singleResult(list);
   }
 

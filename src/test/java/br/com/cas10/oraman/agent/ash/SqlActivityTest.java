@@ -26,7 +26,7 @@ public class SqlActivityTest {
     final int totalActivity = 11;
     final int totalSamples = 17;
 
-    SqlActivity sqlActivity = builder.build(null, totalActivity, totalSamples);
+    SqlActivity sqlActivity = builder.build(null, null, totalActivity, totalSamples);
 
     assertEquals(4, sqlActivity.activity);
     assertEquals(4d / totalSamples, sqlActivity.averageActiveSessions, 0);

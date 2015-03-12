@@ -10,15 +10,17 @@ public class SqlActivity {
 
   public final String sqlId;
   public final String sqlText;
+  public final String command;
   public final int activity;
   public final double averageActiveSessions;
   public final double percentageTotalActivity;
   public final Multiset<String> activityByWaitClass;
 
-  private SqlActivity(String sqlId, String sqlText, Multiset<String> activityByWaitClass,
-      int totalActivity, int totalSamples) {
+  private SqlActivity(String sqlId, String sqlText, String command,
+      Multiset<String> activityByWaitClass, int totalActivity, int totalSamples) {
     this.sqlId = sqlId;
     this.sqlText = sqlText;
+    this.command = command;
     this.activity = activityByWaitClass.size();
     this.averageActiveSessions = (double) activity / totalSamples;
     this.percentageTotalActivity = (activity * 100d) / totalActivity;
@@ -46,8 +48,9 @@ public class SqlActivity {
       activityByWaitClass.add(activeSession.waitClass);
     }
 
-    public SqlActivity build(String sqlText, int totalActivity, int totalSamples) {
-      return new SqlActivity(sqlId, sqlText, activityByWaitClass, totalActivity, totalSamples);
+    public SqlActivity build(String sqlText, String command, int totalActivity, int totalSamples) {
+      return new SqlActivity(sqlId, sqlText, command, activityByWaitClass, totalActivity,
+          totalSamples);
     }
   }
 }

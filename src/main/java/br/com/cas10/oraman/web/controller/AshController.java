@@ -102,6 +102,7 @@ class AshController {
       Map<String, Object> sqlMap = new LinkedHashMap<>();
       sqlMap.put("sqlId", firstNonNull(sql.sqlId, "Unknown"));
       sqlMap.put("sqlText", firstNonNull(sql.sqlText, "Unavailable"));
+      sqlMap.put("command", sql.command);
       sqlMap.put("activity", sql.activity);
       sqlMap.put("averageActiveSessions", sql.averageActiveSessions);
       sqlMap.put("percentageTotalActivity", sql.percentageTotalActivity);
