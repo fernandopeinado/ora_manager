@@ -1,7 +1,6 @@
 (function() {
 
-	var module = angular.module('ash', [ 'averageActiveSessions',
-			'jqPlotHelper' ]);
+	var module = angular.module('ash', [ 'averageActiveSessions' ]);
 
 	var series = [ [ 'CPU + CPU Wait', '#04ce04' ], [ 'Scheduler', '#87fd88' ],
 			[ 'User I/O', '#044ae4' ], [ 'System I/O', '#0993e1' ],
@@ -10,15 +9,6 @@
 			[ 'Administrative', '#73745e' ], [ 'Network', '#9b9378' ],
 			[ 'Queueing', '#cbb796' ], [ 'Cluster', '#cec4a7' ],
 			[ 'Other', '#f070ac' ] ];
-
-	function dateToHMS(dateInMillis) {
-		var date = new Date(dateInMillis);
-		var h = date.getHours();
-		var m = date.getMinutes();
-		var s = date.getSeconds();
-		return (h > 9 ? h : '0' + h) + ':' + (m > 9 ? m : '0' + m) + ':'
-				+ (s > 9 ? s : '0' + s);
-	}
 
 	function activityBar(activityMap, topActivity) {
 		var result = [];
@@ -37,8 +27,7 @@
 		return result;
 	}
 
-	function AshCtrl($scope, $interval, $http, AverageActiveSessions,
-			JqPlotHelper) {
+	function AshCtrl($scope, $http) {
 
 		function updateTopSql(data) {
 			var top = (data.length > 0) ? data[0].activity : null;
@@ -60,74 +49,53 @@
 		}
 
 		function updateIntervalData(data) {
-			$scope.intervalStart = dateToHMS(data.intervalStart);
-			$scope.intervalEnd = dateToHMS(data.intervalEnd);
+			var selStart = $scope.selectedInterval.start;
+			var selEnd = $scope.selectedInterval.end;
+
+			// If multiple updates are triggered in rapid succession, it's
+			// necessary to check if the data received matches the current
+			// selection.
+			if (data.intervalStart != selStart.getTime()
+					|| data.intervalEnd != selEnd.getTime())
+				return;
+
+			$scope.intervalStart = selStart;
+			$scope.intervalEnd = selEnd;
 			updateTopSql(data.topSql);
 			updateTopSessions(data.topSessions);
 		}
 
-		function updateAasPlot(data) {
-			if (data.data.length < 2) {
+		$scope.series = series;
+		$scope.preprocessor = function(json) {
+			// Optimization: caches the default interval data (5 minutes) in
+			// order to avoid unnecessary requests when the 'selectedInterval'
+			// watcher is triggered.
+			$scope.cachedAshData = json;
+			return json.averageActiveSessions;
+		};
+		$scope.selectedInterval = {};
+
+		$scope.$watchCollection('selectedInterval', function() {
+			var selStart = $scope.selectedInterval.start;
+			var selEnd = $scope.selectedInterval.end;
+
+			// Page initialization
+			if (!selStart || !selEnd)
+				return;
+
+			// Cache hit
+			if (selStart.getTime() == $scope.cachedAshData.intervalStart
+					&& selEnd.getTime() == $scope.cachedAshData.intervalEnd) {
+				updateIntervalData($scope.cachedAshData);
 				return;
 			}
 
-			var targetId = 'ash_aas';
-			var options = {
-				cursor : {
-					show : true,
-					showTooltip : false,
-					zoom : true,
-					zoomProxy : true,
-					constrainZoomTo : 'x'
-				}
-			}
-			var params = [ data, series, options, targetId ];
-			var plot = JqPlotHelper.plot($scope, targetId,
-					AverageActiveSessions.plotGraph, params);
-
-			plot.target.bind('jqplotZoom', function(ev, gridpos, datapos, plot,
-					cursor) {
-				$scope.autoUpdate = false;
-
-				var point1 = Math.floor(cursor._zoom.axes.start.xaxis);
-				var point2 = Math.floor(datapos.xaxis);
-
-				var start = Math.min(point1, point2);
-				var end = Math.max(point1, point2);
-
-				$http.get('ws/ash/ash-interval?start=' + start + '&end=' + end)
-						.success(updateIntervalData);
-			});
-
-			plot.target.bind('jqplotResetZoom', function(ev, plot, cursor) {
-				$scope.$apply(function() {
-					updateIntervalData($scope.ashData)
-				});
-				$scope.autoUpdate = true;
-			});
-		}
-
-		function update() {
-			if (!$scope.autoUpdate) {
-				return;
-			}
-			$http.get('ws/ash/ash').success(function(json) {
-				$scope.ashData = json;
-				updateIntervalData(json);
-				updateAasPlot(json.averageActiveSessions);
-			});
-		}
-
-		$scope.autoUpdate = true;
-		update();
-		var updatePromise = $interval(update, 60000);
-
-		$scope.$on('$destroy', function() {
-			$interval.cancel(updatePromise);
+			var url = 'ws/ash/ash-interval?start=' + selStart.getTime()
+					+ '&end=' + selEnd.getTime();
+			$http.get(url).success(updateIntervalData);
 		});
 	}
 
-	module.controller('AshCtrl', [ '$scope', '$interval', '$http',
-			'AverageActiveSessions', 'JqPlotHelper', AshCtrl ]);
+	module.controller('AshCtrl', [ '$scope', '$http', AshCtrl ]);
 
 })();

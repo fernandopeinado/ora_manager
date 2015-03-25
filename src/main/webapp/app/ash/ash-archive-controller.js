@@ -1,7 +1,6 @@
 (function() {
 
-	var module = angular.module('ash-archive', [ 'averageActiveSessions',
-			'jqPlotHelper' ]);
+	var module = angular.module('ash-archive', [ 'averageActiveSessions' ]);
 
 	var series = [ [ 'CPU + CPU Wait', '#04ce04' ], [ 'Scheduler', '#87fd88' ],
 			[ 'User I/O', '#044ae4' ], [ 'System I/O', '#0993e1' ],
@@ -28,7 +27,7 @@
 		return result;
 	}
 
-	function AshArchiveCtrl($scope, $http, AverageActiveSessions, JqPlotHelper) {
+	function AshArchiveCtrl($scope, $routeParams, $location) {
 
 		function updateTopSql(data) {
 			var top = (data.length > 0) ? data[0].activity : null;
@@ -49,30 +48,35 @@
 			$scope.topSessions = data;
 		}
 
-		function updateAasPlot(data) {
-			if (data.data.length < 2) {
-				JqPlotHelper.destroyAllPlots($scope);
-				return;
-			}
-			var targetId = 'ash-archive-aas';
-			var params = [ data, series, {}, targetId ];
-			JqPlotHelper.plot($scope, targetId,
-					AverageActiveSessions.plotGraph, params);
+		$scope.year = parseInt($routeParams.year);
+		$scope.month = parseInt($routeParams.month);
+		$scope.day = parseInt($routeParams.day);
+		$scope.hour = parseInt($routeParams.hour);
+
+		if ([ $scope.year, $scope.month, $scope.day, $scope.hour ].some(isNaN)) {
+			var now = new Date(Date.now() - 60 * 60 * 1000);
+			$location.path('/ash-archive/' + now.getFullYear() + '/'
+					+ (now.getMonth() + 1) + '/' + now.getDate() + '/'
+					+ now.getHours());
+			return;
 		}
+
+		$scope.url = 'ws/ash/ash-archive/' + $scope.year + '/' + $scope.month
+				+ '/' + $scope.day + '/' + $scope.hour;
+		$scope.series = series;
+		$scope.preprocessor = function(json) {
+			updateTopSql(json.topSql);
+			updateTopSessions(json.topSessions);
+			return json.averageActiveSessions;
+		};
 
 		$scope.loadData = function() {
-			var url = 'ws/ash/ash-archive/' + $scope.year + '/' + $scope.month;
-			url += '/' + $scope.day + '/' + $scope.hour;
-
-			$http.get(url).success(function(json) {
-				updateTopSql(json.topSql);
-				updateTopSessions(json.topSessions);
-				updateAasPlot(json.averageActiveSessions);
-			});
-		}
+			$location.path('/ash-archive/' + $scope.year + '/' + $scope.month
+					+ '/' + $scope.day + '/' + $scope.hour);
+		};
 	}
 
-	module.controller('AshArchiveCtrl', [ '$scope', '$http',
-			'AverageActiveSessions', 'JqPlotHelper', AshArchiveCtrl ]);
+	module.controller('AshArchiveCtrl', [ '$scope', '$routeParams',
+			'$location', AshArchiveCtrl ]);
 
 })();

@@ -1,14 +1,18 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-md-12">
-			<div class="ash-graph-container">
-				<div id="ash_aas"></div>
+			<div class="ash-chart-container">
+				<div oraman-aas-chart aas-url="ws/ash/ash" aas-auto-refresh="60000"
+					aas-title="Average Active Sessions" aas-series="series"
+					aas-preprocessor="preprocessor"
+					aas-selected-interval="selectedInterval"></div>
 			</div>
 		</div>
 	</div>
 	<div class="row">
 		<div class="col-md-12">
-			<h4 class="text-center">{{intervalStart}} - {{intervalEnd}}</h4>
+			<h4 class="text-center">{{intervalStart | date:'HH:mm:ss'}} -
+				{{intervalEnd | date:'HH:mm:ss'}}</h4>
 		</div>
 	</div>
 	<div class="row ash-top-activity">

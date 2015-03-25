@@ -1,13 +1,7 @@
-.cumulative_times_aas_container {
-	padding: 20px;
+.cumulative-times-aas-chart-container {
 	border: 1px solid #ccc;
 }
 
-.cumulative_times_aas_container>div {
-	width: calc(100% - 150px);
-	height: 350px;
-}
-
-.cumulative_times_aas_container table.jqplot-table-legend {
-	height: 260px;
+.cumulative-times-aas-chart-container>div {
+	height: 390px;
 }

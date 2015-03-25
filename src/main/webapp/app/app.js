@@ -12,7 +12,7 @@
 		}).when('/ash', {
 			templateUrl : 'app/ash/ash.html',
 			controller : 'AshCtrl'
-		}).when('/ash-archive', {
+		}).when('/ash-archive/:year?/:month?/:day?/:hour?', {
 			templateUrl : 'app/ash/ash-archive.html',
 			controller : 'AshArchiveCtrl'
 		}).when('/sql/:sqlId', {

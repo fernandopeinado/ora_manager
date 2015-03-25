@@ -24,6 +24,7 @@ import br.com.cas10.oraman.agent.ash.SqlActivity;
 import br.com.cas10.oraman.oracle.DatabaseSystem;
 import br.com.cas10.oraman.util.Snapshot;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 
@@ -41,10 +42,14 @@ class AshController {
   @ResponseBody
   @RequestMapping(value = "/ash/ash", method = GET)
   Map<String, ?> ash() {
-    long currentTimeMillis = System.currentTimeMillis();
     List<Snapshot<Double>> snapshots = ash.getWaitClassesSnapshots();
-    IntervalActivity intervalActivity =
-        ash.getIntervalActivity(currentTimeMillis - FIVE_MINUTES, currentTimeMillis);
+
+    long intervalStart = 0, intervalEnd = 0;
+    if (!snapshots.isEmpty()) {
+      intervalEnd = Iterables.getLast(snapshots).getTimestamp();
+      intervalStart = Math.max(snapshots.get(0).getTimestamp(), intervalEnd - FIVE_MINUTES);
+    }
+    IntervalActivity intervalActivity = ash.getIntervalActivity(intervalStart, intervalEnd);
 
     Map<String, Object> response = new LinkedHashMap<>();
     putAasData(snapshots, response);

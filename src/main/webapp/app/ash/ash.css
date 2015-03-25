@@ -1,17 +1,10 @@
-.ash-graph-container {
-	padding: 20px;
+.ash-chart-container {
 	margin-bottom: 20px;
 	border: 1px solid #ccc;
 }
 
-.ash-graph-container>div {
-	width: calc(100% - 150px);
-	height: 350px;
-}
-
-.ash-graph-container table.jqplot-table-legend {
-	width: 115px;
-	height: 260px;
+.ash-chart-container>div {
+	height: 390px;
 }
 
 .ash-top-activity table>caption {
@@ -20,7 +13,7 @@
 	padding-bottom: 10px;
 }
 
-.ash-top-activity table>tbody,.ash-top-activity table>thead {
+.ash-top-activity table>tbody, .ash-top-activity table>thead {
 	font-size: 13px;
 }
 

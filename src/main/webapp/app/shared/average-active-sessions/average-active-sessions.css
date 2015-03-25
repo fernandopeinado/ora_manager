@@ -1,0 +1,52 @@
+svg.oraman-aas text {
+	font-size: 11px;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	fill: #666;
+}
+
+svg.oraman-aas text.no-data {
+	font-size: 30px;
+}
+
+svg.oraman-aas text.title {
+	font-size: 16px;
+	font-weight: bold;
+	fill: #333;
+}
+
+svg.oraman-aas line {
+	shape-rendering: crispEdges;
+}
+
+svg.oraman-aas line.grid, svg.oraman-aas .axis path {
+	fill: none;
+	stroke: #ccc;
+}
+
+svg.oraman-aas .axis line {
+	stroke: #666;
+}
+
+svg.oraman-aas line.cpu {
+	stroke: red;
+	stroke-width: 1;
+}
+
+svg.oraman-aas line.cpu.cores {
+	stroke-dasharray: 10, 5;
+}
+
+svg.oraman-aas .selection-area {
+	fill: black;
+	fill-opacity: 0.2;
+	cursor: move;
+}
+
+svg.oraman-aas .selection-handle-line {
+	stroke: #333;
+}
+
+svg.oraman-aas .selection-handle {
+	fill-opacity: 0;
+	cursor: ew-resize
+}
