@@ -6,12 +6,15 @@
   border: 0;
 }
 
-.sql-statistics tr {
-  font-size: 13px;
+.sql-statistics {
+  padding-top: 0;
 }
 
-.sql-statistics caption {
+.sql-statistics th.title {
+  text-align: center;
   font-size: 15px;
-  font-weight: bold;
-  padding-bottom: 10px;
+}
+
+.sql-statistics tr {
+  font-size: 13px;
 }

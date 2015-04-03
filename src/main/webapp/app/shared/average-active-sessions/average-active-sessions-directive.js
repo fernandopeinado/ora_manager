@@ -13,6 +13,7 @@
         autoRefresh: '@aasAutoRefresh',
         title: '@aasTitle',
         noDataMessage: '@aasNoDataMessage',
+        waitFor: '@aasWaitFor',
         series: '=aasSeries',
         preprocessor: '=aasPreprocessor',
         selectedInterval: '=aasSelectedInterval'
@@ -34,11 +35,23 @@
           });
         }
 
-        refresh();
-        if (scope.autoRefresh) {
-          var refreshPromise = $interval(refresh, parseInt(scope.autoRefresh));
-          scope.$on('$destroy', function() {
-            $interval.cancel(refreshPromise);
+        function start() {
+          refresh();
+          if (scope.autoRefresh) {
+            var refreshPromise = $interval(refresh, parseInt(scope.autoRefresh));
+            scope.$on('$destroy', function() {
+              $interval.cancel(refreshPromise);
+            });
+          }
+        }
+
+        if (!scope.waitFor || scope.waitFor == 'true') {
+          start();
+        } else {
+          scope.$watch('waitFor', function(newValue, oldValue) {
+            if (newValue !== oldValue && newValue == 'true') {
+              start();
+            }
           });
         }
       }
@@ -92,11 +105,13 @@
     if (scope.title) {
       margin.top += 15;
     }
-    var longestKey = d3.max(json.keys, function(key) {
-      return key.length;
-    });
-    margin.right += 55; // legend circles + padding
-    margin.right += 5 * longestKey; // 5px per letter
+    if (json.keys.length > 0) {
+      var longestKey = d3.max(json.keys, function(key) {
+        return key.length;
+      });
+      margin.right += 55; // legend circles + padding
+      margin.right += 5 * longestKey; // 5px per letter
+    }
 
     // --------------------------------------------------------------------
     // SVG
@@ -127,11 +142,11 @@
 
     var maxY = d3.max(json.data, function(d) {
       return d3.sum(d[1]);
-    });
+    }) || 1;
     if (json.cpuThreads && json.cpuCores) {
-      if (maxY < json.cpuCores) {
+      if (maxY <= json.cpuCores) {
         maxY = json.cpuCores;
-      } else if (maxY < json.cpuThreads) {
+      } else if (maxY <= json.cpuThreads) {
         maxY = json.cpuThreads;
       }
     }

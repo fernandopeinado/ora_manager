@@ -17,22 +17,10 @@
       <div class="oraman-details-header">
         <h4>Activity</h4>
       </div>
-      <table class="table table-bordered table-condensed">
-        <thead>
-          <tr>
-            <th>Event</th>
-            <th>Wait Class</th>
-            <th>Activity</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="row in sql.activity">
-            <td>{{row.event}}</td>
-            <td>{{row.waitClass}}</td>
-            <td>{{row.activity}}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="oraman-aas-chart-container">
+        <div oraman-aas-chart aas-url="ws/ash/ash-sql/{{sqlId}}"
+          aas-series="series" aas-preprocessor="preprocessor"></div>
+      </div>
       <div class="oraman-details-header">
         <h4>Execution Plans</h4>
       </div>
@@ -53,7 +41,9 @@
               <div class="row">
                 <div class="col-md-4">
                   <table class="table table-bordered table-condensed">
-                    <caption>Activity (seconds)</caption>
+                    <tr>
+                      <th colspan="2" class="title">Activity (seconds)</th>
+                    </tr>
                     <tr>
                       <th>Elapsed Time</th>
                       <td>{{plan.elapsedTime | microsToSeconds}}</td>
@@ -89,7 +79,9 @@
                 </div>
                 <div class="col-md-4">
                   <table class="table table-bordered table-condensed">
-                    <caption>Executions</caption>
+                    <tr>
+                      <th colspan="3" class="title">Executions</th>
+                    </tr>
                     <tr>
                       <td></td>
                       <th>Total</th>
@@ -139,7 +131,9 @@
                 </div>
                 <div class="col-md-4">
                   <table class="table table-bordered table-condensed">
-                    <caption>Other Statistics</caption>
+                    <tr>
+                      <th colspan="2" class="title">Other Statistics</th>
+                    </tr>
                     <tr>
                       <th>Child Cursors</th>
                       <td>{{plan.childCursors}}</td>

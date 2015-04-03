@@ -1,7 +1,9 @@
 package br.com.cas10.oraman.web.controller;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
@@ -24,6 +26,7 @@ import br.com.cas10.oraman.agent.ash.SqlActivity;
 import br.com.cas10.oraman.oracle.DatabaseSystem;
 import br.com.cas10.oraman.util.Snapshot;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
@@ -80,16 +83,32 @@ class AshController {
     return response;
   }
 
+  @ResponseBody
+  @RequestMapping(value = "/ash/ash-sql/{sqlId}", method = GET)
+  Map<String, ?> ashSql(@PathVariable("sqlId") String sqlId) {
+    Map<String, Object> response = new LinkedHashMap<>();
+    putEventsAasData(ash.getSqlSnapshots(sqlId), response);
+    return response;
+  }
+
+  @ResponseBody
+  @RequestMapping(value = "/ash/ash-session", method = GET)
+  Map<String, ?> ashSession(@RequestParam("sid") Long sid,
+      @RequestParam("serialNumber") Long serialNumber) {
+    Map<String, Object> response = new LinkedHashMap<>();
+    putEventsAasData(ash.getSessionSnapshots(sid, serialNumber), response);
+    return response;
+  }
+
   private void putAasData(List<Snapshot<Double>> snapshots, Map<String, Object> response) {
     List<String> waitClasses = ash.getWaitClasses();
 
     List<List<Object>> data = new ArrayList<>(snapshots.size());
     for (Snapshot<Double> snapshot : snapshots) {
-      List<Object> snapshotData = new ArrayList<>(1 + waitClasses.size());
-      snapshotData.add(snapshot.getTimestamp());
-      snapshotData.add(waitClasses.stream().map(wc -> snapshot.getValues().getOrDefault(wc, ZERO))
-          .collect(toList()));
-      data.add(snapshotData);
+      List<Double> values =
+          waitClasses.stream().map(wc -> snapshot.getValues().getOrDefault(wc, ZERO))
+              .collect(toList());
+      data.add(asList(snapshot.getTimestamp(), values));
     }
 
     Map<String, Object> averageActiveSessions = new LinkedHashMap<>();
@@ -99,6 +118,26 @@ class AshController {
     averageActiveSessions.put("data", data);
 
     response.put("averageActiveSessions", averageActiveSessions);
+  }
+
+  private void putEventsAasData(List<Snapshot<Double>> snapshots, Map<String, Object> response) {
+    Multiset<String> events =
+        snapshots.stream().flatMap(s -> s.getValues().keySet().stream())
+            .collect(toCollection(HashMultiset::create));
+    List<String> sortedEvents =
+        events.entrySet().stream().sorted((a, b) -> Integer.compare(b.getCount(), a.getCount()))
+            .map(e -> e.getElement()).collect(toList());
+
+    List<List<Object>> data = new ArrayList<>(snapshots.size());
+    for (Snapshot<Double> snapshot : snapshots) {
+      List<Double> values =
+          sortedEvents.stream().map(e -> snapshot.getValues().getOrDefault(e, ZERO))
+              .collect(toList());
+      data.add(asList(snapshot.getTimestamp(), values));
+    }
+
+    response.put("keys", sortedEvents);
+    response.put("data", data);
   }
 
   private void putIntervalData(IntervalActivity intervalActivity, Map<String, Object> response) {

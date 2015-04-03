@@ -4,8 +4,15 @@
 
   function SessionCtrl($scope, $routeParams, $http) {
     $scope.sid = $routeParams.sid;
-    $scope.message = null;
-    $scope.messageClass = '';
+
+    $scope.series = [];
+    $scope.preprocessor = function(json) {
+      var colors = d3.scale.category20();
+      json.keys.forEach(function(key, i) {
+        $scope.series.push([key, colors(i)]);
+      });
+      return json;
+    };
 
     function setMessage(message, messageClass) {
       $scope.message = message;
@@ -56,7 +63,7 @@
       }).error(function(response) {
         setMessage('Error', 'alert-danger');
       });
-    }
+    };
   }
 
   module.controller('SessionCtrl', ['$scope', '$routeParams', '$http',

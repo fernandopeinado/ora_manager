@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import br.com.cas10.oraman.oracle.Cursors;
 import br.com.cas10.oraman.oracle.data.ActiveSession;
+import br.com.cas10.oraman.util.Snapshot;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,18 +105,19 @@ public class AshTest {
   }
 
   @Test
-  public void testGetSqlWaitEvents() {
+  public void testGetSqlSnapshots() {
     final int samples = 5;
 
     List<ActiveSession> s1Sessions = new ArrayList<>();
     s1Sessions.add(newActiveSession(SQL_ID_1, EVENT_1));
     s1Sessions.add(newActiveSession(SQL_ID_2, EVENT_2));
+    s1Sessions.add(newActiveSession((String) null, EVENT_3));
     AshSnapshot s1 = newSnapshot(1, samples, s1Sessions);
 
     List<ActiveSession> s2Sessions = new ArrayList<>();
     s2Sessions.add(newActiveSession(SQL_ID_1, EVENT_1));
     s2Sessions.add(newActiveSession(SQL_ID_1, EVENT_3));
-    s2Sessions.add(newActiveSession(null, EVENT_3));
+    s2Sessions.add(newActiveSession(SQL_ID_1, EVENT_3));
     AshSnapshot s2 = newSnapshot(2, samples, s2Sessions);
 
     AshAgent agent = mock(AshAgent.class);
@@ -124,21 +126,55 @@ public class AshTest {
     Ash ash = new Ash();
     setField(ash, "agent", agent);
 
-    List<WaitEventActivity> waitEvents = ash.getSqlWaitEvents(SQL_ID_1);
+    List<Snapshot<Double>> snapshots = ash.getSqlSnapshots(SQL_ID_1);
 
-    assertEquals(2, waitEvents.size());
+    assertEquals(2, snapshots.size());
 
-    WaitEventActivity event1 = waitEvents.get(0);
+    Snapshot<Double> snapshot1 = snapshots.get(0);
+    assertEquals(1, snapshot1.getValues().size());
+    assertEquals((double) 1 / samples, snapshot1.getValues().get(EVENT_1[0]), 0);
 
-    assertEquals(EVENT_1[0], event1.event);
-    assertEquals(EVENT_1[1], event1.waitClass);
-    assertEquals(2, event1.activity);
+    Snapshot<Double> snapshot2 = snapshots.get(1);
+    assertEquals(2, snapshot2.getValues().size());
+    assertEquals((double) 1 / samples, snapshot2.getValues().get(EVENT_1[0]), 0);
+    assertEquals((double) 2 / samples, snapshot2.getValues().get(EVENT_3[0]), 0);
+  }
 
-    WaitEventActivity event2 = waitEvents.get(1);
+  @Test
+  public void testGetSessionSnapshots() {
+    final int samples = 5;
 
-    assertEquals(EVENT_3[0], event2.event);
-    assertEquals(EVENT_3[1], event2.waitClass);
-    assertEquals(1, event2.activity);
+    List<ActiveSession> s1Sessions = new ArrayList<>();
+    s1Sessions.add(newActiveSession(SESSION_1, EVENT_1));
+    s1Sessions.add(newActiveSession(SESSION_2, EVENT_2));
+    AshSnapshot s1 = newSnapshot(1, samples, s1Sessions);
+
+    List<ActiveSession> s2Sessions = new ArrayList<>();
+    s2Sessions.add(newActiveSession(SESSION_1, EVENT_1));
+    s2Sessions.add(newActiveSession(SESSION_1, EVENT_3));
+    s2Sessions.add(newActiveSession(SESSION_1, EVENT_3));
+    AshSnapshot s2 = newSnapshot(2, samples, s2Sessions);
+
+    AshAgent agent = mock(AshAgent.class);
+    when(agent.getSnapshots()).thenReturn(ImmutableList.of(s1, s2));
+
+    Ash ash = new Ash();
+    setField(ash, "agent", agent);
+
+    long sid = Long.parseLong(SESSION_1[0]);
+    long serialNumber = Long.parseLong(SESSION_1[1]);
+    List<Snapshot<Double>> snapshots = ash.getSessionSnapshots(sid, serialNumber);
+
+    assertEquals(2, snapshots.size());
+
+    Snapshot<Double> snapshot1 = snapshots.get(0);
+    assertEquals(1, snapshot1.getValues().size());
+    assertEquals((double) 1 / samples, snapshot1.getValues().get(EVENT_1[0]), 0);
+
+    Snapshot<Double> snapshot2 = snapshots.get(1);
+    assertEquals(2, snapshot2.getValues().size());
+    assertEquals((double) 1 / samples, snapshot2.getValues().get(EVENT_1[0]), 0);
+    assertEquals((double) 2 / samples, snapshot2.getValues().get(EVENT_3[0]), 0);
   }
 
   private static void verifySqlActivity(String expectedSqlId, int expectedActivity,
@@ -180,6 +216,10 @@ public class AshTest {
 
   private static ActiveSession newActiveSession(String sqlId, String[] event) {
     return newActiveSession(SESSION_1, sqlId, event);
+  }
+
+  private static ActiveSession newActiveSession(String[] session, String[] event) {
+    return newActiveSession(session, SQL_ID_1, event);
   }
 
   private static ActiveSession newActiveSession(String[] session, String sqlId, String[] event) {

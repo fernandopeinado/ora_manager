@@ -1,18 +1,19 @@
 package br.com.cas10.oraman.agent.ash;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,8 @@ import br.com.cas10.oraman.oracle.data.Cursor;
 import br.com.cas10.oraman.util.Snapshot;
 
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 
@@ -158,27 +161,44 @@ public class Ash {
   }
 
   /**
-   * @param sqlId the identifier of a parent cursor.
-   * @return the wait events of the specified cursor, calculated from the ASH snapshots currently in
-   *         memory.
+   * Returns the average activity of the specified parent cursor by wait event.
+   *
+   * @param sqlId {@code v$sql:sql_id}
+   * @return a list of snapshots
    */
-  @Transactional(readOnly = true)
-  public List<WaitEventActivity> getSqlWaitEvents(String sqlId) {
+  public List<Snapshot<Double>> getSqlSnapshots(String sqlId) {
     checkNotNull(sqlId);
+    return buildEventsSnapshots(s -> sqlId.equals(s.sqlId));
+  }
 
+  /**
+   * Returns the average activity of the specified session by wait event.
+   *
+   * @param sessionId {@code v$session:sid}
+   * @param serialNumber {@code v$session:serial#}
+   * @return a list of snapshots
+   */
+  public List<Snapshot<Double>> getSessionSnapshots(long sessionId, long serialNumber) {
+    String sidStr = Long.toString(sessionId);
+    String serialNumberStr = Long.toString(serialNumber);
+    return buildEventsSnapshots(s -> sidStr.equals(s.sid) && serialNumberStr.equals(s.serialNumber));
+  }
+
+  private List<Snapshot<Double>> buildEventsSnapshots(Predicate<ActiveSession> activeSessionFilter) {
     List<AshSnapshot> snapshots = agent.getSnapshots();
 
-    Map<String, List<ActiveSession>> sessionsByEvent =
-        snapshots.stream().flatMap(s -> s.activeSessions.stream())
-            .filter(s -> sqlId.equals(s.sqlId)).collect(groupingBy(s -> s.event));
+    List<Snapshot<Double>> eventsSnapshots = new ArrayList<>(snapshots.size());
+    for (AshSnapshot snapshot : snapshots) {
+      Multiset<String> events =
+          snapshot.activeSessions.stream().filter(activeSessionFilter).map(s -> s.event)
+              .collect(toCollection(HashMultiset::create));
 
-    List<WaitEventActivity> result = new ArrayList<>();
-    for (List<ActiveSession> sessions : sessionsByEvent.values()) {
-      ActiveSession first = sessions.get(0);
-      result.add(new WaitEventActivity(first.event, first.waitClass, sessions.size()));
+      Map<String, Double> values =
+          events.entrySet().stream()
+              .collect(toMap(e -> e.getElement(), e -> (double) e.getCount() / snapshot.samples));
+
+      eventsSnapshots.add(new Snapshot<>(snapshot.timestamp, values));
     }
-    Collections.sort(result, (a, b) -> -Integer.compare(a.activity, b.activity));
-
-    return result;
+    return eventsSnapshots;
   }
 }

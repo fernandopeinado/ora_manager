@@ -56,6 +56,16 @@
         json.fullText = 'Not Available';
       }
     });
+
+    $scope.sqlId = $routeParams.sqlId;
+    $scope.series = [];
+    $scope.preprocessor = function(json) {
+      var colors = d3.scale.category20();
+      json.keys.forEach(function(key, i) {
+        $scope.series.push([key, colors(i)]);
+      });
+      return json;
+    };
   }
 
   var c = ['$scope', '$routeParams', '$http', SqlCtrl];
