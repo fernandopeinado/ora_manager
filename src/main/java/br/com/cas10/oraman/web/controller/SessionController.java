@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import br.com.cas10.oraman.oracle.DatabaseSystem;
 import br.com.cas10.oraman.oracle.Sessions;
+import br.com.cas10.oraman.oracle.data.ActiveSession;
 import br.com.cas10.oraman.oracle.data.Session;
 
 import com.google.common.collect.ImmutableList;
@@ -67,4 +68,16 @@ class SessionController {
   void killSession(@RequestParam("sid") Long sid, @RequestParam("serialNumber") Long serialNumber) {
     sessions.killSession(sid, serialNumber);
   }
+
+  @ResponseBody
+  @RequestMapping(value = "/sessions", method = RequestMethod.GET)
+  Map<String, ?> sessions() {
+    List<ActiveSession> sessions = this.sessions.getAllSessions();
+    Map<String, Object> response = new HashMap<>();
+    response.put("instanceNumber", system.getInstanceNumber());
+    response.put("sessionTerminationEnabled", this.sessions.sessionTerminationEnabled());
+    response.put("sessions", sessions);
+    return response;
+  }
+
 }

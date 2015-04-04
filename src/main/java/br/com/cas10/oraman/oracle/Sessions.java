@@ -40,6 +40,7 @@ public class Sessions {
     return bean;
   };
 
+  private final String allSessionsSql = loadSqlStatement("all_sessions.sql");
   private final String activeSessionsSql = loadSqlStatement("active_sessions.sql");
   private final String lockedObjectsSql = loadSqlStatement("locked_objects.sql");
   private final String sessionBySidSql = loadSqlStatement("session_by_sid.sql");
@@ -107,6 +108,22 @@ public class Sessions {
   @Transactional(readOnly = true)
   public List<ActiveSession> getActiveSessions() {
     return jdbc.query(activeSessionsSql, (rs, rowNum) -> {
+      ActiveSession s = new ActiveSession();
+      s.sid = rs.getString("sid").intern();
+      s.serialNumber = rs.getString("serial#").intern();
+      s.username = nullSafeIntern(rs.getString("username"));
+      s.program = nullSafeIntern(rs.getString("program"));
+      s.sqlId = nullSafeIntern(rs.getString("sql_id"));
+      s.sqlChildNumber = nullSafeIntern(rs.getString("sql_child_number"));
+      s.event = rs.getString("event").intern();
+      s.waitClass = rs.getString("wait_class").intern();
+      return s;
+    });
+  }
+  
+  @Transactional(readOnly = true)
+  public List<ActiveSession> getAllSessions() {
+    return jdbc.query(allSessionsSql, (rs, rowNum) -> {
       ActiveSession s = new ActiveSession();
       s.sid = rs.getString("sid").intern();
       s.serialNumber = rs.getString("serial#").intern();
