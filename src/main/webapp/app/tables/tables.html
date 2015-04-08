@@ -1,0 +1,54 @@
+<div class="container-fluid">
+  <div class="row" ng-show="schemas">
+    <div class="col-md-12">
+      <div class="form-group">
+        <label>Schema</label>
+        <select ng-model="schema" ng-options="opt as opt for opt in schemas" ng-change="loadTables()">
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="row" ng-show="tables">
+    <div class="col-md-12">
+      <table class="table table-bordered table-condensed">
+        <thead>
+          <tr>
+            <th><input type="text" class="form-control" placeholder="Table" ng-model="tableFilter"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-show="page" ng-repeat="t in page">
+            <td>{{t.name}}</td>
+          </tr>
+          <tr ng-hide="page">
+            <td align="center">Not Found</td>
+          </tr>
+        </tbody>
+      </table>
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-form navbar-left">
+            <input class="btn btn-default" style="width: 100px;" ng-click="previousPage()" type="button" value="Previous" />
+          </div>
+          <form class="navbar-form navbar-left">
+            <div class="form-group">
+              <label>{{currentPage + 1}} / {{totalPages}}&nbsp;&nbsp;</label>
+              <input type="text" class="form-control" placeholder="Page" ng-model="pageToGo" style="width: 5em;">
+              <button type="button" class="btn btn-default" ng-click="goToPage(pageToGo)">Go</button>
+            </div>
+          </form>
+          <form class="navbar-form navbar-left">
+            <div class="form-group">
+              <label>Items per Page</label>
+              <input type="text" class="form-control" placeholder="Page Size" ng-model="newPageSize" style="width: 5em;">
+              <button type="button" class="btn btn-default" ng-click="changePageSize(newPageSize)"><i class="glyphicon glyphicon-retweet"></i></button>
+            </div>
+          </form>
+          <div class="navbar-form navbar-right" style="margin-right: 0px;">
+            <input class="btn btn-default" style="width: 100px;" ng-click="nextPage()" type="button" value="Next" />
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
+</div>

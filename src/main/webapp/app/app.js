@@ -1,7 +1,7 @@
 (function() {
 
 	var mainApp = angular.module('mainApp', [ 'home', 'ash', 'ash-archive',
-			'sql', 'session', 'tablespaces', 'ngRoute' ]);
+			'sql', 'session', 'tables', 'tablespaces', 'ngRoute' ]);
 
 	mainApp.config([ '$routeProvider', function($routeProvider) {
 		$routeProvider.when('/', {
@@ -21,6 +21,9 @@
 		}).when('/session', {
 			templateUrl : 'app/session/session.html',
 			controller : 'SessionCtrl'
+                }).when('/tables', {
+			templateUrl : 'app/tables/tables.html',
+			controller : 'TablesCtrl'
                 }).when('/tablespaces', {
 			templateUrl : 'app/tablespaces/tablespaces.html',
 			controller : 'TablespaceCtrl'
