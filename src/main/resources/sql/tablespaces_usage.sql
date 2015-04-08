@@ -1,18 +1,18 @@
 select 
 df.tablespace_name as tablespace,
-totalusedspace as usedMb,
-(df.totalspace - tu.totalusedspace) as freeMb,
+(df.totalspace - tu.totalfreespace) as usedMb,
+totalfreespace as freeMb,
 df.totalspace as totalMb
 from
 (select 
     tablespace_name,
-    round(sum(bytes) / 1048576) totalspace
+    round(sum(bytes) / (1024 * 1024)) totalspace
     from dba_data_files 
-    group by tablespace_name) df,
+    group by tablespace_name) df
+inner join    
 (select 
-    round(sum(bytes) / (1024 * 1024)) totalusedspace, 
+    round(sum(bytes) / (1024 * 1024)) totalfreespace, 
     tablespace_name
-    from dba_segments 
+    from dba_free_space 
     group by tablespace_name) tu
-where 
-df.tablespace_name (+)= tu.tablespace_name
+on df.tablespace_name = tu.tablespace_name
