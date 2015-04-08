@@ -9,7 +9,7 @@ from
     round(sum(bytes) / (1024 * 1024)) totalspace
     from dba_data_files 
     group by tablespace_name) df
-inner join    
+left join    
 (select 
     round(sum(bytes) / (1024 * 1024)) totalfreespace, 
     tablespace_name
