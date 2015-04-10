@@ -1,54 +1,126 @@
-<div class="container-fluid">
-  <div class="row" ng-show="schemas">
-    <div class="col-md-12">
-      <div class="form-group">
-        <label>Schema</label>
-        <select ng-model="schema" ng-options="opt as opt for opt in schemas" ng-change="loadTables()">
-        </select>
+<div>
+  <div class="container-fluid" ng-show="table">
+    <div class="row" ng-show="schemas">
+      <div class="col-md-12">
+        <h2>Table: {{table.name}} ({{table.dataSizeMb + table.lobSizeMb + table.indexSizeMb}} Mb)</h2>
+        <table class="table table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Data Type</th>
+              <th>Length</th>
+              <th>Precision</th>
+              <th>Scale</th>
+              <th>Nullable</th>
+              <th>Last Analyzed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="col in table.columns">
+              <td>{{col.name}}</td>
+              <td>{{col.dataType}}</td>
+              <td>{{col.length}}</td>
+              <td>{{col.precision}}</td>
+              <td>{{col.scale}}</td>
+              <td>{{col.nullable}}</td>
+              <td>{{col.lastAnalyzed}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <h2>Indexes</h2>
+        <table class="table table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Unique</th>
+              <th>Tablespace</th>
+              <th>Logging</th>
+              <th>Blevel</th>
+              <th>Leaf Blocks</th>
+              <th>Distinct Keys</th>
+              <th>Rows</th>
+              <th>Sample Size</th>
+              <th>Size</th>
+              <th>Last Analyzed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="ind in table.indexes">
+              <td>{{ind.name}}</td>
+              <td>{{ind.unique}}</td>
+              <td>{{ind.tablespace}}</td>
+              <td>{{ind.logging}}</td>
+              <td>{{ind.blevel}}</td>
+              <td>{{ind.leafBlocks}}</td>
+              <td>{{ind.distinctKeys}}</td>
+              <td>{{ind.rows}}</td>
+              <td>{{ind.sampleSize}}</td>
+              <td>{{ind.sizeMb}} Mb</td>
+              <td>{{ind.lastAnalyzed}}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
-  <div class="row" ng-show="tables">
-    <div class="col-md-12">
-      <table class="table table-bordered table-condensed">
-        <thead>
-          <tr>
-            <th><input type="text" class="form-control" placeholder="Table" ng-model="tableFilter"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-show="page" ng-repeat="t in page">
-            <td>{{t.name}}</td>
-          </tr>
-          <tr ng-hide="page">
-            <td align="center">Not Found</td>
-          </tr>
-        </tbody>
-      </table>
-      <nav class="navbar navbar-default">
-        <div class="container-fluid">
-          <div class="navbar-form navbar-left">
-            <input class="btn btn-default" style="width: 100px;" ng-click="previousPage()" type="button" value="Previous" />
-          </div>
-          <form class="navbar-form navbar-left">
-            <div class="form-group">
-              <label>{{currentPage + 1}} / {{totalPages}}&nbsp;&nbsp;</label>
-              <input type="text" class="form-control" placeholder="Page" ng-model="pageToGo" style="width: 5em;">
-              <button type="button" class="btn btn-default" ng-click="goToPage(pageToGo)">Go</button>
-            </div>
-          </form>
-          <form class="navbar-form navbar-left">
-            <div class="form-group">
-              <label>Items per Page</label>
-              <input type="text" class="form-control" placeholder="Page Size" ng-model="newPageSize" style="width: 5em;">
-              <button type="button" class="btn btn-default" ng-click="changePageSize(newPageSize)"><i class="glyphicon glyphicon-retweet"></i></button>
-            </div>
-          </form>
-          <div class="navbar-form navbar-right" style="margin-right: 0px;">
-            <input class="btn btn-default" style="width: 100px;" ng-click="nextPage()" type="button" value="Next" />
-          </div>
+  <div class="container-fluid" ng-hide="table">
+    <div class="row" ng-show="schemas">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label>Schema</label>
+          <select ng-model="schema" ng-options="opt as opt for opt in schemas" ng-change="loadTables()">
+          </select>
         </div>
-      </nav>
+      </div>
+    </div>
+    <div class="row" ng-show="tables">
+      <div class="col-md-12">
+        <table class="table table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th><input type="text" class="form-control" placeholder="Table" ng-model="tableFilter"></th>
+              <th>Tablespace</th>
+              <th>Rows</th>
+              <th>Last Analyzed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-show="page" ng-repeat="t in page">
+              <td><a href="#/tables?table={{t.name}}&schema={{schema}}">{{t.name}}</a></td>
+              <td>{{t.tablespace}}</td>
+              <td>{{t.rows}}</td>
+              <td>{{t.lastAnalyzed}}</td>
+            </tr>
+            <tr ng-hide="page">
+              <td align="center">Not Found</td>
+            </tr>
+          </tbody>
+        </table>
+        <nav class="navbar navbar-default">
+          <div class="container-fluid">
+            <div class="navbar-form navbar-left">
+              <input class="btn btn-default" style="width: 100px;" ng-click="previousPage()" type="button" value="Previous" />
+            </div>
+            <form class="navbar-form navbar-left">
+              <div class="form-group">
+                <label>{{currentPage + 1}} / {{totalPages}}&nbsp;&nbsp;</label>
+                <input type="text" class="form-control" placeholder="Page" ng-model="pageToGo" style="width: 5em;">
+                <button type="button" class="btn btn-default" ng-click="goToPage(pageToGo)">Go</button>
+              </div>
+            </form>
+            <form class="navbar-form navbar-left">
+              <div class="form-group">
+                <label>Items per Page</label>
+                <input type="text" class="form-control" placeholder="Page Size" ng-model="newPageSize" style="width: 5em;">
+                <button type="button" class="btn btn-default" ng-click="changePageSize(newPageSize)"><i class="glyphicon glyphicon-retweet"></i></button>
+              </div>
+            </form>
+            <div class="navbar-form navbar-right" style="margin-right: 0px;">
+              <input class="btn btn-default" style="width: 100px;" ng-click="nextPage()" type="button" value="Next" />
+            </div>
+          </div>
+        </nav>
+      </div>
     </div>
   </div>
 </div>

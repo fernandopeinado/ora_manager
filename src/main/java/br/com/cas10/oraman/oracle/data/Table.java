@@ -5,8 +5,9 @@
  */
 package br.com.cas10.oraman.oracle.data;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashMap;
 
 /**
  *
@@ -23,11 +24,11 @@ public class Table {
   public Long sampleSize;
   public Date lastAnalyzed;
 
-  public List<Column> columns;
-  public List<Index> indexes;
+  public LinkedHashMap<String, Column> columns = new LinkedHashMap<>();
+  public LinkedHashMap<String, Index> indexes = new LinkedHashMap<>();
 
-  public Long dataSizeMb;
-  public Long lobSizeMb;
-  public Long indexSizeMb;
+  public Double dataSizeMb;
+  public Double lobSizeMb;
+  public Double indexSizeMb;
 
 }

@@ -38,4 +38,12 @@ class TablesController {
     return response;
   }
 
+  @ResponseBody
+  @RequestMapping(value = "/tables/{schema}/{table}", method = RequestMethod.GET)
+  Map<String, ?> fullTable(@PathVariable("schema") String schema, @PathVariable("table") String table) {
+    Table tbl = this.tables.getFullTable(schema, table);
+    Map<String, Object> response = new HashMap<>();
+    response.put("table", tbl);
+    return response;
+  }
 }

@@ -2,9 +2,9 @@
 
   var module = angular.module('tables', []);
 
-  function TablesCtrl($scope, $routeParams, $http) {
+  function TablesCtrl($scope, $routeParams, $http, $location) {
     $scope.schemas;
-    $scope.schema;
+    $scope.schema = $routeParams.schema;
     $scope.tables;
     $scope.filteredTables;
     $scope.currentPage = 0;
@@ -14,6 +14,8 @@
     $scope.page = null;
     $scope.message;
     $scope.tableFilter = "";
+    $scope.tableName = $routeParams.table;
+    $scope.table;
 
     $scope.goToPage = function (page) {
       $scope.newPageSize = $scope.pageSize;
@@ -87,11 +89,7 @@
     }
 
     $scope.loadTables = function () {
-      $http.get('ws/tables/' + $scope.schema).success(function (json) {
-        $scope.tables = json.tables;
-        $scope.filterTables();
-        $scope.goToPage(0);
-      });
+      $location.url("/tables?schema=" + $scope.schema);
     }
 
     $scope.$watch('tableFilter', function (newValue, oldValue) {
@@ -99,13 +97,25 @@
       $scope.goToPage(0);
     });
 
+    if ($scope.tableName) {
+      $http.get('ws/tables/' + $scope.schema + '/' + $scope.tableName).success(function (json) {
+        $scope.table = json.table;
+      });
+    }
+    else if ($scope.schema && !$scope.filteredTables) {
+      $http.get('ws/tables/' + $scope.schema).success(function (json) {
+        $scope.tables = json.tables;
+        $scope.filterTables();
+        $scope.goToPage(0);
+      });
+    }
+
     $http.get('ws/schemas').success(function (json) {
       $scope.schemas = json.schemas;
     });
-
   }
 
-  module.controller('TablesCtrl', ['$scope', '$routeParams', '$http',
+  module.controller('TablesCtrl', ['$scope', '$routeParams', '$http', '$location',
     TablesCtrl]);
 
 })();

@@ -5,6 +5,7 @@
  */
 package br.com.cas10.oraman.oracle.data;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 
 /**
@@ -13,7 +14,6 @@ import java.util.Date;
  */
 public class Column {
 
-  public Table table;
   public String name;
   public String dataType;
   public Long id;
@@ -21,5 +21,6 @@ public class Column {
   public Long precision;
   public Long scale;
   public Boolean nullable;
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   public Date lastAnalyzed;
 }
