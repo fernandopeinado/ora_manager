@@ -73,18 +73,23 @@ public class Tables {
 
     @Override
     public Index mapRow(ResultSet rs, int i) throws SQLException {
-      Index bean = new Index();
-      bean.name = rs.getString("index_name");
-      bean.unique = "UNIQUE".equalsIgnoreCase(rs.getString("uniqueness"));
-      bean.tablespace = rs.getString("tablespace_name");
-      bean.logging = "YES".equalsIgnoreCase(rs.getString("logging"));
-      bean.blevel = rs.getLong("blevel");
-      bean.leafBlocks = rs.getLong("leaf_blocks");
-      bean.distinctKeys = rs.getLong("distinct_keys");
-      bean.rows = rs.getLong("num_rows");
-      bean.sampleSize = rs.getLong("sample_size");
-      bean.lastAnalyzed = rs.getTimestamp("last_analyzed");
-      table.indexes.put(bean.name, bean);
+      String name = rs.getString("index_name");
+      Index bean = table.indexes.get(name);
+      if (bean == null) {
+        bean = new Index();
+        bean.name = name;
+        bean.unique = "UNIQUE".equalsIgnoreCase(rs.getString("uniqueness"));
+        bean.tablespace = rs.getString("tablespace_name");
+        bean.logging = "YES".equalsIgnoreCase(rs.getString("logging"));
+        bean.blevel = rs.getLong("blevel");
+        bean.leafBlocks = rs.getLong("leaf_blocks");
+        bean.distinctKeys = rs.getLong("distinct_keys");
+        bean.rows = rs.getLong("num_rows");
+        bean.sampleSize = rs.getLong("sample_size");
+        bean.lastAnalyzed = rs.getTimestamp("last_analyzed");
+        table.indexes.put(bean.name, bean);
+      }
+      bean.columns.add(rs.getString("column_name"));
       return bean;
     }
   };

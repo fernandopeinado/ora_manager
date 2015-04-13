@@ -6,6 +6,22 @@
         <table class="table table-bordered table-condensed">
           <thead>
             <tr>
+              <th>Property</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Rows</td><td>{{table.rows}}</td></tr>
+            <tr><td>Data</td><td>{{table.dataSizeMb}} Mb</td></tr>
+            <tr><td>Lob</td><td>{{table.lobSizeMb}} Mb</td></tr>
+            <tr><td>Index</td><td>{{table.indexSizeMb}} Mb</td></tr>
+          </tbody>
+        </table>
+        
+        <h2>Columns</h2>
+        <table class="table table-bordered table-condensed">
+          <thead>
+            <tr>
               <th>Name</th>
               <th>Data Type</th>
               <th>Length</th>
@@ -32,6 +48,7 @@
           <thead>
             <tr>
               <th>Name</th>
+              <th>Columns</th>
               <th>Unique</th>
               <th>Tablespace</th>
               <th>Logging</th>
@@ -45,18 +62,22 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="ind in table.indexes">
-              <td>{{ind.name}}</td>
-              <td>{{ind.unique}}</td>
-              <td>{{ind.tablespace}}</td>
-              <td>{{ind.logging}}</td>
-              <td>{{ind.blevel}}</td>
-              <td>{{ind.leafBlocks}}</td>
-              <td>{{ind.distinctKeys}}</td>
-              <td>{{ind.rows}}</td>
-              <td>{{ind.sampleSize}}</td>
-              <td>{{ind.sizeMb}} Mb</td>
-              <td>{{ind.lastAnalyzed}}</td>
+            <tr ng-repeat-start="ind in table.indexes">
+              <td rowspan="{{ind.columns.length}}">{{ind.name}}</td>
+              <td>{{ind.columns[0]}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.unique}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.tablespace}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.logging}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.blevel}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.leafBlocks}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.distinctKeys}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.rows}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.sampleSize}}</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.sizeMb}} Mb</td>
+              <td rowspan="{{ind.columns.length}}">{{ind.lastAnalyzed}}</td>
+            </tr>
+            <tr ng-repeat-end ng-repeat="col in ind.columns.slice(1)">
+              <td>{{col}}</td>
             </tr>
           </tbody>
         </table>
@@ -108,16 +129,16 @@
                 <button type="button" class="btn btn-default" ng-click="goToPage(pageToGo)">Go</button>
               </div>
             </form>
-            <form class="navbar-form navbar-left">
+            <div class="navbar-form navbar-left" style="margin-right: 0px;">
+              <input class="btn btn-default" style="width: 100px;" ng-click="nextPage()" type="button" value="Next" />
+            </div>
+            <form class="navbar-form navbar-right">
               <div class="form-group">
                 <label>Items per Page</label>
                 <input type="text" class="form-control" placeholder="Page Size" ng-model="newPageSize" style="width: 5em;">
                 <button type="button" class="btn btn-default" ng-click="changePageSize(newPageSize)"><i class="glyphicon glyphicon-retweet"></i></button>
               </div>
             </form>
-            <div class="navbar-form navbar-right" style="margin-right: 0px;">
-              <input class="btn btn-default" style="width: 100px;" ng-click="nextPage()" type="button" value="Next" />
-            </div>
           </div>
         </nav>
       </div>

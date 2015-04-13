@@ -11,8 +11,12 @@ i.owner
 , i.num_rows
 , i.sample_size
 , i.last_analyzed
+, c.column_name
 from 
-ALL_INDEXES i
+ALL_INDEXES i 
+inner join ALL_IND_COLUMNS c on i.owner = c.index_owner and i.index_name = c.index_name
 where 
 i.owner = :owner
 and i.table_name = :tableName
+order by c.column_position
+
