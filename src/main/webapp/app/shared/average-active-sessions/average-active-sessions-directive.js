@@ -177,6 +177,13 @@
           'class': 'grid'
         });
     svg.append('line').attr({
+      x1: 0,
+      y1: 0,
+      x2: width,
+      y2: 0,
+      'class': 'grid'
+    });
+    svg.append('line').attr({
       x1: width,
       y1: 0,
       x2: width,
