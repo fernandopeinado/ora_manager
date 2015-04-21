@@ -1,26 +1,26 @@
 .ash-chart-container {
-	margin-bottom: 20px;
-	border: 1px solid #ccc;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
 }
 
 .ash-chart-container>div {
-	height: 390px;
+  height: 390px;
 }
 
 .ash-top-activity table>caption {
-	font-size: 15px;
-	font-weight: bold;
-	padding-bottom: 10px;
+  font-size: 15px;
+  font-weight: bold;
+  padding-bottom: 10px;
 }
 
 .ash-top-activity table>tbody, .ash-top-activity table>thead {
-	font-size: 13px;
+  font-size: 13px;
 }
 
 .ash-activity-bar {
-	width: 180px;
+  width: 180px;
 }
 
 .ash-activity-bar>div {
-	float: left;
+  float: left;
 }

@@ -1,73 +1,73 @@
 <div class="container-fluid">
-	<div class="row">
-		<div class="col-md-12">
-			<div class="ash-chart-container">
-				<div oraman-aas-chart aas-url="ws/ash/ash" aas-auto-refresh="60000"
-					aas-title="Average Active Sessions" aas-series="series"
-					aas-preprocessor="preprocessor"
-					aas-selected-interval="selectedInterval"></div>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-md-12">
-			<h4 class="text-center">{{intervalStart | date:'HH:mm:ss'}} -
-				{{intervalEnd | date:'HH:mm:ss'}}</h4>
-		</div>
-	</div>
-	<div class="row ash-top-activity">
-		<div class="col-md-6">
-			<table class="table table-bordered table-condensed table-striped">
-				<caption>Top SQL</caption>
-				<thead>
-					<tr>
-						<th>SQL ID</th>
-						<th>Command</th>
-						<th colspan="2">Activity</th>
-						<th>AAS</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="sql in topSql">
-						<td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
-							<a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
-							ng-switch-default>{{sql.sqlId}}</a></td>
-						<td><span title="{{sql.sqlText}}">{{sql.command}}</span></td>
-						<td class="ash-activity-bar">
-							<div title="{{element.title}}" ng-style="element.style"
-								ng-repeat="element in sql.activityBar">&nbsp;</div>
-						</td>
-						<td>{{sql.percentageFixed}}%</td>
-						<td>{{sql.aasFixed}}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div class="col-md-6">
-			<table class="table table-bordered table-condensed table-striped">
-				<caption>Top Sessions</caption>
-				<thead>
-					<tr>
-						<th>SID</th>
-						<th>User</th>
-						<th>Program</th>
-						<th colspan="2">Activity</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="sess in topSessions">
-						<td><a
-							href="#session?sid={{sess.sessionId}}&serialNumber={{sess.serialNumber}}">{{sess.sessionId}}</a></td>
-						<td>{{sess.username}}</td>
-						<td>{{sess.program}}</td>
-						<td class="ash-activity-bar">
-							<div title="{{element.title}}" ng-style="element.style"
-								ng-repeat="element in sess.activityBar">&nbsp;</div>
-						</td>
-						<td>{{sess.percentageFixed}}%</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="ash-chart-container">
+        <div oraman-aas-chart aas-url="ws/ash/ash" aas-auto-refresh="60000"
+          aas-title="Average Active Sessions" aas-series="series"
+          aas-preprocessor="preprocessor"
+          aas-selected-interval="selectedInterval"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <h4 class="text-center">{{intervalStart | date:'HH:mm:ss'}} -
+        {{intervalEnd | date:'HH:mm:ss'}}</h4>
+    </div>
+  </div>
+  <div class="row ash-top-activity">
+    <div class="col-md-6">
+      <table class="table table-bordered table-condensed table-striped">
+        <caption>Top SQL</caption>
+        <thead>
+          <tr>
+            <th>SQL ID</th>
+            <th>Command</th>
+            <th colspan="2">Activity</th>
+            <th>AAS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="sql in topSql">
+            <td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
+              <a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
+              ng-switch-default>{{sql.sqlId}}</a></td>
+            <td><span title="{{sql.sqlText}}">{{sql.command}}</span></td>
+            <td class="ash-activity-bar">
+              <div title="{{element.title}}" ng-style="element.style"
+                ng-repeat="element in sql.activityBar">&nbsp;</div>
+            </td>
+            <td>{{sql.percentageFixed}}%</td>
+            <td>{{sql.aasFixed}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <table class="table table-bordered table-condensed table-striped">
+        <caption>Top Sessions</caption>
+        <thead>
+          <tr>
+            <th>SID</th>
+            <th>User</th>
+            <th>Program</th>
+            <th colspan="2">Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="sess in topSessions">
+            <td><a
+              href="#session?sid={{sess.sessionId}}&serialNumber={{sess.serialNumber}}">{{sess.sessionId}}</a></td>
+            <td>{{sess.username}}</td>
+            <td>{{sess.program}}</td>
+            <td class="ash-activity-bar">
+              <div title="{{element.title}}" ng-style="element.style"
+                ng-repeat="element in sess.activityBar">&nbsp;</div>
+            </td>
+            <td>{{sess.percentageFixed}}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>

@@ -1,7 +1,7 @@
 .cumulative-times-aas-chart-container {
-	border: 1px solid #ccc;
+  border: 1px solid #ccc;
 }
 
 .cumulative-times-aas-chart-container>div {
-	height: 390px;
+  height: 390px;
 }

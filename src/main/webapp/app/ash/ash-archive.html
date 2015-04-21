@@ -1,88 +1,88 @@
 <div class="container-fluid">
-	<div class="row">
-		<div class="col-md-12">
-			<form class="form-inline" role="form" style="margin-bottom: 10px">
-				<div class="form-group">
-					<input type="text" class="form-control" placeholder="Year"
-						style="width: 80px" ng-model="year">
-				</div>
-				<div class="form-group">
-					<input type="text" class="form-control" placeholder="Month"
-						style="width: 80px" ng-model="month">
-				</div>
-				<div class="form-group">
-					<input type="text" class="form-control" placeholder="Day"
-						style="width: 80px" ng-model="day">
-				</div>
-				<div class="form-group">
-					<input type="text" class="form-control" placeholder="Hour"
-						style="width: 80px" ng-model="hour">
-				</div>
-				<button type="button" class="btn btn-primary" ng-click="loadData()">Load</button>
-			</form>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-md-12">
-			<div class="ash-chart-container">
-				<div oraman-aas-chart aas-url="{{url}}"
-					aas-title="Average Active Sessions"
-					aas-no-data-message="NOT AVAILABLE" aas-series="series"
-					aas-preprocessor="preprocessor"></div>
-			</div>
-		</div>
-	</div>
-	<div class="row ash-top-activity">
-		<div class="col-md-6">
-			<table class="table table-bordered table-condensed table-striped">
-				<caption>Top SQL</caption>
-				<thead>
-					<tr>
-						<th>SQL ID</th>
-						<th colspan="2">Activity</th>
-						<th>AAS</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="sql in topSql">
-						<td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
-							<a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
-							ng-switch-default>{{sql.sqlId}}</a></td>
-						<td class="ash-activity-bar">
-							<div title="{{element.title}}" ng-style="element.style"
-								ng-repeat="element in sql.activityBar">&nbsp;</div>
-						</td>
-						<td>{{sql.percentageFixed}}%</td>
-						<td>{{sql.aasFixed}}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div class="col-md-6">
-			<table class="table table-bordered table-condensed table-striped">
-				<caption>Top Sessions</caption>
-				<thead>
-					<tr>
-						<th>SID</th>
-						<th>User</th>
-						<th>Program</th>
-						<th colspan="2">Activity</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="sess in topSessions">
-						<td><a
-							href="#session?sid={{sess.sessionId}}&serialNumber={{sess.serialNumber}}">{{sess.sessionId}}</a></td>
-						<td>{{sess.username}}</td>
-						<td>{{sess.program}}</td>
-						<td class="ash-activity-bar">
-							<div title="{{element.title}}" ng-style="element.style"
-								ng-repeat="element in sess.activityBar">&nbsp;</div>
-						</td>
-						<td>{{sess.percentageFixed}}%</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
+  <div class="row">
+    <div class="col-md-12">
+      <form class="form-inline" role="form" style="margin-bottom: 10px">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Year"
+            style="width: 80px" ng-model="year">
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Month"
+            style="width: 80px" ng-model="month">
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Day"
+            style="width: 80px" ng-model="day">
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Hour"
+            style="width: 80px" ng-model="hour">
+        </div>
+        <button type="button" class="btn btn-primary" ng-click="loadData()">Load</button>
+      </form>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="ash-chart-container">
+        <div oraman-aas-chart aas-url="{{url}}"
+          aas-title="Average Active Sessions"
+          aas-no-data-message="NOT AVAILABLE" aas-series="series"
+          aas-preprocessor="preprocessor"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row ash-top-activity">
+    <div class="col-md-6">
+      <table class="table table-bordered table-condensed table-striped">
+        <caption>Top SQL</caption>
+        <thead>
+          <tr>
+            <th>SQL ID</th>
+            <th colspan="2">Activity</th>
+            <th>AAS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="sql in topSql">
+            <td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
+              <a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
+              ng-switch-default>{{sql.sqlId}}</a></td>
+            <td class="ash-activity-bar">
+              <div title="{{element.title}}" ng-style="element.style"
+                ng-repeat="element in sql.activityBar">&nbsp;</div>
+            </td>
+            <td>{{sql.percentageFixed}}%</td>
+            <td>{{sql.aasFixed}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <table class="table table-bordered table-condensed table-striped">
+        <caption>Top Sessions</caption>
+        <thead>
+          <tr>
+            <th>SID</th>
+            <th>User</th>
+            <th>Program</th>
+            <th colspan="2">Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="sess in topSessions">
+            <td><a
+              href="#session?sid={{sess.sessionId}}&serialNumber={{sess.serialNumber}}">{{sess.sessionId}}</a></td>
+            <td>{{sess.username}}</td>
+            <td>{{sess.program}}</td>
+            <td class="ash-activity-bar">
+              <div title="{{element.title}}" ng-style="element.style"
+                ng-repeat="element in sess.activityBar">&nbsp;</div>
+            </td>
+            <td>{{sess.percentageFixed}}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
