@@ -2,3 +2,12 @@
   border-bottom: 1px solid #ddd;
   margin-bottom: 10px;
 }
+
+.oraman-aas-chart-container {
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+}
+
+.oraman-aas-chart-container>div {
+  height: 390px;
+}

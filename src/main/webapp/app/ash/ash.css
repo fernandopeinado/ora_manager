@@ -1,12 +1,3 @@
-.ash-chart-container {
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-}
-
-.ash-chart-container>div {
-  height: 390px;
-}
-
 .ash-top-activity table>caption {
   font-size: 15px;
   font-weight: bold;
