@@ -1,166 +1,168 @@
 <div class="container-fluid">
-	<div class="row">
-		<div class="col-md-12">
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a href="" data-toggle="collapse" data-target="#sql-full-text">SQL
-							Full Text</a>
-					</h4>
-				</div>
-				<div id="sql-full-text" class="panel-collapse collapse in">
-					<div class="panel-body">
-						<pre>{{sql.fullText}}</pre>
-					</div>
-				</div>
-			</div>
-			<div class="oraman-details-header">
-				<h4>Activity</h4>
-			</div>
-			<table class="table table-bordered table-condensed">
-				<thead>
-					<tr>
-						<th>Event</th>
-						<th>Wait Class</th>
-						<th>Activity</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="row in sql.activity">
-						<td>{{row.event}}</td>
-						<td>{{row.waitClass}}</td>
-						<td>{{row.activity}}</td>
-					</tr>
-				</tbody>
-			</table>
-			<div class="oraman-details-header">
-				<h4>Execution Plans</h4>
-			</div>
-			<p ng-show="!sql.executionPlans.length">Not Available</p>
-			<div class="panel-group">
-				<div class="panel panel-default"
-					ng-repeat="plan in sql.executionPlans">
-					<div class="panel-heading">
-						<h4 class="panel-title">
-							<a href="" data-toggle="collapse"
-								data-target="#plan{{plan.planHashValue}}">{{plan.planHashValue}}</a>
-						</h4>
-					</div>
-					<div id="plan{{plan.planHashValue}}"
-						class="panel-collapse collapse">
-						<div class="panel-body sql-statistics">
-							<div class="oraman-details-header">
-								<h4>Statistics</h4>
-							</div>
-							<div class="row">
-								<div class="col-md-4">
-									<table class="table table-bordered table-condensed">
-										<caption>Activity (seconds)</caption>
-										<tr>
-											<th>Elapsed Time</th>
-											<td>{{plan.elapsedTime | microsToSeconds}}</td>
-										</tr>
-										<tr>
-											<th>CPU Time</th>
-											<td>{{plan.cpuTime | microsToSeconds}}</td>
-										</tr>
-										<tr>
-											<th>User I/O Wait Time</th>
-											<td>{{plan.userIoWaitTime | microsToSeconds}}</td>
-										</tr>
-										<tr>
-											<th>Concurrency Wait Time</th>
-											<td>{{plan.concurrencyWaitTime | microsToSeconds}}</td>
-										</tr>
-										<tr>
-											<th>Application Wait Time</th>
-											<td>{{plan.applicationWaitTime | microsToSeconds}}</td>
-										</tr>
-										<tr>
-											<th>Cluster Wait Time</th>
-											<td>{{plan.clusterWaitTime | microsToSeconds}}</td>
-										</tr>
-										<tr>
-											<td colspan="2">
-												<div title="{{element.title}}" class="pull-left"
-													ng-style="element.style"
-													ng-repeat="element in plan.activityBar">&nbsp;</div>
-											</td>
-										</tr>
-									</table>
-								</div>
-								<div class="col-md-4">
-									<table class="table table-bordered table-condensed">
-										<caption>Executions</caption>
-										<tr>
-											<td></td>
-											<th>Total</th>
-											<th>Per Execution</th>
-										</tr>
-										<tr>
-											<th>Parse Calls</th>
-											<td>{{plan.parseCalls}}</td>
-											<td>{{plan.parseCalls | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Executions</th>
-											<td>{{plan.executions}}</td>
-											<td>{{plan.executions | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Fetches</th>
-											<td>{{plan.fetches}}</td>
-											<td>{{plan.fetches | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Rows Processed</th>
-											<td>{{plan.rowsProcessed}}</td>
-											<td>{{plan.rowsProcessed |
-												perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Buffer Gets</th>
-											<td>{{plan.bufferGets}}</td>
-											<td>{{plan.bufferGets | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Disk Reads</th>
-											<td>{{plan.diskReads}}</td>
-											<td>{{plan.diskReads | perExecution:plan.executions}}</td>
-										</tr>
-										<tr>
-											<th>Direct Writes</th>
-											<td>{{plan.directWrites}}</td>
-											<td>{{plan.directWrites | perExecution:plan.executions}}</td>
-										</tr>
-									</table>
-								</div>
-								<div class="col-md-4">
-									<table class="table table-bordered table-condensed">
-										<caption>Other Statistics</caption>
-										<tr>
-											<th>Child Cursors</th>
-											<td>{{plan.childCursors}}</td>
-										</tr>
-										<tr>
-											<th>Loads</th>
-											<td>{{plan.loads}}</td>
-										</tr>
-										<tr>
-											<th>Invalidations</th>
-											<td>{{plan.invalidations}}</td>
-										</tr>
-									</table>
-								</div>
-							</div>
-							<div class="oraman-details-header">
-								<h4>Plan</h4>
-							</div>
-							<pre>{{plan.planText}}</pre>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a href="" data-toggle="collapse" data-target="#sql-full-text">SQL
+              Full Text</a>
+          </h4>
+        </div>
+        <div id="sql-full-text" class="panel-collapse collapse in">
+          <div class="panel-body">
+            <pre>{{sql.fullText}}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="oraman-details-header">
+        <h4>Activity</h4>
+      </div>
+      <table class="table table-bordered table-condensed">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Wait Class</th>
+            <th>Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="row in sql.activity">
+            <td>{{row.event}}</td>
+            <td>{{row.waitClass}}</td>
+            <td>{{row.activity}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="oraman-details-header">
+        <h4>Execution Plans</h4>
+      </div>
+      <p ng-show="!sql.executionPlans.length">Not Available</p>
+      <div class="panel-group">
+        <div class="panel panel-default" ng-repeat="plan in sql.executionPlans">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a href="" data-toggle="collapse"
+                data-target="#plan{{plan.planHashValue}}">{{plan.planHashValue}}</a>
+            </h4>
+          </div>
+          <div id="plan{{plan.planHashValue}}" class="panel-collapse collapse">
+            <div class="panel-body sql-statistics">
+              <div class="oraman-details-header">
+                <h4>Statistics</h4>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <table class="table table-bordered table-condensed">
+                    <caption>Activity (seconds)</caption>
+                    <tr>
+                      <th>Elapsed Time</th>
+                      <td>{{plan.elapsedTime | microsToSeconds}}</td>
+                    </tr>
+                    <tr>
+                      <th>CPU Time</th>
+                      <td>{{plan.cpuTime | microsToSeconds}}</td>
+                    </tr>
+                    <tr>
+                      <th>User I/O Wait Time</th>
+                      <td>{{plan.userIoWaitTime | microsToSeconds}}</td>
+                    </tr>
+                    <tr>
+                      <th>Concurrency Wait Time</th>
+                      <td>{{plan.concurrencyWaitTime | microsToSeconds}}</td>
+                    </tr>
+                    <tr>
+                      <th>Application Wait Time</th>
+                      <td>{{plan.applicationWaitTime | microsToSeconds}}</td>
+                    </tr>
+                    <tr>
+                      <th>Cluster Wait Time</th>
+                      <td>{{plan.clusterWaitTime | microsToSeconds}}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2">
+                        <div title="{{element.title}}" class="pull-left"
+                          ng-style="element.style"
+                          ng-repeat="element in plan.activityBar">&nbsp;</div>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <div class="col-md-4">
+                  <table class="table table-bordered table-condensed">
+                    <caption>Executions</caption>
+                    <tr>
+                      <td></td>
+                      <th>Total</th>
+                      <th>Per Execution</th>
+                    </tr>
+                    <tr>
+                      <th>Parse Calls</th>
+                      <td>{{plan.parseCalls}}</td>
+                      <td>{{plan.parseCalls |
+                        perExecution:plan.executions}}</td>
+                    </tr>
+                    <tr>
+                      <th>Executions</th>
+                      <td>{{plan.executions}}</td>
+                      <td>{{plan.executions |
+                        perExecution:plan.executions}}</td>
+                    </tr>
+                    <tr>
+                      <th>Fetches</th>
+                      <td>{{plan.fetches}}</td>
+                      <td>{{plan.fetches | perExecution:plan.executions}}</td>
+                    </tr>
+                    <tr>
+                      <th>Rows Processed</th>
+                      <td>{{plan.rowsProcessed}}</td>
+                      <td>{{plan.rowsProcessed |
+                        perExecution:plan.executions}}</td>
+                    </tr>
+                    <tr>
+                      <th>Buffer Gets</th>
+                      <td>{{plan.bufferGets}}</td>
+                      <td>{{plan.bufferGets |
+                        perExecution:plan.executions}}</td>
+                    </tr>
+                    <tr>
+                      <th>Disk Reads</th>
+                      <td>{{plan.diskReads}}</td>
+                      <td>{{plan.diskReads | perExecution:plan.executions}}</td>
+                    </tr>
+                    <tr>
+                      <th>Direct Writes</th>
+                      <td>{{plan.directWrites}}</td>
+                      <td>{{plan.directWrites |
+                        perExecution:plan.executions}}</td>
+                    </tr>
+                  </table>
+                </div>
+                <div class="col-md-4">
+                  <table class="table table-bordered table-condensed">
+                    <caption>Other Statistics</caption>
+                    <tr>
+                      <th>Child Cursors</th>
+                      <td>{{plan.childCursors}}</td>
+                    </tr>
+                    <tr>
+                      <th>Loads</th>
+                      <td>{{plan.loads}}</td>
+                    </tr>
+                    <tr>
+                      <th>Invalidations</th>
+                      <td>{{plan.invalidations}}</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+              <div class="oraman-details-header">
+                <h4>Plan</h4>
+              </div>
+              <pre>{{plan.planText}}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
