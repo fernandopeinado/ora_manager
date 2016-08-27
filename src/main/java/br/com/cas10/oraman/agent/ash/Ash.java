@@ -1,7 +1,6 @@
 package br.com.cas10.oraman.agent.ash;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
@@ -19,20 +18,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Table;
+
 import br.com.cas10.oraman.agent.ash.AshArchive.ArchivedSnapshotsIterator;
 import br.com.cas10.oraman.oracle.Cursors;
 import br.com.cas10.oraman.oracle.data.ActiveSession;
 import br.com.cas10.oraman.oracle.data.Cursor;
 import br.com.cas10.oraman.util.Snapshot;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Table;
-
 @Service
 public class Ash {
+
+  private static final Predicate<ActiveSession> ALL_ACTIVE_SESSIONS = s -> true;
 
   @Autowired
   private AshAgent agent;
@@ -58,6 +60,24 @@ public class Ash {
   }
 
   /**
+   * Returns activity data from the snapshots currently in memory.
+   *
+   * @param activeSessionFilter a predicate for session filtering
+   * @return activity data for the sessions that satisfy the predicate
+   */
+  @Transactional(readOnly = true)
+  public IntervalActivity getActivity(Predicate<ActiveSession> activeSessionFilter) {
+    checkNotNull(activeSessionFilter);
+
+    List<AshSnapshot> snapshots = agent.getSnapshots();
+
+    long start = snapshots.isEmpty() ? 0 : snapshots.get(0).timestamp;
+    long end = snapshots.isEmpty() ? 0 : Iterables.getLast(snapshots).timestamp;
+
+    return intervalActivity(snapshots.iterator(), start, end, activeSessionFilter);
+  }
+
+  /**
    * Returns the activity data for the specified interval.
    * <p>
    * The activity data is taken from the ASH snapshots currently in memory whose timestamp is in the
@@ -75,9 +95,8 @@ public class Ash {
   @Transactional(readOnly = true)
   public IntervalActivity getIntervalActivity(long start, long end) {
     List<AshSnapshot> snapshots = agent.getSnapshots();
-    return intervalActivity(snapshots.iterator(), start, end);
+    return intervalActivity(snapshots.iterator(), start, end, ALL_ACTIVE_SESSIONS);
   }
-
 
   /**
    * Loads and returns from the disk archive the activity data for the 1-hour interval
@@ -104,18 +123,21 @@ public class Ash {
     if (endDateTime.getHour() == hour) {
       endDateTime = endDateTime.plusHours(1); // daylight saving time
     }
-    try (ArchivedSnapshotsIterator it = archive.getArchivedSnapshots(year, month, dayOfMonth, hour)) {
+    try (ArchivedSnapshotsIterator it =
+        archive.getArchivedSnapshots(year, month, dayOfMonth, hour)) {
       long start = startDateTime.toInstant().toEpochMilli();
       long end = endDateTime.toInstant().toEpochMilli() - 1;
-      return intervalActivity(it, start, end);
+      return intervalActivity(it, start, end, ALL_ACTIVE_SESSIONS);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private IntervalActivity intervalActivity(Iterator<AshSnapshot> snapshots, long start, long end) {
+  private IntervalActivity intervalActivity(Iterator<AshSnapshot> snapshots, long start, long end,
+      Predicate<ActiveSession> activeSessionFilter) {
     int totalSamples = 0;
     int totalActivity = 0;
+    List<Snapshot<Double>> eventsSnapshots = new ArrayList<>();
     List<Snapshot<Double>> waitClassesSnapshots = new ArrayList<>();
     Map<String, SqlActivity.Builder> sqlMap = new HashMap<>();
     Table<String, String, SessionActivity.Builder> sessionsTable = HashBasedTable.create();
@@ -126,9 +148,18 @@ public class Ash {
         continue;
       }
       totalSamples += snapshot.samples;
-      totalActivity += snapshot.activeSessions.size();
-      waitClassesSnapshots.add(snapshot.waitClassesSnapshot);
+
+      Multiset<String> activityByEvent = HashMultiset.create();
+      Multiset<String> activityByWaitClass = HashMultiset.create();
+
       for (ActiveSession s : snapshot.activeSessions) {
+        if (!activeSessionFilter.test(s)) {
+          continue;
+        }
+        totalActivity++;
+        activityByEvent.add(s.event);
+        activityByWaitClass.add(s.waitClass);
+
         sqlMap.computeIfAbsent(s.sqlId, SqlActivity.Builder::new).add(s);
 
         SessionActivity.Builder sessBuilder = sessionsTable.get(s.sid, s.serialNumber);
@@ -138,6 +169,14 @@ public class Ash {
         }
         sessBuilder.add(s);
       }
+
+      Map<String, Double> eventsValues = activityByEvent.entrySet().stream()
+          .collect(toMap(e -> e.getElement(), e -> (double) e.getCount() / snapshot.samples));
+      eventsSnapshots.add(new Snapshot<>(snapshot.timestamp, eventsValues));
+
+      Map<String, Double> waitClassesValues = activityByWaitClass.entrySet().stream()
+          .collect(toMap(e -> e.getElement(), e -> (double) e.getCount() / snapshot.samples));
+      waitClassesSnapshots.add(new Snapshot<>(snapshot.timestamp, waitClassesValues));
     }
 
     Ordering<SqlActivity.Builder> sqlOrdering =
@@ -153,52 +192,12 @@ public class Ash {
     Ordering<SessionActivity.Builder> sessionsOrdering =
         Ordering.from((a, b) -> Integer.compare(a.getActivity(), b.getActivity()));
     List<SessionActivity> topSessions = new ArrayList<>();
-    for (SessionActivity.Builder builder : sessionsOrdering.greatestOf(sessionsTable.values(), 10)) {
+    for (SessionActivity.Builder builder : sessionsOrdering.greatestOf(sessionsTable.values(),
+        10)) {
       topSessions.add(builder.build(totalActivity));
     }
 
-    return new IntervalActivity(start, end, waitClassesSnapshots, topSql, topSessions);
-  }
-
-  /**
-   * Returns the average activity of the specified parent cursor by wait event.
-   *
-   * @param sqlId {@code v$sql:sql_id}
-   * @return a list of snapshots
-   */
-  public List<Snapshot<Double>> getSqlSnapshots(String sqlId) {
-    checkNotNull(sqlId);
-    return buildEventsSnapshots(s -> sqlId.equals(s.sqlId));
-  }
-
-  /**
-   * Returns the average activity of the specified session by wait event.
-   *
-   * @param sessionId {@code v$session:sid}
-   * @param serialNumber {@code v$session:serial#}
-   * @return a list of snapshots
-   */
-  public List<Snapshot<Double>> getSessionSnapshots(long sessionId, long serialNumber) {
-    String sidStr = Long.toString(sessionId);
-    String serialNumberStr = Long.toString(serialNumber);
-    return buildEventsSnapshots(s -> sidStr.equals(s.sid) && serialNumberStr.equals(s.serialNumber));
-  }
-
-  private List<Snapshot<Double>> buildEventsSnapshots(Predicate<ActiveSession> activeSessionFilter) {
-    List<AshSnapshot> snapshots = agent.getSnapshots();
-
-    List<Snapshot<Double>> eventsSnapshots = new ArrayList<>(snapshots.size());
-    for (AshSnapshot snapshot : snapshots) {
-      Multiset<String> events =
-          snapshot.activeSessions.stream().filter(activeSessionFilter).map(s -> s.event)
-              .collect(toCollection(HashMultiset::create));
-
-      Map<String, Double> values =
-          events.entrySet().stream()
-              .collect(toMap(e -> e.getElement(), e -> (double) e.getCount() / snapshot.samples));
-
-      eventsSnapshots.add(new Snapshot<>(snapshot.timestamp, values));
-    }
-    return eventsSnapshots;
+    return new IntervalActivity(start, end, eventsSnapshots, waitClassesSnapshots, topSql,
+        topSessions);
   }
 }

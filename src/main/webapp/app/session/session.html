@@ -57,6 +57,32 @@
               aas-wait-for="{{result == 'sessionFound'}}" aas-series="series"
               aas-preprocessor="preprocessor"></div>
           </div>
+          <div class="oraman-ash-top-activity">
+            <table class="table table-bordered table-condensed table-striped">
+              <thead>
+                <tr>
+                  <th>SQL ID</th>
+                  <th>Command</th>
+                  <th colspan="2">Activity</th>
+                  <th>AAS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="sql in topSql">
+                  <td ng-switch="sql.sqlId"><span ng-switch-when="Unknown">Unknown</span>
+                    <a title="{{sql.sqlText}}" href="#/sql/{{sql.sqlId}}"
+                    ng-switch-default>{{sql.sqlId}}</a></td>
+                  <td><span title="{{sql.sqlText}}">{{sql.command}}</span></td>
+                  <td class="oraman-ash-activity-bar width-300">
+                    <div title="{{element.title}}" ng-style="element.style"
+                      ng-repeat="element in sql.activityBar">&nbsp;</div>
+                  </td>
+                  <td>{{sql.percentageFixed}}%</td>
+                  <td>{{sql.aasFixed}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div ng-show="session.blockingSession">
             <div class="oraman-details-header">
               <h4>Blocking Session</h4>

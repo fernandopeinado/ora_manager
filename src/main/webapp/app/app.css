@@ -12,3 +12,21 @@
 .oraman-aas-chart-container>div {
   height: 390px;
 }
+
+.oraman-ash-top-activity table>caption {
+  font-size: 15px;
+  font-weight: bold;
+  padding-bottom: 10px;
+}
+
+.oraman-ash-top-activity table>tbody, .oraman-ash-top-activity table>thead {
+  font-size: 13px;
+}
+
+.oraman-ash-activity-bar.width-300 {
+  width: 300px;
+}
+
+.oraman-ash-activity-bar>div {
+  float: left;
+}

@@ -5,12 +5,40 @@
   function SessionCtrl($scope, $routeParams, $http) {
     $scope.sid = $routeParams.sid;
 
+    function sqlActivityBar(activityMap, topActivity) {
+      var result = [];
+      $scope.series.forEach(function(s) {
+        var width = Math.floor((activityMap[s[0]] * 100) / topActivity);
+        if (width > 0) {
+          result.push({
+            title: s[0],
+            style: {
+              'width': width + '%',
+              'background-color': s[1]
+            }
+          });
+        }
+      });
+      return result;
+    }
+
+    function fillTopSql(data) {
+      var top = (data.length > 0) ? data[0].activity : null;
+      data.forEach(function(sql) {
+        sql.percentageFixed = sql.percentageTotalActivity.toFixed(0);
+        sql.aasFixed = sql.averageActiveSessions.toFixed(2);
+        sql.activityBar = sqlActivityBar(sql.activityByEvent, top);
+      });
+      $scope.topSql = data;
+    }
+
     $scope.series = [];
     $scope.preprocessor = function(json) {
       var colors = d3.scale.category20();
       json.keys.forEach(function(key, i) {
         $scope.series.push([key, colors(i)]);
       });
+      fillTopSql(json.topSql);
       return json;
     };
 

@@ -19,17 +19,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
+
 import br.com.cas10.oraman.agent.ash.Ash;
 import br.com.cas10.oraman.agent.ash.IntervalActivity;
 import br.com.cas10.oraman.agent.ash.SessionActivity;
 import br.com.cas10.oraman.agent.ash.SqlActivity;
 import br.com.cas10.oraman.oracle.DatabaseSystem;
 import br.com.cas10.oraman.util.Snapshot;
-
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 
 @Controller
 class AshController {
@@ -86,8 +86,25 @@ class AshController {
   @ResponseBody
   @RequestMapping(value = "/ash/ash-sql/{sqlId}", method = GET)
   Map<String, ?> ashSql(@PathVariable("sqlId") String sqlId) {
+    IntervalActivity activity = ash.getActivity(s -> sqlId.equals(s.sqlId));
+
     Map<String, Object> response = new LinkedHashMap<>();
-    putEventsAasData(ash.getSqlSnapshots(sqlId), response);
+    putEventsAasData(activity.eventsSnapshots, response);
+
+    List<Map<String, Object>> topSessions = new ArrayList<>();
+    for (SessionActivity session : activity.topSessions) {
+      Map<String, Object> sessionMap = new LinkedHashMap<>();
+      sessionMap.put("sessionId", session.sessionId);
+      sessionMap.put("serialNumber", session.serialNumber);
+      sessionMap.put("username", session.username);
+      sessionMap.put("program", session.program);
+      sessionMap.put("activity", session.activity);
+      sessionMap.put("percentageTotalActivity", session.percentageTotalActivity);
+      sessionMap.put("activityByEvent", asMap(session.activityByEvent));
+      topSessions.add(sessionMap);
+    }
+    response.put("topSessions", topSessions);
+
     return response;
   }
 
@@ -95,8 +112,29 @@ class AshController {
   @RequestMapping(value = "/ash/ash-session", method = GET)
   Map<String, ?> ashSession(@RequestParam("sid") Long sid,
       @RequestParam("serialNumber") Long serialNumber) {
+    String sSid = sid.toString();
+    String sSerialNumber = serialNumber.toString();
+
+    IntervalActivity activity =
+        ash.getActivity(s -> sSid.equals(s.sid) && sSerialNumber.equals(s.serialNumber));
+
     Map<String, Object> response = new LinkedHashMap<>();
-    putEventsAasData(ash.getSessionSnapshots(sid, serialNumber), response);
+    putEventsAasData(activity.eventsSnapshots, response);
+
+    List<Map<String, Object>> topSql = new ArrayList<>();
+    for (SqlActivity sql : activity.topSql) {
+      Map<String, Object> sqlMap = new LinkedHashMap<>();
+      sqlMap.put("sqlId", firstNonNull(sql.sqlId, "Unknown"));
+      sqlMap.put("sqlText", firstNonNull(sql.sqlText, "Unavailable"));
+      sqlMap.put("command", sql.command);
+      sqlMap.put("activity", sql.activity);
+      sqlMap.put("averageActiveSessions", sql.averageActiveSessions);
+      sqlMap.put("percentageTotalActivity", sql.percentageTotalActivity);
+      sqlMap.put("activityByEvent", asMap(sql.activityByEvent));
+      topSql.add(sqlMap);
+    }
+    response.put("topSql", topSql);
+
     return response;
   }
 
@@ -105,9 +143,8 @@ class AshController {
 
     List<List<Object>> data = new ArrayList<>(snapshots.size());
     for (Snapshot<Double> snapshot : snapshots) {
-      List<Double> values =
-          waitClasses.stream().map(wc -> snapshot.getValues().getOrDefault(wc, ZERO))
-              .collect(toList());
+      List<Double> values = waitClasses.stream()
+          .map(wc -> snapshot.getValues().getOrDefault(wc, ZERO)).collect(toList());
       data.add(asList(snapshot.getTimestamp(), values));
     }
 
@@ -121,18 +158,16 @@ class AshController {
   }
 
   private void putEventsAasData(List<Snapshot<Double>> snapshots, Map<String, Object> response) {
-    Multiset<String> events =
-        snapshots.stream().flatMap(s -> s.getValues().keySet().stream())
-            .collect(toCollection(HashMultiset::create));
+    Multiset<String> events = snapshots.stream().flatMap(s -> s.getValues().keySet().stream())
+        .collect(toCollection(HashMultiset::create));
     List<String> sortedEvents =
         events.entrySet().stream().sorted((a, b) -> Integer.compare(b.getCount(), a.getCount()))
             .map(e -> e.getElement()).collect(toList());
 
     List<List<Object>> data = new ArrayList<>(snapshots.size());
     for (Snapshot<Double> snapshot : snapshots) {
-      List<Double> values =
-          sortedEvents.stream().map(e -> snapshot.getValues().getOrDefault(e, ZERO))
-              .collect(toList());
+      List<Double> values = sortedEvents.stream()
+          .map(e -> snapshot.getValues().getOrDefault(e, ZERO)).collect(toList());
       data.add(asList(snapshot.getTimestamp(), values));
     }
 

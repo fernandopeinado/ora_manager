@@ -1,24 +1,25 @@
 package br.com.cas10.oraman.agent.ash;
 
+import static br.com.cas10.oraman.agent.ash.util.Util.verifySnapshot;
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.summingInt;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Predicate;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
+import br.com.cas10.oraman.agent.ash.util.SessionActivityVerifier;
+import br.com.cas10.oraman.agent.ash.util.SqlActivityVerifier;
 import br.com.cas10.oraman.oracle.Cursors;
 import br.com.cas10.oraman.oracle.data.ActiveSession;
 import br.com.cas10.oraman.util.Snapshot;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multiset;
 
 public class AshTest {
 
@@ -37,35 +38,166 @@ public class AshTest {
   private static final String[] EVENT_3 = {"event 3", WAIT_CLASS_2};
 
   @Test
+  public void testGetActivityFilterSqlId() {
+    Predicate<ActiveSession> filter = s -> SQL_ID_1.equals(s.sqlId);
+
+    final int samples = 5;
+
+    List<ActiveSession> s1Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_2, SQL_ID_2, EVENT_2))
+        .add(newActiveSession(SESSION_3, (String) null, EVENT_3)).build();
+    AshSnapshot s1 = new AshSnapshot(1, s1Sessions, samples);
+
+    List<ActiveSession> s2Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_3))
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_3))
+        .add(newActiveSession(SESSION_2, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_2, SQL_ID_1, EVENT_3)).build();
+    AshSnapshot s2 = new AshSnapshot(2, s2Sessions, samples);
+
+    AshSnapshot s3 = new AshSnapshot(3, ImmutableList.of(), samples);
+
+    List<AshSnapshot> snapshots = ImmutableList.of(s1, s2, s3);
+    final int totalSamples = snapshots.size() * samples;
+    final int totalActivity = snapshots.stream().flatMap(s -> s.activeSessions.stream())
+        .filter(filter).collect(counting()).intValue();
+
+    AshAgent agent = mock(AshAgent.class);
+    when(agent.getSnapshots()).thenReturn(snapshots);
+
+    Ash ash = new Ash();
+    setField(ash, "agent", agent);
+    setField(ash, "cursors", mock(Cursors.class));
+
+    IntervalActivity activity = ash.getActivity(filter);
+
+    assertEquals(1, activity.intervalStart);
+    assertEquals(3, activity.intervalEnd);
+
+    List<Snapshot<Double>> eSnapshots = activity.eventsSnapshots;
+    assertEquals(3, eSnapshots.size());
+    verifySnapshot(eSnapshots.get(0), 1, samples, EVENT_1[0], 1);
+    verifySnapshot(eSnapshots.get(1), 2, samples, EVENT_1[0], 1, EVENT_3[0], 3);
+    verifySnapshot(eSnapshots.get(2), 3, samples);
+
+    List<Snapshot<Double>> wcSnapshots = activity.waitClassesSnapshots;
+    assertEquals(3, wcSnapshots.size());
+    verifySnapshot(wcSnapshots.get(0), 1, samples, WAIT_CLASS_1, 1);
+    verifySnapshot(wcSnapshots.get(1), 2, samples, WAIT_CLASS_1, 1, WAIT_CLASS_2, 3);
+    verifySnapshot(wcSnapshots.get(2), 3, samples);
+
+    SqlActivityVerifier sqlVerifier = new SqlActivityVerifier(totalActivity, totalSamples);
+    assertEquals(1, activity.topSql.size());
+
+    sqlVerifier.verify(activity.topSql.get(0)).sqlId(SQL_ID_1).activity(5)
+        .events(EVENT_1[0], 2, EVENT_3[0], 3).waitClasses(WAIT_CLASS_1, 2, WAIT_CLASS_2, 3);
+
+    SessionActivityVerifier sessionVerifier = new SessionActivityVerifier(totalActivity);
+    assertEquals(2, activity.topSessions.size());
+
+    sessionVerifier.verify(activity.topSessions.get(0)).session(SESSION_1).activity(3)
+        .events(EVENT_1[0], 1, EVENT_3[0], 2).waitClasses(WAIT_CLASS_1, 1, WAIT_CLASS_2, 2);
+
+    sessionVerifier.verify(activity.topSessions.get(1)).session(SESSION_2).activity(2)
+        .events(EVENT_1[0], 1, EVENT_3[0], 1).waitClasses(WAIT_CLASS_1, 1, WAIT_CLASS_2, 1);
+  }
+
+  @Test
+  public void testGetActivityFilterSession() {
+    Predicate<ActiveSession> filter =
+        s -> SESSION_1[0].equals(s.sid) && SESSION_1[1].equals(s.serialNumber);
+
+    final int samples = 5;
+
+    List<ActiveSession> s1Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_2, SQL_ID_2, EVENT_2)).build();
+    AshSnapshot s1 = new AshSnapshot(1, s1Sessions, samples);
+
+    List<ActiveSession> s2Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_3))
+        .add(newActiveSession(SESSION_1, SQL_ID_2, EVENT_3)).build();
+    AshSnapshot s2 = new AshSnapshot(2, s2Sessions, samples);
+
+    AshSnapshot s3 = new AshSnapshot(3, ImmutableList.of(), samples);
+
+    List<AshSnapshot> snapshots = ImmutableList.of(s1, s2, s3);
+    final int totalSamples = snapshots.size() * samples;
+    final int totalActivity = snapshots.stream().flatMap(s -> s.activeSessions.stream())
+        .filter(filter).collect(counting()).intValue();
+
+    AshAgent agent = mock(AshAgent.class);
+    when(agent.getSnapshots()).thenReturn(snapshots);
+
+    Ash ash = new Ash();
+    setField(ash, "agent", agent);
+    setField(ash, "cursors", mock(Cursors.class));
+
+    IntervalActivity activity = ash.getActivity(filter);
+
+    assertEquals(1, activity.intervalStart);
+    assertEquals(3, activity.intervalEnd);
+
+    List<Snapshot<Double>> eSnapshots = activity.eventsSnapshots;
+    assertEquals(3, eSnapshots.size());
+    verifySnapshot(eSnapshots.get(0), 1, samples, EVENT_1[0], 1);
+    verifySnapshot(eSnapshots.get(1), 2, samples, EVENT_1[0], 1, EVENT_3[0], 2);
+    verifySnapshot(eSnapshots.get(2), 3, samples);
+
+    List<Snapshot<Double>> wcSnapshots = activity.waitClassesSnapshots;
+    assertEquals(3, wcSnapshots.size());
+    verifySnapshot(wcSnapshots.get(0), 1, samples, WAIT_CLASS_1, 1);
+    verifySnapshot(wcSnapshots.get(1), 2, samples, WAIT_CLASS_1, 1, WAIT_CLASS_2, 2);
+    verifySnapshot(wcSnapshots.get(2), 3, samples);
+
+    SqlActivityVerifier sqlVerifier = new SqlActivityVerifier(totalActivity, totalSamples);
+    assertEquals(2, activity.topSql.size());
+
+    sqlVerifier.verify(activity.topSql.get(0)).sqlId(SQL_ID_1).activity(3)
+        .events(EVENT_1[0], 2, EVENT_3[0], 1).waitClasses(WAIT_CLASS_1, 2, WAIT_CLASS_2, 1);
+
+    sqlVerifier.verify(activity.topSql.get(1)).sqlId(SQL_ID_2).activity(1).events(EVENT_3[0], 1)
+        .waitClasses(WAIT_CLASS_2, 1);
+
+    SessionActivityVerifier sessionVerifier = new SessionActivityVerifier(totalActivity);
+    assertEquals(1, activity.topSessions.size());
+
+    sessionVerifier.verify(activity.topSessions.get(0)).session(SESSION_1).activity(4)
+        .events(EVENT_1[0], 2, EVENT_3[0], 2).waitClasses(WAIT_CLASS_1, 2, WAIT_CLASS_2, 2);
+  }
+
+  @Test
   public void testGetIntervalActivity() {
     final int samples = 10;
 
-    List<ActiveSession> s1Sessions = new ArrayList<>();
-    s1Sessions.add(newActiveSession(SESSION_1, SQL_ID_1, WAIT_CLASS_1));
-    AshSnapshot s1 = newSnapshot(1, samples, s1Sessions);
+    List<ActiveSession> s1Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_1)).build();
+    AshSnapshot s1 = new AshSnapshot(1, s1Sessions, samples);
 
-    List<ActiveSession> s2Sessions = new ArrayList<>();
-    s2Sessions.add(newActiveSession(SESSION_1, SQL_ID_1, WAIT_CLASS_1));
-    s2Sessions.add(newActiveSession(SESSION_1, SQL_ID_1, WAIT_CLASS_1));
-    s2Sessions.add(newActiveSession(SESSION_2, SQL_ID_2, WAIT_CLASS_1));
-    s2Sessions.add(newActiveSession(SESSION_2, SQL_ID_2, WAIT_CLASS_2));
-    AshSnapshot s2 = newSnapshot(2, samples, s2Sessions);
+    List<ActiveSession> s2Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_1, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_2, SQL_ID_2, EVENT_1))
+        .add(newActiveSession(SESSION_2, SQL_ID_2, EVENT_2)).build();
+    AshSnapshot s2 = new AshSnapshot(2, s2Sessions, samples);
 
-    List<ActiveSession> s3Sessions = new ArrayList<>();
-    s3Sessions.add(newActiveSession(SESSION_2, SQL_ID_2, WAIT_CLASS_2));
-    s3Sessions.add(newActiveSession(SESSION_2, SQL_ID_2, WAIT_CLASS_2));
-    s3Sessions.add(newActiveSession(SESSION_2, SQL_ID_1, WAIT_CLASS_1));
-    s3Sessions.add(newActiveSession(SESSION_2, SQL_ID_1, WAIT_CLASS_1));
-    AshSnapshot s3 = newSnapshot(3, samples, s3Sessions);
+    List<ActiveSession> s3Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_2, SQL_ID_2, EVENT_2))
+        .add(newActiveSession(SESSION_2, SQL_ID_2, EVENT_2))
+        .add(newActiveSession(SESSION_2, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_2, SQL_ID_1, EVENT_1)).build();
+    AshSnapshot s3 = new AshSnapshot(3, s3Sessions, samples);
 
-    List<ActiveSession> s4Sessions = new ArrayList<>();
-    s4Sessions.add(newActiveSession(SESSION_2, SQL_ID_1, WAIT_CLASS_1));
-    s4Sessions.add(newActiveSession(SESSION_3, SQL_ID_1, WAIT_CLASS_2));
-    AshSnapshot s4 = newSnapshot(4, samples, s4Sessions);
+    List<ActiveSession> s4Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_2, SQL_ID_1, EVENT_1))
+        .add(newActiveSession(SESSION_3, SQL_ID_1, EVENT_2)).build();
+    AshSnapshot s4 = new AshSnapshot(4, s4Sessions, samples);
 
-    List<ActiveSession> s5Sessions = new ArrayList<>();
-    s5Sessions.add(newActiveSession(SESSION_3, SQL_ID_1, WAIT_CLASS_2));
-    AshSnapshot s5 = newSnapshot(5, samples, s5Sessions);
+    List<ActiveSession> s5Sessions = ImmutableList.<ActiveSession>builder()//
+        .add(newActiveSession(SESSION_3, SQL_ID_1, EVENT_2)).build();
+    AshSnapshot s5 = new AshSnapshot(5, s5Sessions, samples);
 
     List<AshSnapshot> selectedSnapshots = ImmutableList.of(s2, s3, s4);
     final int totalSamples = selectedSnapshots.size() * samples;
@@ -83,143 +215,39 @@ public class AshTest {
 
     assertEquals(2, activity.intervalStart);
     assertEquals(4, activity.intervalEnd);
-    assertEquals(3, activity.waitClassesSnapshots.size());
 
-    List<SqlActivity> topSql = activity.topSql;
+    List<Snapshot<Double>> eSnapshots = activity.eventsSnapshots;
+    assertEquals(3, eSnapshots.size());
+    verifySnapshot(eSnapshots.get(0), 2, samples, EVENT_1[0], 3, EVENT_2[0], 1);
+    verifySnapshot(eSnapshots.get(1), 3, samples, EVENT_1[0], 2, EVENT_2[0], 2);
+    verifySnapshot(eSnapshots.get(2), 4, samples, EVENT_1[0], 1, EVENT_2[0], 1);
 
-    assertEquals(2, topSql.size());
-    verifySqlActivity(SQL_ID_1, 6, ImmutableMap.of(WAIT_CLASS_1, 5, WAIT_CLASS_2, 1),
-        totalActivity, totalSamples, topSql.get(0));
-    verifySqlActivity(SQL_ID_2, 4, ImmutableMap.of(WAIT_CLASS_1, 1, WAIT_CLASS_2, 3),
-        totalActivity, totalSamples, topSql.get(1));
+    List<Snapshot<Double>> wcSnapshots = activity.waitClassesSnapshots;
+    assertEquals(3, wcSnapshots.size());
+    verifySnapshot(wcSnapshots.get(0), 2, samples, WAIT_CLASS_1, 3, WAIT_CLASS_2, 1);
+    verifySnapshot(wcSnapshots.get(1), 3, samples, WAIT_CLASS_1, 2, WAIT_CLASS_2, 2);
+    verifySnapshot(wcSnapshots.get(2), 4, samples, WAIT_CLASS_1, 1, WAIT_CLASS_2, 1);
 
-    List<SessionActivity> topSessions = activity.topSessions;
+    SqlActivityVerifier sqlVerifier = new SqlActivityVerifier(totalActivity, totalSamples);
+    assertEquals(2, activity.topSql.size());
 
-    assertEquals(3, topSessions.size());
-    verifySessionActivity(SESSION_2, 7, ImmutableMap.of(WAIT_CLASS_1, 4, WAIT_CLASS_2, 3),
-        totalActivity, topSessions.get(0));
-    verifySessionActivity(SESSION_1, 2, ImmutableMap.of(WAIT_CLASS_1, 2), totalActivity,
-        topSessions.get(1));
-    verifySessionActivity(SESSION_3, 1, ImmutableMap.of(WAIT_CLASS_2, 1), totalActivity,
-        topSessions.get(2));
-  }
+    sqlVerifier.verify(activity.topSql.get(0)).sqlId(SQL_ID_1).activity(6)
+        .events(EVENT_1[0], 5, EVENT_2[0], 1).waitClasses(WAIT_CLASS_1, 5, WAIT_CLASS_2, 1);
 
-  @Test
-  public void testGetSqlSnapshots() {
-    final int samples = 5;
+    sqlVerifier.verify(activity.topSql.get(1)).sqlId(SQL_ID_2).activity(4)
+        .events(EVENT_1[0], 1, EVENT_2[0], 3).waitClasses(WAIT_CLASS_1, 1, WAIT_CLASS_2, 3);
 
-    List<ActiveSession> s1Sessions = new ArrayList<>();
-    s1Sessions.add(newActiveSession(SQL_ID_1, EVENT_1));
-    s1Sessions.add(newActiveSession(SQL_ID_2, EVENT_2));
-    s1Sessions.add(newActiveSession((String) null, EVENT_3));
-    AshSnapshot s1 = newSnapshot(1, samples, s1Sessions);
+    SessionActivityVerifier sessionVerifier = new SessionActivityVerifier(totalActivity);
+    assertEquals(3, activity.topSessions.size());
 
-    List<ActiveSession> s2Sessions = new ArrayList<>();
-    s2Sessions.add(newActiveSession(SQL_ID_1, EVENT_1));
-    s2Sessions.add(newActiveSession(SQL_ID_1, EVENT_3));
-    s2Sessions.add(newActiveSession(SQL_ID_1, EVENT_3));
-    AshSnapshot s2 = newSnapshot(2, samples, s2Sessions);
+    sessionVerifier.verify(activity.topSessions.get(0)).session(SESSION_2).activity(7)
+        .events(EVENT_1[0], 4, EVENT_2[0], 3).waitClasses(WAIT_CLASS_1, 4, WAIT_CLASS_2, 3);
 
-    AshAgent agent = mock(AshAgent.class);
-    when(agent.getSnapshots()).thenReturn(ImmutableList.of(s1, s2));
+    sessionVerifier.verify(activity.topSessions.get(1)).session(SESSION_1).activity(2)
+        .events(EVENT_1[0], 2).waitClasses(WAIT_CLASS_1, 2);
 
-    Ash ash = new Ash();
-    setField(ash, "agent", agent);
-
-    List<Snapshot<Double>> snapshots = ash.getSqlSnapshots(SQL_ID_1);
-
-    assertEquals(2, snapshots.size());
-
-    Snapshot<Double> snapshot1 = snapshots.get(0);
-    assertEquals(1, snapshot1.getValues().size());
-    assertEquals((double) 1 / samples, snapshot1.getValues().get(EVENT_1[0]), 0);
-
-    Snapshot<Double> snapshot2 = snapshots.get(1);
-    assertEquals(2, snapshot2.getValues().size());
-    assertEquals((double) 1 / samples, snapshot2.getValues().get(EVENT_1[0]), 0);
-    assertEquals((double) 2 / samples, snapshot2.getValues().get(EVENT_3[0]), 0);
-  }
-
-  @Test
-  public void testGetSessionSnapshots() {
-    final int samples = 5;
-
-    List<ActiveSession> s1Sessions = new ArrayList<>();
-    s1Sessions.add(newActiveSession(SESSION_1, EVENT_1));
-    s1Sessions.add(newActiveSession(SESSION_2, EVENT_2));
-    AshSnapshot s1 = newSnapshot(1, samples, s1Sessions);
-
-    List<ActiveSession> s2Sessions = new ArrayList<>();
-    s2Sessions.add(newActiveSession(SESSION_1, EVENT_1));
-    s2Sessions.add(newActiveSession(SESSION_1, EVENT_3));
-    s2Sessions.add(newActiveSession(SESSION_1, EVENT_3));
-    AshSnapshot s2 = newSnapshot(2, samples, s2Sessions);
-
-    AshAgent agent = mock(AshAgent.class);
-    when(agent.getSnapshots()).thenReturn(ImmutableList.of(s1, s2));
-
-    Ash ash = new Ash();
-    setField(ash, "agent", agent);
-
-    long sid = Long.parseLong(SESSION_1[0]);
-    long serialNumber = Long.parseLong(SESSION_1[1]);
-    List<Snapshot<Double>> snapshots = ash.getSessionSnapshots(sid, serialNumber);
-
-    assertEquals(2, snapshots.size());
-
-    Snapshot<Double> snapshot1 = snapshots.get(0);
-    assertEquals(1, snapshot1.getValues().size());
-    assertEquals((double) 1 / samples, snapshot1.getValues().get(EVENT_1[0]), 0);
-
-    Snapshot<Double> snapshot2 = snapshots.get(1);
-    assertEquals(2, snapshot2.getValues().size());
-    assertEquals((double) 1 / samples, snapshot2.getValues().get(EVENT_1[0]), 0);
-    assertEquals((double) 2 / samples, snapshot2.getValues().get(EVENT_3[0]), 0);
-  }
-
-  private static void verifySqlActivity(String expectedSqlId, int expectedActivity,
-      Map<String, Integer> expectedWaitClasses, int totalActivity, int totalSamples,
-      SqlActivity sqlActivity) {
-
-    assertEquals(expectedSqlId, sqlActivity.sqlId);
-    assertEquals(expectedActivity, sqlActivity.activity);
-    assertEquals((double) expectedActivity / totalSamples, sqlActivity.averageActiveSessions, 0);
-    assertEquals((100d * expectedActivity) / totalActivity, sqlActivity.percentageTotalActivity, 0);
-
-    verifyMultiset(expectedWaitClasses, sqlActivity.activityByWaitClass);
-  }
-
-  private static void verifySessionActivity(String[] expectedSession, int expectedActivity,
-      Map<String, Integer> expectedWaitClasses, int totalActivity, SessionActivity sessionActivity) {
-
-    assertEquals(expectedSession[0], sessionActivity.sessionId);
-    assertEquals(expectedSession[1], sessionActivity.serialNumber);
-    assertEquals(expectedActivity, sessionActivity.activity);
-    assertEquals((100d * expectedActivity) / totalActivity,
-        sessionActivity.percentageTotalActivity, 0);
-
-    verifyMultiset(expectedWaitClasses, sessionActivity.activityByWaitClass);
-  }
-
-  private static void verifyMultiset(Map<String, Integer> expected, Multiset<String> actual) {
-    int size = 0;
-    for (Map.Entry<String, Integer> entry : expected.entrySet()) {
-      size += entry.getValue();
-      assertEquals(entry.getValue().intValue(), actual.count(entry.getKey()));
-    }
-    assertEquals(size, actual.size());
-  }
-
-  private static ActiveSession newActiveSession(String[] session, String sqlId, String waitClass) {
-    return newActiveSession(session, sqlId, new String[] {null, waitClass});
-  }
-
-  private static ActiveSession newActiveSession(String sqlId, String[] event) {
-    return newActiveSession(SESSION_1, sqlId, event);
-  }
-
-  private static ActiveSession newActiveSession(String[] session, String[] event) {
-    return newActiveSession(session, SQL_ID_1, event);
+    sessionVerifier.verify(activity.topSessions.get(2)).session(SESSION_3).activity(1)
+        .events(EVENT_2[0], 1).waitClasses(WAIT_CLASS_2, 1);
   }
 
   private static ActiveSession newActiveSession(String[] session, String sqlId, String[] event) {
@@ -230,10 +258,5 @@ public class AshTest {
     as.event = event[0];
     as.waitClass = event[1];
     return as;
-  }
-
-  private static AshSnapshot newSnapshot(long timestamp, int samples,
-      List<ActiveSession> activeSessions) {
-    return new AshSnapshot(timestamp, activeSessions, samples);
   }
 }

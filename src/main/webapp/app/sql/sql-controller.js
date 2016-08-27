@@ -48,6 +48,32 @@
 
   function SqlCtrl($scope, $routeParams, $http) {
 
+    function sessionActivityBar(activityMap, topActivity) {
+      var result = [];
+      $scope.series.forEach(function(s) {
+        var width = Math.floor((activityMap[s[0]] * 100) / topActivity);
+        if (width > 0) {
+          result.push({
+            title: s[0],
+            style: {
+              'width': width + '%',
+              'background-color': s[1]
+            }
+          });
+        }
+      });
+      return result;
+    }
+
+    function fillTopSessions(data) {
+      var top = (data.length > 0) ? data[0].activity : null;
+      data.forEach(function(sess) {
+        sess.percentageFixed = sess.percentageTotalActivity.toFixed(0);
+        sess.activityBar = sessionActivityBar(sess.activityByEvent, top);
+      });
+      $scope.topSessions = data;
+    }
+
     $http.get('ws/sql/' + $routeParams.sqlId).success(function(json) {
       json.executionPlans.forEach(preparePlan);
       $scope.sql = json;
@@ -64,6 +90,7 @@
       json.keys.forEach(function(key, i) {
         $scope.series.push([key, colors(i)]);
       });
+      fillTopSessions(json.topSessions);
       return json;
     };
   }

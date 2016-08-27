@@ -21,6 +21,31 @@
         <div oraman-aas-chart aas-url="ws/ash/ash-sql/{{sqlId}}"
           aas-series="series" aas-preprocessor="preprocessor"></div>
       </div>
+      <div class="oraman-ash-top-activity">
+        <table class="table table-bordered table-condensed table-striped">
+          <thead>
+            <tr>
+              <th>SID</th>
+              <th>User</th>
+              <th>Program</th>
+              <th colspan="2">Activity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="sess in topSessions">
+              <td><a
+                href="#session?sid={{sess.sessionId}}&serialNumber={{sess.serialNumber}}">{{sess.sessionId}}</a></td>
+              <td>{{sess.username}}</td>
+              <td>{{sess.program}}</td>
+              <td class="oraman-ash-activity-bar width-300">
+                <div title="{{element.title}}" ng-style="element.style"
+                  ng-repeat="element in sess.activityBar">&nbsp;</div>
+              </td>
+              <td>{{sess.percentageFixed}}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <div class="oraman-details-header">
         <h4>Execution Plans</h4>
       </div>
