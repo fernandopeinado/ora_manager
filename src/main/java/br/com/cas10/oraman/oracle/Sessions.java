@@ -44,6 +44,11 @@ public class Sessions {
   private final String activeSessionsSql = loadSqlStatement("active_sessions.sql");
   private final String lockedObjectsSql = loadSqlStatement("locked_objects.sql");
   private final String sessionBySidSql = loadSqlStatement("session_by_sid.sql");
+  private final String sessionBySidAndSerialSql = loadSqlStatement("session_by_sid_and_serial.sql");
+  private final String globalSessionsByInstanceAndSidSql = loadSqlStatement("global_sessions_by_instance_and_sid.sql");
+  private final String killSessionSql = loadSqlStatement("kill_session.sql");
+
+
 
   @Autowired(required = false)
   @Qualifier("admin")
@@ -55,8 +60,8 @@ public class Sessions {
   @Transactional(readOnly = true)
   public Session getSession(long sessionId, long serialNumber) {
     List<SessionBean> list =
-        jdbc.query(sessionBySidSql + " and serial# = :serialNumber",
-            ImmutableMap.of("sid", sessionId, "serialNumber", serialNumber), SESSION_ROW_MAPPER);
+        jdbc.query(sessionBySidAndSerialSql, ImmutableMap.of("sid", sessionId, "serialNumber", serialNumber),
+                SESSION_ROW_MAPPER);
     return convert(DataAccessUtils.singleResult(list));
   }
 
@@ -81,8 +86,7 @@ public class Sessions {
 
   private GlobalSession getGlobalSession(long instanceNumber, long sessionId) {
     return jdbc
-        .queryForObject(
-            "select serial#, username, program from gv$session where inst_id = :instance and sid = :sid",
+        .queryForObject(globalSessionsByInstanceAndSidSql,
             ImmutableMap.of("instance", instanceNumber, "sid", sessionId), (rs, rowNum) -> {
               GlobalSession session = new GlobalSession();
               session.instanceNumber = instanceNumber;
@@ -146,8 +150,7 @@ public class Sessions {
     checkArgument(serialNumber >= 0);
 
     if (adminJdbc != null) {
-      adminJdbc.execute(String.format("alter system kill session '%d,%d' immediate", sessionId,
-          serialNumber));
+      adminJdbc.execute(killSessionSql.replace(":fullSid", String.format("'%d,%d'", sessionId, serialNumber)));
       LOGGER.info(String.format("Session killed: %d (SID), %d (Serial#)", sessionId, serialNumber));
     }
   }

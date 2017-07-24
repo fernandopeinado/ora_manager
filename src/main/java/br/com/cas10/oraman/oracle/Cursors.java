@@ -23,6 +23,8 @@ public class Cursors {
 
   private final String childCursorsSql = loadSqlStatement("execution_plans.sql");
   private final String cursorBySqlId = loadSqlStatement("cursor_by_sqlid.sql");
+  private final String sqlFullTextBySqlId = loadSqlStatement("sql_fulltext.sql");
+  private final String planTableOutputBySqlIdAndChildNumber = loadSqlStatement("plan_table_output.sql");
 
   @Autowired
   @Qualifier("monitoring")
@@ -53,9 +55,7 @@ public class Cursors {
    */
   public String getSqlFullText(String sqlId) {
     checkNotNull(sqlId);
-    List<String> list =
-        jdbc.queryForList("select sql_fulltext from v$sqlarea where sql_id = :sqlId",
-            ImmutableMap.of("sqlId", sqlId), String.class);
+    List<String> list = jdbc.queryForList(sqlFullTextBySqlId, ImmutableMap.of("sqlId", sqlId), String.class);
     return DataAccessUtils.singleResult(list);
   }
 
@@ -103,9 +103,8 @@ public class Cursors {
 
   private String getPlan(String sqlId, long childNumber) {
     List<String> lines =
-        jdbc.queryForList(
-            "select plan_table_output from table(dbms_xplan.display_cursor(:sqlId, :childNumber))",
-            ImmutableMap.of("sqlId", sqlId, "childNumber", childNumber), String.class);
+        jdbc.queryForList(planTableOutputBySqlIdAndChildNumber, ImmutableMap.of("sqlId", sqlId, "childNumber",
+                childNumber), String.class);
     return String.join("\n", lines);
   }
 }

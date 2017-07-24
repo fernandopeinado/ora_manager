@@ -1,0 +1,1 @@
+select count(1) from v$version where banner like 'Oracle Database%Express Edition%'

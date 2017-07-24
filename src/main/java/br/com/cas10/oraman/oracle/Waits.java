@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 @Service
 public class Waits {
 
+  private final String waitClassesSql = loadSqlStatement("wait_classes.sql");
   private final String waitsSql = loadSqlStatement("waits.sql");
 
   @Autowired
@@ -29,11 +30,7 @@ public class Waits {
 
   @PostConstruct
   private void init() {
-    List<String> list =
-        jdbc.getJdbcOperations()
-            .queryForList(
-                "select distinct wait_class from v$event_name where wait_class <> 'Idle'",
-                String.class);
+    List<String> list = jdbc.getJdbcOperations().queryForList(waitClassesSql, String.class);
     waitClasses = ImmutableList.copyOf(list);
   }
 

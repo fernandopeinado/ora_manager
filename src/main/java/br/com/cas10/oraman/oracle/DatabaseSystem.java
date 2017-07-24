@@ -7,8 +7,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
+
 @Service
 public class DatabaseSystem {
+
+  private final String instanceNumberSql = loadSqlStatement("instance_number.sql");
+  private final String checkExpressEditionSql = loadSqlStatement("check_express_edition.sql");
+  private final String numCpuCoresSql = loadSqlStatement("num_cpu_cores.sql");
+  private final String numCpuThreadsSql = loadSqlStatement("num_cpu_threads.sql");
 
   @Autowired
   @Qualifier("monitoring")
@@ -20,26 +27,17 @@ public class DatabaseSystem {
 
   @PostConstruct
   private void init() {
-    instanceNumber =
-        jdbc.getJdbcOperations().queryForObject("select instance_number from v$instance",
-            Long.class);
+    instanceNumber = jdbc.getJdbcOperations().queryForObject(instanceNumberSql,Long.class);
 
-    int xeQueryResult =
-        jdbc.getJdbcOperations().queryForObject(
-            "select count(1) from v$version where banner like 'Oracle Database%Express Edition%'",
-            Integer.class);
+    int xeQueryResult = jdbc.getJdbcOperations().queryForObject(checkExpressEditionSql, Integer.class);
     boolean expressEdition = xeQueryResult > 0;
 
     if (expressEdition) {
       cpuCores = 1;
       cpuThreads = 1;
     } else {
-      cpuCores =
-          jdbc.getJdbcOperations().queryForObject(
-              "select value from v$osstat where stat_name = 'NUM_CPU_CORES'", Integer.class);
-      cpuThreads =
-          jdbc.getJdbcOperations().queryForObject(
-              "select value from v$osstat where stat_name = 'NUM_CPUS'", Integer.class);
+      cpuCores = jdbc.getJdbcOperations().queryForObject(numCpuCoresSql, Integer.class);
+      cpuThreads = jdbc.getJdbcOperations().queryForObject(numCpuThreadsSql, Integer.class);
     }
   }
 
