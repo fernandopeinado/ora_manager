@@ -1,13 +1,15 @@
 package br.com.cas10.oraman.oracle;
 
+import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
+import static com.google.common.collect.Iterables.getOnlyElement;
+
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
-
-import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 
 @Service
 public class DatabaseSystem {
@@ -27,23 +29,28 @@ public class DatabaseSystem {
 
   @PostConstruct
   private void init() {
-    instanceNumber = jdbc.getJdbcOperations().queryForObject(instanceNumberSql,Long.class);
+    JdbcOperations jdbcOps = jdbc.getJdbcOperations();
 
-    int xeQueryResult = jdbc.getJdbcOperations().queryForObject(checkExpressEditionSql, Integer.class);
+    instanceNumber = jdbcOps.queryForObject(instanceNumberSql, Long.class);
+
+    int xeQueryResult = jdbcOps.queryForObject(checkExpressEditionSql, Integer.class);
     boolean expressEdition = xeQueryResult > 0;
 
     if (expressEdition) {
       cpuCores = 1;
       cpuThreads = 1;
     } else {
-      cpuCores = jdbc.getJdbcOperations().queryForObject(numCpuCoresSql, Integer.class);
-      cpuThreads = jdbc.getJdbcOperations().queryForObject(numCpuThreadsSql, Integer.class);
+      cpuThreads = jdbcOps.queryForObject(numCpuThreadsSql, Integer.class);
+      // NUM_CPU_CORES is not always available (e.g., cloud environments)
+      cpuCores = getOnlyElement(jdbcOps.queryForList(numCpuCoresSql, Integer.class), cpuThreads);
     }
   }
 
   /**
    * Returns the number of CPU cores available (the value of {@code NUM_CPU_CORES} on
    * {@code v$osstat}). On Express Edition databases, returns {@code 1}.
+   * <p>
+   * Returns the value of {@code NUM_CPUS} if {@code NUM_CPU_CORES} is not available.
    *
    * @return the number of CPU cores available.
    */
