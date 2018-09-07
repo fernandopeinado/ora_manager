@@ -2,7 +2,6 @@ package br.com.cas10.oraman;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;

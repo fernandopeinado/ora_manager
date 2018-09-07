@@ -1,6 +1,5 @@
 package br.com.cas10.oraman.oracle.data;
 
-
 public class ExecutionPlan {
 
   public String sqlId;

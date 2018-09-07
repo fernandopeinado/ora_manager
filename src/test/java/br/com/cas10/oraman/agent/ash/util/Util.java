@@ -2,9 +2,8 @@ package br.com.cas10.oraman.agent.ash.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.Multiset;
-
 import br.com.cas10.oraman.util.Snapshot;
+import com.google.common.collect.Multiset;
 
 public class Util {
 

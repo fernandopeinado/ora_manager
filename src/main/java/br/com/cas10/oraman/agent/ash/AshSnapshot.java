@@ -1,16 +1,14 @@
 package br.com.cas10.oraman.agent.ash;
 
+import br.com.cas10.oraman.oracle.data.ActiveSession;
+import br.com.cas10.oraman.util.Snapshot;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multiset;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import br.com.cas10.oraman.oracle.data.ActiveSession;
-import br.com.cas10.oraman.util.Snapshot;
-
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multiset;
 
 class AshSnapshot implements Serializable {
 

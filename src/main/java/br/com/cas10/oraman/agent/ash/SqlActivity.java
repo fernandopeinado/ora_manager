@@ -2,10 +2,9 @@ package br.com.cas10.oraman.agent.ash;
 
 import static com.google.common.collect.Multisets.unmodifiableMultiset;
 
+import br.com.cas10.oraman.oracle.data.ActiveSession;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-
-import br.com.cas10.oraman.oracle.data.ActiveSession;
 
 public class SqlActivity {
 

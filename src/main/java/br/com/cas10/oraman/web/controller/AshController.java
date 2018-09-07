@@ -7,29 +7,26 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
-
 import br.com.cas10.oraman.agent.ash.Ash;
 import br.com.cas10.oraman.agent.ash.IntervalActivity;
 import br.com.cas10.oraman.agent.ash.SessionActivity;
 import br.com.cas10.oraman.agent.ash.SqlActivity;
 import br.com.cas10.oraman.oracle.DatabaseSystem;
 import br.com.cas10.oraman.util.Snapshot;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 class AshController {
@@ -47,7 +44,8 @@ class AshController {
   Map<String, ?> ash() {
     List<Snapshot<Double>> snapshots = ash.getWaitClassesSnapshots();
 
-    long intervalStart = 0, intervalEnd = 0;
+    long intervalStart = 0;
+    long intervalEnd = 0;
     if (!snapshots.isEmpty()) {
       intervalEnd = Iterables.getLast(snapshots).getTimestamp();
       intervalStart = Math.max(snapshots.get(0).getTimestamp(), intervalEnd - FIVE_MINUTES);
@@ -112,11 +110,11 @@ class AshController {
   @RequestMapping(value = "/ash/ash-session", method = GET)
   Map<String, ?> ashSession(@RequestParam("sid") Long sid,
       @RequestParam("serialNumber") Long serialNumber) {
-    String sSid = sid.toString();
-    String sSerialNumber = serialNumber.toString();
+    String sidStr = sid.toString();
+    String serialNumberStr = serialNumber.toString();
 
     IntervalActivity activity =
-        ash.getActivity(s -> sSid.equals(s.sid) && sSerialNumber.equals(s.serialNumber));
+        ash.getActivity(s -> sidStr.equals(s.sid) && serialNumberStr.equals(s.serialNumber));
 
     Map<String, Object> response = new LinkedHashMap<>();
     putEventsAasData(activity.eventsSnapshots, response);

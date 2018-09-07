@@ -5,14 +5,12 @@ import br.com.cas10.oraman.oracle.data.Table;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 
 @Controller
 class TablesController {
@@ -28,7 +26,7 @@ class TablesController {
     response.put("schemas", schemas);
     return response;
   }
-  
+
   @ResponseBody
   @RequestMapping(value = "/tables/{schema}", method = RequestMethod.GET)
   Map<String, ?> tables(@PathVariable("schema") String schema) {
@@ -40,7 +38,8 @@ class TablesController {
 
   @ResponseBody
   @RequestMapping(value = "/tables/{schema}/{table}", method = RequestMethod.GET)
-  Map<String, ?> fullTable(@PathVariable("schema") String schema, @PathVariable("table") String table) {
+  Map<String, ?> fullTable(@PathVariable("schema") String schema,
+      @PathVariable("table") String table) {
     Table tbl = this.tables.getFullTable(schema, table);
     Map<String, Object> response = new HashMap<>();
     response.put("table", tbl);

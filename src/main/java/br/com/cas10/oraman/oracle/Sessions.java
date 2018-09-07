@@ -4,8 +4,12 @@ import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.stream.Collectors.toList;
 
+import br.com.cas10.oraman.oracle.data.ActiveSession;
+import br.com.cas10.oraman.oracle.data.GlobalSession;
+import br.com.cas10.oraman.oracle.data.LockedObject;
+import br.com.cas10.oraman.oracle.data.Session;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,13 +19,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import br.com.cas10.oraman.oracle.data.ActiveSession;
-import br.com.cas10.oraman.oracle.data.GlobalSession;
-import br.com.cas10.oraman.oracle.data.LockedObject;
-import br.com.cas10.oraman.oracle.data.Session;
-
-import com.google.common.collect.ImmutableMap;
 
 @Service
 public class Sessions {
@@ -45,10 +42,9 @@ public class Sessions {
   private final String lockedObjectsSql = loadSqlStatement("locked_objects.sql");
   private final String sessionBySidSql = loadSqlStatement("session_by_sid.sql");
   private final String sessionBySidAndSerialSql = loadSqlStatement("session_by_sid_and_serial.sql");
-  private final String globalSessionsByInstanceAndSidSql = loadSqlStatement("global_sessions_by_instance_and_sid.sql");
+  private final String globalSessionsByInstanceAndSidSql =
+      loadSqlStatement("global_sessions_by_instance_and_sid.sql");
   private final String killSessionSql = loadSqlStatement("kill_session.sql");
-
-
 
   @Autowired(required = false)
   @Qualifier("admin")
@@ -59,9 +55,8 @@ public class Sessions {
 
   @Transactional(readOnly = true)
   public Session getSession(long sessionId, long serialNumber) {
-    List<SessionBean> list =
-        jdbc.query(sessionBySidAndSerialSql, ImmutableMap.of("sid", sessionId, "serialNumber", serialNumber),
-                SESSION_ROW_MAPPER);
+    List<SessionBean> list = jdbc.query(sessionBySidAndSerialSql,
+        ImmutableMap.of("sid", sessionId, "serialNumber", serialNumber), SESSION_ROW_MAPPER);
     return convert(DataAccessUtils.singleResult(list));
   }
 
@@ -85,17 +80,16 @@ public class Sessions {
   }
 
   private GlobalSession getGlobalSession(long instanceNumber, long sessionId) {
-    return jdbc
-        .queryForObject(globalSessionsByInstanceAndSidSql,
-            ImmutableMap.of("instance", instanceNumber, "sid", sessionId), (rs, rowNum) -> {
-              GlobalSession session = new GlobalSession();
-              session.instanceNumber = instanceNumber;
-              session.sid = sessionId;
-              session.serialNumber = rs.getLong("serial#");
-              session.username = rs.getString("username");
-              session.program = rs.getString("program");
-              return session;
-            });
+    return jdbc.queryForObject(globalSessionsByInstanceAndSidSql,
+        ImmutableMap.of("instance", instanceNumber, "sid", sessionId), (rs, rowNum) -> {
+          GlobalSession session = new GlobalSession();
+          session.instanceNumber = instanceNumber;
+          session.sid = sessionId;
+          session.serialNumber = rs.getLong("serial#");
+          session.username = rs.getString("username");
+          session.program = rs.getString("program");
+          return session;
+        });
   }
 
   private List<LockedObject> getLockedObjects(long sessionId) {
@@ -124,7 +118,7 @@ public class Sessions {
       return s;
     });
   }
-  
+
   @Transactional(readOnly = true)
   public List<ActiveSession> getAllSessions() {
     return jdbc.query(allSessionsSql, (rs, rowNum) -> {
@@ -141,8 +135,8 @@ public class Sessions {
     });
   }
 
-  private static String nullSafeIntern(String aString) {
-    return aString == null ? null : aString.intern();
+  private static String nullSafeIntern(String string) {
+    return string == null ? null : string.intern();
   }
 
   public void killSession(long sessionId, long serialNumber) {
@@ -150,7 +144,8 @@ public class Sessions {
     checkArgument(serialNumber >= 0);
 
     if (adminJdbc != null) {
-      adminJdbc.execute(killSessionSql.replace(":fullSid", String.format("'%d,%d'", sessionId, serialNumber)));
+      adminJdbc.execute(
+          killSessionSql.replace(":fullSid", String.format("'%d,%d'", sessionId, serialNumber)));
       LOGGER.info(String.format("Session killed: %d (SID), %d (Serial#)", sessionId, serialNumber));
     }
   }

@@ -1,9 +1,13 @@
 package br.com.cas10.oraman.web.controller;
 
+import br.com.cas10.oraman.oracle.DatabaseSystem;
+import br.com.cas10.oraman.oracle.Sessions;
+import br.com.cas10.oraman.oracle.data.ActiveSession;
+import br.com.cas10.oraman.oracle.data.Session;
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -12,13 +16,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import br.com.cas10.oraman.oracle.DatabaseSystem;
-import br.com.cas10.oraman.oracle.Sessions;
-import br.com.cas10.oraman.oracle.data.ActiveSession;
-import br.com.cas10.oraman.oracle.data.Session;
-
-import com.google.common.collect.ImmutableList;
 
 @Controller
 class SessionController {
@@ -30,8 +27,8 @@ class SessionController {
 
   @ResponseBody
   @RequestMapping(value = "/session", method = RequestMethod.GET)
-  Map<String, ?> session(@RequestParam("sid") Long sid, @RequestParam(value = "serialNumber",
-      required = false) Long serialNumber) {
+  Map<String, ?> session(@RequestParam("sid") Long sid,
+      @RequestParam(value = "serialNumber", required = false) Long serialNumber) {
 
     Session session = null;
     List<Session> candidates = ImmutableList.of();

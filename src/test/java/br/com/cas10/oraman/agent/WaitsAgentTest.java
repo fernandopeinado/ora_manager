@@ -9,16 +9,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Test;
-
 import br.com.cas10.oraman.oracle.Waits;
 import br.com.cas10.oraman.oracle.data.Wait;
 import br.com.cas10.oraman.util.Snapshot;
-
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.Test;
 
 public class WaitsAgentTest {
 

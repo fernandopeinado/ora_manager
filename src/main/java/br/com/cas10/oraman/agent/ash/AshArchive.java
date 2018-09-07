@@ -3,6 +3,9 @@ package br.com.cas10.oraman.agent.ash;
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.util.concurrent.TimeUnit.DAYS;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.UnmodifiableIterator;
+import com.google.common.io.Closer;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -25,19 +28,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
-
 import javax.annotation.PostConstruct;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.UnmodifiableIterator;
-import com.google.common.io.Closer;
-
 
 @Component
 class AshArchive {
@@ -48,8 +44,8 @@ class AshArchive {
   static final Path ARCHIVE_PATH = Paths.get(JAVA_IO_TMPDIR.value(), "oraman");
 
   private static final long ARCHIVE_SIZE_HOURS = DAYS.toHours(7);
-  private static final DateTimeFormatter FILENAME_FORMATTER = DateTimeFormatter
-      .ofPattern("yyyy-MM-dd-HH");
+  private static final DateTimeFormatter FILENAME_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
   private static final Pattern FILENAME_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2}-\\d{2}");
   private static final int SNAPSHOTS_BATCH_SIZE = 100;
 
@@ -116,8 +112,8 @@ class AshArchive {
         ZonedDateTime fileDateTime =
             LocalDateTime.parse(fileName, FILENAME_FORMATTER).atZone(ZoneId.systemDefault());
         if (fileDateTime.isBefore(base)) {
-          LOGGER.info(String.format("Removing file: %s", path.normalize().toAbsolutePath()
-              .toString()));
+          LOGGER.info(
+              String.format("Removing file: %s", path.normalize().toAbsolutePath().toString()));
           Files.deleteIfExists(path);
         }
       }
@@ -129,8 +125,8 @@ class AshArchive {
   interface ArchivedSnapshotsIterator extends Closeable, Iterator<AshSnapshot> {
   }
 
-  private static class FileSnapshotsIterator extends UnmodifiableIterator<AshSnapshot> implements
-      ArchivedSnapshotsIterator {
+  private static class FileSnapshotsIterator extends UnmodifiableIterator<AshSnapshot>
+      implements ArchivedSnapshotsIterator {
 
     private final Path path;
     private final Closer closer = Closer.create();
@@ -175,8 +171,8 @@ class AshArchive {
     }
   }
 
-  private static class EmptyIterator extends UnmodifiableIterator<AshSnapshot> implements
-      ArchivedSnapshotsIterator {
+  private static class EmptyIterator extends UnmodifiableIterator<AshSnapshot>
+      implements ArchivedSnapshotsIterator {
 
     private static final EmptyIterator INSTANCE = new EmptyIterator();
 

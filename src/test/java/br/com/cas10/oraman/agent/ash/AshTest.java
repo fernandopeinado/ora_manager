@@ -8,18 +8,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-import java.util.List;
-import java.util.function.Predicate;
-
-import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
-
 import br.com.cas10.oraman.agent.ash.util.SessionActivityVerifier;
 import br.com.cas10.oraman.agent.ash.util.SqlActivityVerifier;
 import br.com.cas10.oraman.oracle.Cursors;
 import br.com.cas10.oraman.oracle.data.ActiveSession;
 import br.com.cas10.oraman.util.Snapshot;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.function.Predicate;
+import org.junit.Test;
 
 public class AshTest {
 

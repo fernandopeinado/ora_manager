@@ -2,13 +2,11 @@ package br.com.cas10.oraman.agent.ash;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-
 import br.com.cas10.oraman.oracle.data.ActiveSession;
 import br.com.cas10.oraman.util.Snapshot;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Test;
 
 public class AshSnapshotTest {
 

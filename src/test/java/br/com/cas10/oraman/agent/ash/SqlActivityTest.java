@@ -1,11 +1,9 @@
 package br.com.cas10.oraman.agent.ash;
 
-
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
-
 import br.com.cas10.oraman.oracle.data.ActiveSession;
+import org.junit.Test;
 
 public class SqlActivityTest {
 

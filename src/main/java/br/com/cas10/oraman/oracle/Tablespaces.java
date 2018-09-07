@@ -2,18 +2,15 @@ package br.com.cas10.oraman.oracle;
 
 import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 
+import br.com.cas10.oraman.oracle.data.TablespaceUsage;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import br.com.cas10.oraman.oracle.data.TablespaceUsage;
-
-import com.google.common.collect.ImmutableMap;
 
 @Service
 public class Tablespaces {

@@ -1,8 +1,7 @@
 package br.com.cas10.oraman.oracle;
 
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 public enum LockMode {
 

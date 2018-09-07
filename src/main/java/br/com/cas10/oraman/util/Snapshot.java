@@ -1,9 +1,8 @@
 package br.com.cas10.oraman.util;
 
+import com.google.common.collect.ImmutableMap;
 import java.io.Serializable;
 import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
 
 public class Snapshot<T> implements Serializable {
 

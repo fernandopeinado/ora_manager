@@ -3,6 +3,17 @@ package br.com.cas10.oraman.agent.ash;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toMap;
 
+import br.com.cas10.oraman.agent.ash.AshArchive.ArchivedSnapshotsIterator;
+import br.com.cas10.oraman.oracle.Cursors;
+import br.com.cas10.oraman.oracle.data.ActiveSession;
+import br.com.cas10.oraman.oracle.data.Cursor;
+import br.com.cas10.oraman.util.Snapshot;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Table;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -13,23 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Table;
-
-import br.com.cas10.oraman.agent.ash.AshArchive.ArchivedSnapshotsIterator;
-import br.com.cas10.oraman.oracle.Cursors;
-import br.com.cas10.oraman.oracle.data.ActiveSession;
-import br.com.cas10.oraman.oracle.data.Cursor;
-import br.com.cas10.oraman.util.Snapshot;
 
 @Service
 public class Ash {
@@ -48,8 +45,8 @@ public class Ash {
   }
 
   /**
-   * @return snapshots with the average active sessions by wait class, calculated from the ASH
-   *         snapshots in memory.
+   * Returns snapshots with the average active sessions by wait class, calculated from the ASH
+   * snapshots in memory.
    */
   @Transactional(readOnly = true)
   public List<Snapshot<Double>> getWaitClassesSnapshots() {
@@ -79,9 +76,9 @@ public class Ash {
 
   /**
    * Returns the activity data for the specified interval.
-   * <p>
-   * The activity data is taken from the ASH snapshots currently in memory whose timestamp is in the
-   * interval {@code [start, end]}. The returned object contains
+   *
+   * <p>The activity data is taken from the ASH snapshots currently in memory whose timestamp is in
+   * the interval {@code [start, end]}. The returned object contains
    * <ul>
    * <li>snapshots with the average active sessions by wait class,</li>
    * <li>top 10 SQL statements in the interval,</li>
@@ -101,8 +98,8 @@ public class Ash {
   /**
    * Loads and returns from the disk archive the activity data for the 1-hour interval
    * {@code year/month/dayOfMonth [hour, hour + 1)}.
-   * <p>
-   * The returned object contains
+   *
+   * <p>The returned object contains
    * <ul>
    * <li>snapshots with the average active sessions by wait class,</li>
    * <li>top 10 SQL statements in the interval,</li>

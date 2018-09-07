@@ -3,24 +3,20 @@ package br.com.cas10.oraman.agent.ash;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import br.com.cas10.oraman.oracle.Sessions;
+import br.com.cas10.oraman.oracle.Waits;
+import br.com.cas10.oraman.oracle.data.ActiveSession;
+import br.com.cas10.oraman.util.Buffer;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.PostConstruct;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
-
-import br.com.cas10.oraman.oracle.Sessions;
-import br.com.cas10.oraman.oracle.Waits;
-import br.com.cas10.oraman.oracle.data.ActiveSession;
-import br.com.cas10.oraman.util.Buffer;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 
 @Component
 class AshAgent {

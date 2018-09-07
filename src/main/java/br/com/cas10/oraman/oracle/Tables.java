@@ -1,23 +1,20 @@
 package br.com.cas10.oraman.oracle;
 
 import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
+
 import br.com.cas10.oraman.oracle.data.Column;
 import br.com.cas10.oraman.oracle.data.Index;
 import br.com.cas10.oraman.oracle.data.Table;
-
+import com.google.common.collect.ImmutableMap;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.google.common.collect.ImmutableMap;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Date;
 
 @Service
 public class Tables {
@@ -61,7 +58,7 @@ public class Tables {
       table.columns.put(bean.name, bean);
       return bean;
     }
-  };
+  }
 
   private static class IndexColumnRowMapper implements RowMapper<Index> {
 
@@ -92,7 +89,7 @@ public class Tables {
       bean.columns.add(rs.getString("column_name"));
       return bean;
     }
-  };
+  }
 
   private static class SizeRowMapper implements RowMapper<Object> {
 
@@ -125,7 +122,7 @@ public class Tables {
       }
       return sizeMb;
     }
-  };
+  }
 
   private final String allSchemasSql = loadSqlStatement("all_schemas.sql");
   private final String allTablesSql = loadSqlStatement("all_tables.sql");
@@ -150,10 +147,14 @@ public class Tables {
 
   @Transactional(readOnly = true)
   public Table getFullTable(String owner, String tableName) {
-    Table table = jdbc.queryForObject(tableSql, ImmutableMap.of("owner", owner, "tableName", tableName), TABLE_ROW_MAPPER);
-    jdbc.query(tableColumnsSql, ImmutableMap.of("owner", owner, "tableName", tableName), new TableColumnRowMapper(table));
-    jdbc.query(tableIndexesSql, ImmutableMap.of("owner", owner, "tableName", tableName), new IndexColumnRowMapper(table));
-    jdbc.query(tableSizeSql, ImmutableMap.of("owner", owner, "tableName", tableName), new SizeRowMapper(table));
+    Table table = jdbc.queryForObject(tableSql,
+        ImmutableMap.of("owner", owner, "tableName", tableName), TABLE_ROW_MAPPER);
+    jdbc.query(tableColumnsSql, ImmutableMap.of("owner", owner, "tableName", tableName),
+        new TableColumnRowMapper(table));
+    jdbc.query(tableIndexesSql, ImmutableMap.of("owner", owner, "tableName", tableName),
+        new IndexColumnRowMapper(table));
+    jdbc.query(tableSizeSql, ImmutableMap.of("owner", owner, "tableName", tableName),
+        new SizeRowMapper(table));
     return table;
   }
 

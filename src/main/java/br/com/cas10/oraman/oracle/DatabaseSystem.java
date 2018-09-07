@@ -4,7 +4,6 @@ import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -49,8 +48,8 @@ public class DatabaseSystem {
   /**
    * Returns the number of CPU cores available (the value of {@code NUM_CPU_CORES} on
    * {@code v$osstat}). On Express Edition databases, returns {@code 1}.
-   * <p>
-   * Returns the value of {@code NUM_CPUS} if {@code NUM_CPU_CORES} is not available.
+   *
+   * <p>Returns the value of {@code NUM_CPUS} if {@code NUM_CPU_CORES} is not available.
    *
    * @return the number of CPU cores available.
    */
@@ -69,8 +68,8 @@ public class DatabaseSystem {
   }
 
   /**
-   * @return the ID of the monitored instance, retrieved from {@code v$instance} (column
-   *         {@code INSTANCE_NUMBER}).
+   * Returns the ID of the monitored instance, retrieved from {@code v$instance} (column
+   * {@code INSTANCE_NUMBER}).
    */
   public long getInstanceNumber() {
     return instanceNumber;

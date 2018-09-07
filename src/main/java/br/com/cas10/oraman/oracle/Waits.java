@@ -2,19 +2,15 @@ package br.com.cas10.oraman.oracle;
 
 import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 
+import br.com.cas10.oraman.oracle.data.Wait;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
-
 import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import br.com.cas10.oraman.oracle.data.Wait;
-
-import com.google.common.collect.ImmutableList;
 
 @Service
 public class Waits {
@@ -35,8 +31,8 @@ public class Waits {
   }
 
   /**
-   * @return the waits from {@code v$system_event} aggregated by wait class and the CPU usage from
-   *         {@code v$sys_time_model}.
+   * Returns the waits from {@code v$system_event} aggregated by wait class and the CPU usage from
+   * {@code v$sys_time_model}.
    */
   @Transactional(readOnly = true)
   public List<Wait> getWaits() {
@@ -49,7 +45,7 @@ public class Waits {
   }
 
   /**
-   * @return the wait classes from {@code v$event_name}, except {@code Idle}.
+   * Returns the wait classes from {@code v$event_name}, except {@code Idle}.
    */
   public List<String> getWaitClasses() {
     return this.waitClasses;

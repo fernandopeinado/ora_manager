@@ -8,14 +8,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
+import br.com.cas10.oraman.oracle.Sessions;
+import br.com.cas10.oraman.oracle.data.ActiveSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.Test;
-
-import br.com.cas10.oraman.oracle.Sessions;
-import br.com.cas10.oraman.oracle.data.ActiveSession;
 
 public class AshAgentTest {
 

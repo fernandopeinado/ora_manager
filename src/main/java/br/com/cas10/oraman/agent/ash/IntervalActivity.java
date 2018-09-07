@@ -1,10 +1,8 @@
 package br.com.cas10.oraman.agent.ash;
 
-import java.util.List;
-
-import com.google.common.collect.ImmutableList;
-
 import br.com.cas10.oraman.util.Snapshot;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 public class IntervalActivity {
 

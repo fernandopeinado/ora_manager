@@ -2,10 +2,9 @@ package br.com.cas10.oraman.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.List;
-
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 public class Buffer<T> {
 
