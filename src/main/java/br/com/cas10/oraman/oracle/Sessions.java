@@ -10,7 +10,8 @@ import br.com.cas10.oraman.oracle.data.LockedObject;
 import br.com.cas10.oraman.oracle.data.Session;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.support.DataAccessUtils;
@@ -23,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class Sessions {
 
-  private static final Logger LOGGER = Logger.getLogger(Sessions.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Sessions.class);
 
   private static final RowMapper<SessionBean> SESSION_ROW_MAPPER = (rs, rownum) -> {
     SessionBean bean = new SessionBean();

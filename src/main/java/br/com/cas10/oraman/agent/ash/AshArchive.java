@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -38,7 +39,7 @@ import org.springframework.stereotype.Component;
 @Component
 class AshArchive {
 
-  private static final Logger LOGGER = Logger.getLogger(AshArchive.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AshArchive.class);
 
   @VisibleForTesting
   static final Path ARCHIVE_PATH = Paths.get(JAVA_IO_TMPDIR.value(), "oraman");

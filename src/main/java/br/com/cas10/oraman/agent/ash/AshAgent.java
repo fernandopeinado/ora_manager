@@ -12,7 +12,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 class AshAgent {
 
-  private static final Logger LOGGER = Logger.getLogger(AshAgent.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AshAgent.class);
 
   @VisibleForTesting
   static final int SNAPSHOT_SAMPLES = 15;
