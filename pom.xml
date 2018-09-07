@@ -35,6 +35,11 @@
 			<version>[2.4,2.4.9999)</version>
 		</dependency>
 		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>2.7.9</version>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>[1.6,1.6.9999)</version>

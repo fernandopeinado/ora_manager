@@ -1,6 +1,7 @@
 package br.com.cas10.oraman;
 
-import javax.naming.NamingException;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jndi.JndiTemplate;
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -19,17 +20,30 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 class RootConfig {
 
   @Bean
-  DataSource oramanDataSource() throws NamingException {
-    return new JndiTemplate().lookup("java:comp/env/jdbc/oraman", DataSource.class);
+  DataSource oramanDataSource() {
+    String jdbcUrl = System.getProperty("oraman.oracle.jdbc.url");
+    String jdbcUsername = System.getProperty("oraman.oracle.jdbc.username");
+    String jdbcPassword = System.getProperty("oraman.oracle.jdbc.password");
+
+    HikariConfig config = new HikariConfig();
+    config.setPoolName("oraman");
+    config.setJdbcUrl(jdbcUrl);
+    config.setUsername(jdbcUsername);
+    config.setPassword(jdbcPassword);
+    config.setMinimumIdle(1);
+    config.setMaximumPoolSize(5);
+    config.setReadOnly(true);
+    config.addDataSourceProperty("v$session.program", "OraManager");
+    return new TransactionAwareDataSourceProxy(new HikariDataSource(config));
   }
 
   @Bean
-  DataSourceTransactionManager oramanTransactionManager() throws NamingException {
+  DataSourceTransactionManager oramanTransactionManager() {
     return new DataSourceTransactionManager(oramanDataSource());
   }
 
   @Bean
-  NamedParameterJdbcTemplate oramanJdbc() throws NamingException {
+  NamedParameterJdbcTemplate oramanJdbc() {
     return new NamedParameterJdbcTemplate(oramanDataSource());
   }
 
