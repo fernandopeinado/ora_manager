@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -132,7 +131,6 @@ public class Tables {
   private final String tableSizeSql = loadSqlStatement("table_size.sql");
 
   @Autowired
-  @Qualifier("monitoring")
   private NamedParameterJdbcTemplate jdbc;
 
   @Transactional(readOnly = true)

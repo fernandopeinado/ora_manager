@@ -8,14 +8,14 @@ import br.com.cas10.oraman.oracle.data.ActiveSession;
 import br.com.cas10.oraman.oracle.data.GlobalSession;
 import br.com.cas10.oraman.oracle.data.LockedObject;
 import br.com.cas10.oraman.oracle.data.Session;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.support.DataAccessUtils;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -47,12 +47,19 @@ public class Sessions {
       loadSqlStatement("global_sessions_by_instance_and_sid.sql");
   private final String killSessionSql = loadSqlStatement("kill_session.sql");
 
-  @Autowired(required = false)
-  @Qualifier("admin")
-  private JdbcTemplate adminJdbc;
   @Autowired
-  @Qualifier("monitoring")
-  private NamedParameterJdbcTemplate jdbc;
+  @VisibleForTesting
+  NamedParameterJdbcTemplate jdbc;
+
+  @VisibleForTesting
+  boolean sessionTerminationEnabled;
+
+  @PostConstruct
+  private void init() {
+    Integer alterSystemPrivilegeResult = jdbc.getJdbcOperations()
+        .queryForObject(loadSqlStatement("alter_system_privilege.sql"), Integer.class);
+    sessionTerminationEnabled = alterSystemPrivilegeResult > 0;
+  }
 
   @Transactional(readOnly = true)
   public Session getSession(long sessionId, long serialNumber) {
@@ -144,15 +151,15 @@ public class Sessions {
     checkArgument(sessionId >= 0);
     checkArgument(serialNumber >= 0);
 
-    if (adminJdbc != null) {
-      adminJdbc.execute(
+    if (sessionTerminationEnabled) {
+      jdbc.getJdbcOperations().execute(
           killSessionSql.replace(":fullSid", String.format("'%d,%d'", sessionId, serialNumber)));
       LOGGER.info(String.format("Session killed: %d (SID), %d (Serial#)", sessionId, serialNumber));
     }
   }
 
   public boolean sessionTerminationEnabled() {
-    return adminJdbc != null;
+    return sessionTerminationEnabled;
   }
 
   private static class SessionBean {

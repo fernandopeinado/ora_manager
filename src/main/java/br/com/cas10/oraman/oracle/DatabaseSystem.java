@@ -5,7 +5,6 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ public class DatabaseSystem {
   private final String numCpuThreadsSql = loadSqlStatement("num_cpu_threads.sql");
 
   @Autowired
-  @Qualifier("monitoring")
   private NamedParameterJdbcTemplate jdbc;
 
   private int cpuCores;

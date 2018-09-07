@@ -8,7 +8,6 @@ import br.com.cas10.oraman.oracle.data.ExecutionPlan;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,6 @@ public class Cursors {
       loadSqlStatement("plan_table_output.sql");
 
   @Autowired
-  @Qualifier("monitoring")
   private NamedParameterJdbcTemplate jdbc;
 
   /**

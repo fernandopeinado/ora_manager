@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +18,6 @@ public class Waits {
   private final String waitsSql = loadSqlStatement("waits.sql");
 
   @Autowired
-  @Qualifier("monitoring")
   private NamedParameterJdbcTemplate jdbc;
 
   private List<String> waitClasses;

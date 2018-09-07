@@ -1,13 +1,12 @@
 package br.com.cas10.oraman.oracle;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.util.ReflectionTestUtils.setField;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 public class SessionsTest {
 
@@ -25,20 +24,16 @@ public class SessionsTest {
 
   @Test
   public void testKillSessionCommand() {
-    JdbcTemplate template = mock(JdbcTemplate.class);
+    NamedParameterJdbcTemplate template = mock(NamedParameterJdbcTemplate.class);
+    JdbcOperations operations = mock(JdbcOperations.class);
+    when(template.getJdbcOperations()).thenReturn(operations);
+
     Sessions sessions = new Sessions();
-    setField(sessions, "adminJdbc", template);
+    sessions.jdbc = template;
+    sessions.sessionTerminationEnabled = true;
 
     sessions.killSession(1, 2);
 
-    verify(template).execute("alter system kill session '1,2' immediate");
-  }
-
-  @Test
-  public void testSessionTerminationEnabled() {
-    Sessions sessions = new Sessions();
-    assertFalse(sessions.sessionTerminationEnabled());
-    setField(sessions, "adminJdbc", mock(JdbcTemplate.class));
-    assertTrue(sessions.sessionTerminationEnabled());
+    verify(operations).execute("alter system kill session '1,2' immediate");
   }
 }
