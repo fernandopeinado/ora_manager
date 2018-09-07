@@ -1,8 +1,7 @@
 .classpath
 .project
 .settings
-bin/
-rebel.xml
-target/
 .idea
 *.iml
+ojdbc*jar
+/target/

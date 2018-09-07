@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,7 +36,7 @@ class AshAgent {
   private Sessions sessions;
   @Autowired
   @Qualifier("ash")
-  private ThreadPoolTaskScheduler scheduler;
+  private TaskScheduler scheduler;
   @Autowired
   private Waits waits;
 

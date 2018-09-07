@@ -10,14 +10,12 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@Controller
+@OramanController
 class SessionController {
 
   @Autowired
@@ -25,7 +23,6 @@ class SessionController {
   @Autowired
   private Sessions sessions;
 
-  @ResponseBody
   @RequestMapping(value = "/session", method = RequestMethod.GET)
   Map<String, ?> session(@RequestParam("sid") Long sid,
       @RequestParam(value = "serialNumber", required = false) Long serialNumber) {
@@ -66,7 +63,6 @@ class SessionController {
     sessions.killSession(sid, serialNumber);
   }
 
-  @ResponseBody
   @RequestMapping(value = "/sessions", method = RequestMethod.GET)
   Map<String, ?> sessions() {
     List<ActiveSession> sessions = this.sessions.getAllSessions();

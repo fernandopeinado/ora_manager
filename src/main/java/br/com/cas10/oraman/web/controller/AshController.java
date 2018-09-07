@@ -22,13 +22,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-@Controller
+@OramanController
 class AshController {
 
   private static final long FIVE_MINUTES = MINUTES.toMillis(5);
@@ -39,7 +37,6 @@ class AshController {
   @Autowired
   private DatabaseSystem databaseSystem;
 
-  @ResponseBody
   @RequestMapping(value = "/ash/ash", method = GET)
   Map<String, ?> ash() {
     List<Snapshot<Double>> snapshots = ash.getWaitClassesSnapshots();
@@ -58,7 +55,6 @@ class AshController {
     return response;
   }
 
-  @ResponseBody
   @RequestMapping(value = "/ash/ash-archive/{year}/{month}/{dayOfMonth}/{hour}", method = GET)
   Map<String, ?> ashArchive(@PathVariable("year") Integer year,
       @PathVariable("month") Integer month, @PathVariable("dayOfMonth") Integer dayOfMonth,
@@ -71,7 +67,6 @@ class AshController {
     return response;
   }
 
-  @ResponseBody
   @RequestMapping(value = "/ash/ash-interval", method = GET)
   Map<String, ?> ashInterval(@RequestParam("start") Long start, @RequestParam("end") Long end) {
     IntervalActivity intervalActivity = ash.getIntervalActivity(start, end);
@@ -81,7 +76,6 @@ class AshController {
     return response;
   }
 
-  @ResponseBody
   @RequestMapping(value = "/ash/ash-sql/{sqlId}", method = GET)
   Map<String, ?> ashSql(@PathVariable("sqlId") String sqlId) {
     IntervalActivity activity = ash.getActivity(s -> sqlId.equals(s.sqlId));
@@ -106,7 +100,6 @@ class AshController {
     return response;
   }
 
-  @ResponseBody
   @RequestMapping(value = "/ash/ash-session", method = GET)
   Map<String, ?> ashSession(@RequestParam("sid") Long sid,
       @RequestParam("serialNumber") Long serialNumber) {

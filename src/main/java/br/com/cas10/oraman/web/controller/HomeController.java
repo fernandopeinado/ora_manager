@@ -10,12 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-@Controller
+@OramanController
 class HomeController {
 
   private static final Double ZERO = Double.valueOf(0);
@@ -25,7 +23,6 @@ class HomeController {
   @Autowired
   private WaitsAgent waitsAgent;
 
-  @ResponseBody
   @RequestMapping(value = "/home/average-active-sessions", method = RequestMethod.GET)
   Map<String, ?> averageActiveSessions() {
     List<Snapshot<Double>> snapshots = waitsAgent.getSnapshots();

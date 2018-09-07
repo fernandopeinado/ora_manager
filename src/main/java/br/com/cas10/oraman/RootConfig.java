@@ -3,28 +3,27 @@ package br.com.cas10.oraman;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@ComponentScan({"br.com.cas10.oraman.agent", "br.com.cas10.oraman.oracle"})
-@EnableTransactionManagement(proxyTargetClass = true)
 class RootConfig {
+
+  @Value("${oraman.oracle.jdbc.url}")
+  private String jdbcUrl;
+  @Value("${oraman.oracle.jdbc.username}")
+  private String jdbcUsername;
+  @Value("${oraman.oracle.jdbc.password}")
+  private String jdbcPassword;
 
   @Bean
   DataSource oramanDataSource() {
-    String jdbcUrl = System.getProperty("oraman.oracle.jdbc.url");
-    String jdbcUsername = System.getProperty("oraman.oracle.jdbc.username");
-    String jdbcPassword = System.getProperty("oraman.oracle.jdbc.password");
-
     HikariConfig config = new HikariConfig();
     config.setPoolName("oraman");
     config.setJdbcUrl(jdbcUrl);
@@ -38,20 +37,18 @@ class RootConfig {
   }
 
   @Bean
-  DataSourceTransactionManager oramanTransactionManager() {
-    return new DataSourceTransactionManager(oramanDataSource());
-  }
-
-  @Bean
-  NamedParameterJdbcTemplate oramanJdbc() {
-    return new NamedParameterJdbcTemplate(oramanDataSource());
-  }
-
-  @Bean
   @Primary
   TaskScheduler defaultTaskScheduler() {
     ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
     taskScheduler.setPoolSize(2);
+    return taskScheduler;
+  }
+
+  @Bean
+  @Qualifier("ash")
+  TaskScheduler ashTaskScheduler() {
+    ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+    taskScheduler.setPoolSize(1);
     return taskScheduler;
   }
 }
