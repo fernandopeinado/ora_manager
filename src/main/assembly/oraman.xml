@@ -1,0 +1,20 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+	<id>oraman</id>
+	<formats>
+		<format>tgz</format>
+	</formats>
+	<baseDirectory>oraman</baseDirectory>
+	<files>
+		<file>
+			<source>src/main/assembly/config.yml</source>
+		</file>
+		<file>
+			<source>src/main/assembly/oraman</source>
+		</file>
+		<file>
+			<source>${project.build.directory}/${project.build.finalName}.war</source>
+		</file>
+	</files>
+</assembly>

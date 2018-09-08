@@ -1,11 +1,12 @@
 package br.com.cas10.oraman.agent.ash;
 
-import static br.com.cas10.oraman.agent.ash.AshArchive.ARCHIVE_PATH;
+import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import br.com.cas10.oraman.OramanProperties;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Iterator;
@@ -21,6 +23,8 @@ import org.junit.After;
 import org.junit.Test;
 
 public class AshArchiveTest {
+
+  private static final Path ARCHIVE_PATH = Paths.get(JAVA_IO_TMPDIR.value(), "oraman");
 
   @After
   public void tearDown() throws IOException {
@@ -33,7 +37,7 @@ public class AshArchiveTest {
     assertFalse(Files.exists(expectedFile));
 
     try {
-      AshArchive archive = new AshArchive();
+      AshArchive archive = new AshArchive(newOramanProperties());
 
       final long timestamp1 = toTimestamp(2014, 10, 5, 10);
       final long timestamp2 = toTimestamp(2014, 10, 5, 11);
@@ -70,7 +74,7 @@ public class AshArchiveTest {
         oos.writeObject(newSnapshot(2));
       }
 
-      AshArchive archive = new AshArchive();
+      AshArchive archive = new AshArchive(newOramanProperties());
 
       Iterator<AshSnapshot> iterator = archive.getArchivedSnapshots(2014, 10, 5, 20);
       assertTrue(iterator.hasNext());
@@ -98,7 +102,7 @@ public class AshArchiveTest {
       Files.createFile(file1);
       Files.createFile(file2);
 
-      AshArchive archive = new AshArchive();
+      AshArchive archive = new AshArchive(newOramanProperties());
       archive.cleanUpArchive();
 
       assertFalse(Files.exists(file1));
@@ -107,6 +111,12 @@ public class AshArchiveTest {
       Files.deleteIfExists(file1);
       Files.deleteIfExists(file2);
     }
+  }
+
+  private static OramanProperties newOramanProperties() {
+    OramanProperties properties = new OramanProperties();
+    properties.getArchive().setDir(ARCHIVE_PATH.toString());
+    return properties;
   }
 
   private static AshSnapshot newSnapshot(long timestamp) {

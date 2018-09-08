@@ -1,8 +1,8 @@
 package br.com.cas10.oraman.agent.ash;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.util.concurrent.TimeUnit.DAYS;
 
+import br.com.cas10.oraman.OramanProperties;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.io.Closer;
@@ -41,9 +41,6 @@ class AshArchive {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AshArchive.class);
 
-  @VisibleForTesting
-  static final Path ARCHIVE_PATH = Paths.get(JAVA_IO_TMPDIR.value(), "oraman");
-
   private static final long ARCHIVE_SIZE_HOURS = DAYS.toHours(7);
   private static final DateTimeFormatter FILENAME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
@@ -53,8 +50,16 @@ class AshArchive {
   @Autowired
   private TaskScheduler scheduler;
 
+  private final Path archivePath;
+
+  @Autowired
+  AshArchive(OramanProperties properties) {
+    this.archivePath = Paths.get(properties.getArchive().getDir());
+  }
+
   @PostConstruct
-  private void init() {
+  private void init() throws IOException {
+    Files.createDirectories(archivePath);
     scheduler.schedule(this::cleanUpArchive, new CronTrigger("0 30 * * * *"));
   }
 
@@ -80,8 +85,8 @@ class AshArchive {
   }
 
   private void flushBuffer() throws IOException {
-    Files.createDirectories(ARCHIVE_PATH);
-    Path outPath = ARCHIVE_PATH.resolve(currentFile);
+    Files.createDirectories(archivePath);
+    Path outPath = archivePath.resolve(currentFile);
     try (OutputStream fos = Files.newOutputStream(outPath);
         BufferedOutputStream bos = new BufferedOutputStream(fos);
         ObjectOutputStream oos = new ObjectOutputStream(bos)) {
@@ -97,14 +102,14 @@ class AshArchive {
 
   ArchivedSnapshotsIterator getArchivedSnapshots(int year, int month, int dayOfMonth, int hour) {
     String fileName = FILENAME_FORMATTER.format(LocalDateTime.of(year, month, dayOfMonth, hour, 0));
-    Path filePath = ARCHIVE_PATH.resolve(fileName);
+    Path filePath = archivePath.resolve(fileName);
     return Files.exists(filePath) ? new FileSnapshotsIterator(filePath) : EmptyIterator.INSTANCE;
   }
 
   @VisibleForTesting
   void cleanUpArchive() {
     ZonedDateTime base = ZonedDateTime.now().minusHours(ARCHIVE_SIZE_HOURS);
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(ARCHIVE_PATH)) {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(archivePath)) {
       for (Path path : stream) {
         String fileName = path.getFileName().toString();
         if (!Files.isRegularFile(path) || !FILENAME_PATTERN.matcher(fileName).matches()) {

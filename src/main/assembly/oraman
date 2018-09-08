@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+    echo "usage: oraman run|start|stop"
+}
+
+oraman_run() {
+    ORAMAN_SYS_PROPS+=" -Dspring.profiles.include=foreground"
+    exec $JAVA_HOME/bin/java $ORAMAN_OPTS $ORAMAN_SYS_PROPS -jar "$oraman_war_file"
+}
+
+is_running() {
+    [[ -f $pid_file ]] && pgrep -f "$oraman_war_file" -F "$pid_file" >/dev/null 2>&1
+}
+
+oraman_start() {
+    is_running && { echo "Already running (PID: $(cat "$pid_file"))"; return 0; }
+    nohup $JAVA_HOME/bin/java $ORAMAN_OPTS $ORAMAN_SYS_PROPS -jar "$oraman_war_file" \
+            </dev/null >/dev/null 2>&1 &
+    echo $! > "$pid_file"
+}
+
+oraman_stop() {
+    is_running || { echo "Not running"; return 0; }
+    pkill -F "$pid_file"
+    rm "$pid_file"
+}
+
+oraman_home=$(dirname "$(readlink -f "$BASH_SOURCE")")
+oraman_war_file=$(echo "$oraman_home"/oraman-*.war)
+pid_file="$oraman_home/oraman.pid"
+
+if [[ -z ${ORAMAN_OPTS-} ]]; then
+    ORAMAN_OPTS="-Xms16m -Xmx128m -XX:MaxHeapFreeRatio=50"
+fi
+if [[ -z ${ORAMAN_SYS_PROPS:-} ]]; then
+    ORAMAN_SYS_PROPS="-Doraman.home=$oraman_home"
+    ORAMAN_SYS_PROPS+=" -Dspring.config.additional-location=$oraman_home/config.yml"
+fi
+
+mkdir -p "$oraman_home/data"
+mkdir -p "$oraman_home/logs"
+
+case "${1-}" in
+    run) oraman_run ;; start) oraman_start ;; stop) oraman_stop ;; *) usage ;;
+esac
+
