@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+cp ../src/main/assembly/oraman ../target/
+cp dev-config.yml ../target/config.yml
+cd ../target/
+./oraman run
+
