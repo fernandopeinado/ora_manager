@@ -1,5 +1,7 @@
 package br.com.cas10.oraman.agent.ash;
 
+import static br.com.cas10.oraman.agent.ash.AshArchiveTestUtils.newOramanProperties;
+import static br.com.cas10.oraman.agent.ash.AshArchiveTestUtils.newSnapshot;
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -11,13 +13,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import br.com.cas10.oraman.OramanProperties;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +24,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Iterator;
 import java.util.List;
 import org.junit.After;
 import org.junit.Test;
@@ -36,7 +34,7 @@ public class AshArchiveTest {
 
   @After
   public void tearDown() throws IOException {
-    Files.deleteIfExists(ARCHIVE_PATH);
+    AshArchiveTestUtils.deleteArchiveDir();
   }
 
   @Test
@@ -68,36 +66,6 @@ public class AshArchiveTest {
   }
 
   @Test
-  public void testGetArchivedSnapshots() throws IOException {
-    Path dataFile = ARCHIVE_PATH.resolve("2014-10-05-20");
-    assertFalse(Files.exists(dataFile));
-
-    try {
-      Files.createDirectories(ARCHIVE_PATH);
-      try (OutputStream fos = Files.newOutputStream(dataFile);
-          ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-        oos.writeInt(3);
-        oos.writeObject(newSnapshot(0));
-        oos.writeObject(newSnapshot(1));
-        oos.writeObject(newSnapshot(2));
-      }
-
-      AshArchive archive = new AshArchive(newOramanProperties());
-
-      Iterator<AshSnapshot> iterator = archive.getArchivedSnapshots(2014, 10, 5, 20);
-      assertTrue(iterator.hasNext());
-      assertEquals(0, iterator.next().timestamp);
-      assertTrue(iterator.hasNext());
-      assertEquals(1, iterator.next().timestamp);
-      assertTrue(iterator.hasNext());
-      assertEquals(2, iterator.next().timestamp);
-      assertFalse(iterator.hasNext());
-    } finally {
-      Files.deleteIfExists(dataFile);
-    }
-  }
-
-  @Test
   public void testCleanUpArchive() throws IOException {
     int archiveMaxDays = 5;
 
@@ -116,7 +84,7 @@ public class AshArchiveTest {
     }
 
     try {
-      Files.createDirectories(ARCHIVE_PATH);
+      AshArchiveTestUtils.createArchiveDir();
       for (Path path : Iterables.concat(shouldRemove, shouldNotRemove)) {
         Files.createFile(path);
       }
@@ -139,16 +107,6 @@ public class AshArchiveTest {
         Files.deleteIfExists(path);
       }
     }
-  }
-
-  private static OramanProperties newOramanProperties() {
-    OramanProperties properties = new OramanProperties();
-    properties.getArchive().setDir(ARCHIVE_PATH.toString());
-    return properties;
-  }
-
-  private static AshSnapshot newSnapshot(long timestamp) {
-    return new AshSnapshot(timestamp, ImmutableList.of(), 10);
   }
 
   private static long toTimestamp(int year, int month, int dayOfMonth, int hour) {

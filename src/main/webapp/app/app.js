@@ -12,7 +12,7 @@
 		}).when('/ash', {
 			templateUrl : 'app/ash/ash.html',
 			controller : 'AshCtrl'
-		}).when('/ash-archive/:year?/:month?/:day?/:hour?', {
+		}).when('/ash-archive', {
 			templateUrl : 'app/ash/ash-archive.html',
 			controller : 'AshArchiveCtrl'
 		}).when('/sql/:sqlId', {
@@ -21,10 +21,10 @@
 		}).when('/session', {
 			templateUrl : 'app/session/session.html',
 			controller : 'SessionCtrl'
-                }).when('/tables', {
+		}).when('/tables', {
 			templateUrl : 'app/tables/tables.html',
 			controller : 'TablesCtrl'
-                }).when('/tablespaces', {
+		}).when('/tablespaces', {
 			templateUrl : 'app/tablespaces/tablespaces.html',
 			controller : 'TablespaceCtrl'
 		}).otherwise({

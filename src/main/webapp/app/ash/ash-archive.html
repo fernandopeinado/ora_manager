@@ -2,23 +2,28 @@
   <div class="row">
     <div class="col-md-12">
       <form class="form-inline" role="form" style="margin-bottom: 10px">
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Year"
-            style="width: 80px" ng-model="year">
+        <div class="form-group has-feedback" ng-class="{ 'has-error': !dateRegex.test(intervalStartString.trim()) }">
+          <input type="text" class="form-control" style="width: 200px"
+              ng-model="intervalStartString">
+          <span class="glyphicon glyphicon-remove form-control-feedback"
+              ng-hide="dateRegex.test(intervalStartString.trim())" />
         </div>
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Month"
-            style="width: 80px" ng-model="month">
-        </div>
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Day"
-            style="width: 80px" ng-model="day">
-        </div>
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Hour"
-            style="width: 80px" ng-model="hour">
+        <span class="glyphicon glyphicon-minus" />
+        <div class="form-group has-feedback" ng-class="{ 'has-error': !dateRegex.test(intervalEndString.trim()) }">
+          <input type="text" class="form-control" style="width: 200px"
+              ng-model="intervalEndString">
+          <span class="glyphicon glyphicon-remove form-control-feedback"
+              ng-hide="dateRegex.test(intervalEndString.trim())" />
         </div>
         <button type="button" class="btn btn-primary" ng-click="loadData()">Load</button>
+
+        <button type="button" class="btn" style="float: right; margin-left: 10px" title="Foward"
+            ng-click="goForward()">
+          <span class="glyphicon glyphicon-arrow-right" />
+        </button>
+        <button type="button" class="btn" style="float: right" title="Back" ng-click="goBack()">
+          <span class="glyphicon glyphicon-arrow-left" />
+        </button>
       </form>
     </div>
   </div>

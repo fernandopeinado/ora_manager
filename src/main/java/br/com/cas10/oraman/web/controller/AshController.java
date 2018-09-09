@@ -55,11 +55,11 @@ class AshController {
     return response;
   }
 
-  @RequestMapping(value = "/ash/ash-archive/{year}/{month}/{dayOfMonth}/{hour}", method = GET)
-  Map<String, ?> ashArchive(@PathVariable("year") Integer year,
-      @PathVariable("month") Integer month, @PathVariable("dayOfMonth") Integer dayOfMonth,
-      @PathVariable("hour") Integer hour) {
-    IntervalActivity intervalActivity = ash.getIntervalActivity(year, month, dayOfMonth, hour);
+  @RequestMapping(value = "/ash/ash-archive", method = GET)
+  Map<String, ?> ashArchiveInterval(@RequestParam("start") Long start,
+      @RequestParam("end") Long end) {
+    long groupInterval = Math.max((end - start) / 240, 15_000);
+    IntervalActivity intervalActivity = ash.getArchivedIntervalActivity(start, end, groupInterval);
 
     Map<String, Object> response = new LinkedHashMap<>();
     putAasData(intervalActivity.waitClassesSnapshots, response);

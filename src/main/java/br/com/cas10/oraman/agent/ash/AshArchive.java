@@ -1,7 +1,9 @@
 package br.com.cas10.oraman.agent.ash;
 
 import br.com.cas10.oraman.OramanProperties;
+import br.com.cas10.oraman.oracle.data.ActiveSession;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.io.Closer;
 import java.io.BufferedInputStream;
@@ -14,11 +16,13 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -103,10 +107,8 @@ class AshArchive {
     }
   }
 
-  ArchivedSnapshotsIterator getArchivedSnapshots(int year, int month, int dayOfMonth, int hour) {
-    String fileName = FILENAME_FORMATTER.format(LocalDateTime.of(year, month, dayOfMonth, hour, 0));
-    Path filePath = archivePath.resolve(fileName);
-    return Files.exists(filePath) ? new FileSnapshotsIterator(filePath) : EmptyIterator.INSTANCE;
+  ArchivedSnapshotsIterator getArchivedSnapshots(long start, long end, long groupInterval) {
+    return new SnapshotGroupsIterator(archivePath, start, end, groupInterval);
   }
 
   @VisibleForTesting
@@ -133,7 +135,139 @@ class AshArchive {
   interface ArchivedSnapshotsIterator extends Closeable, Iterator<AshSnapshot> {
   }
 
-  private static class FileSnapshotsIterator extends UnmodifiableIterator<AshSnapshot>
+  static class SnapshotGroupsIterator extends UnmodifiableIterator<AshSnapshot>
+      implements ArchivedSnapshotsIterator {
+
+    private final long end;
+    private final long groupInterval;
+    private final FileRangeSnapshotsIterator iterator;
+
+    private AshSnapshot current;
+    private long groupStart;
+    private long groupEnd;
+    private List<AshSnapshot> groupMembers = new ArrayList<>();
+
+    SnapshotGroupsIterator(Path archivePath, long start, long end, long groupInterval) {
+      this.end = end;
+      this.groupInterval = groupInterval;
+      this.iterator = new FileRangeSnapshotsIterator(archivePath, toLocalDateTime(start),
+          toLocalDateTime(end).plusHours(1));
+      this.groupStart = start;
+      this.groupEnd = Math.min(end, start + groupInterval);
+    }
+
+    private static LocalDateTime toLocalDateTime(long timeMillis) {
+      return Instant.ofEpochMilli(timeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    @Override
+    public boolean hasNext() {
+      return groupStart < groupEnd;
+    }
+
+    @Override
+    public AshSnapshot next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException();
+      }
+      while (current != null || iterator.hasNext()) {
+        if (current == null) {
+          current = iterator.next();
+        }
+        if (current.timestamp < groupStart) {
+          current = null;
+        } else {
+          if (current.timestamp < groupEnd) {
+            groupMembers.add(current);
+            current = null;
+          } else {
+            return buildGroup();
+          }
+        }
+      }
+      return buildGroup();
+    }
+
+    private AshSnapshot buildGroup() {
+      AshSnapshot group;
+      switch (groupMembers.size()) {
+        case 0:
+          group = new AshSnapshot(groupEnd, ImmutableList.of(), 0);
+          break;
+        case 1:
+          group = groupMembers.get(0);
+          break;
+        default:
+          long timestamp = groupMembers.get(groupMembers.size() - 1).timestamp;
+          ImmutableList.Builder<ActiveSession> activeSessions = ImmutableList.builder();
+          int samples = 0;
+          for (AshSnapshot snapshot : groupMembers) {
+            activeSessions.addAll(snapshot.activeSessions);
+            samples += snapshot.samples;
+          }
+          group = new AshSnapshot(timestamp, activeSessions.build(), samples);
+      }
+      groupStart = groupEnd;
+      groupEnd = Math.min(end, groupStart + groupInterval);
+      groupMembers.clear();
+      return group;
+    }
+
+    @Override
+    public void close() throws IOException {
+      this.iterator.close();
+    }
+  }
+
+  @VisibleForTesting
+  static class FileRangeSnapshotsIterator extends UnmodifiableIterator<AshSnapshot>
+      implements ArchivedSnapshotsIterator {
+
+    private final Path archivePath;
+    private final LocalDateTime end;
+    private ArchivedSnapshotsIterator iterator;
+    private LocalDateTime next;
+
+    FileRangeSnapshotsIterator(Path archivePath, LocalDateTime start, LocalDateTime end) {
+      this.archivePath = archivePath;
+      this.end = LocalDateTime.of(end.toLocalDate(), LocalTime.of(end.getHour(), 0));
+
+      start = LocalDateTime.of(start.toLocalDate(), LocalTime.of(start.getHour(), 0));
+      this.iterator = start.isBefore(end) ? newIterator(start) : EmptyIterator.INSTANCE;
+      this.next = start.plusHours(1);
+    }
+
+    @Override
+    public boolean hasNext() {
+      while (!iterator.hasNext() && next.isBefore(end)) {
+        try {
+          this.iterator.close();
+        } catch (IOException e) {
+          throw new RuntimeException();
+        }
+        this.iterator = newIterator(next);
+        next = next.plusHours(1);
+      }
+      return iterator.hasNext();
+    }
+
+    @Override
+    public AshSnapshot next() {
+      return iterator.next();
+    }
+
+    @Override
+    public void close() throws IOException {
+      iterator.close();
+    }
+
+    private ArchivedSnapshotsIterator newIterator(LocalDateTime dateTime) {
+      return new FileSnapshotsIterator(archivePath.resolve(FILENAME_FORMATTER.format(dateTime)));
+    }
+  }
+
+  @VisibleForTesting
+  static class FileSnapshotsIterator extends UnmodifiableIterator<AshSnapshot>
       implements ArchivedSnapshotsIterator {
 
     private final Path path;
@@ -141,16 +275,26 @@ class AshArchive {
     private ObjectInputStream ois;
     private int counter;
 
-    private FileSnapshotsIterator(Path path) {
+    FileSnapshotsIterator(Path path) {
       this.path = path;
     }
 
     @Override
     public boolean hasNext() {
       if (ois == null) {
+        if (!Files.exists(path)) {
+          return false;
+        }
+        InputStream fis;
         try {
-          InputStream fis = closer.register(Files.newInputStream(path));
-          BufferedInputStream bis = closer.register(new BufferedInputStream(fis));
+          fis = closer.register(Files.newInputStream(path));
+        } catch (NoSuchFileException e) {
+          return false;
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+        BufferedInputStream bis = closer.register(new BufferedInputStream(fis));
+        try {
           ois = closer.register(new ObjectInputStream(bis));
           counter = ois.readInt();
         } catch (IOException e) {

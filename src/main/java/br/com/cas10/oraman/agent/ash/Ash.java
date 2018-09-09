@@ -15,9 +15,6 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -96,8 +93,7 @@ public class Ash {
   }
 
   /**
-   * Loads and returns from the disk archive the activity data for the 1-hour interval
-   * {@code year/month/dayOfMonth [hour, hour + 1)}.
+   * Loads and returns from the disk archive the activity data for the specified interval.
    *
    * <p>The returned object contains
    * <ul>
@@ -106,24 +102,17 @@ public class Ash {
    * <li>top 10 sessions in the interval.</li>
    * </ul>
    *
-   * @param year the year.
-   * @param month the month-of-year, from 1 to 12.
-   * @param dayOfMonth the day-of-month, from 1 to 31.
-   * @param hour the start of the 1-hour interval, from 0 to 23.
+   * <p>The {@code groupInterval} parameter can be used to control the number of points returned.
+   * Snapshots are merged into groups that span {@code groupInterval} milliseconds.
+   *
+   * @param start interval start.
+   * @param end interval end.
+   * @param groupInterval the span of snapshot groups in milliseconds.
    * @return the activity data for the specified interval.
    */
   @Transactional(readOnly = true)
-  public IntervalActivity getIntervalActivity(int year, int month, int dayOfMonth, int hour) {
-    ZonedDateTime startDateTime =
-        LocalDateTime.of(year, month, dayOfMonth, hour, 0).atZone(ZoneId.systemDefault());
-    ZonedDateTime endDateTime = startDateTime.plusHours(1);
-    if (endDateTime.getHour() == hour) {
-      endDateTime = endDateTime.plusHours(1); // daylight saving time
-    }
-    try (ArchivedSnapshotsIterator it =
-        archive.getArchivedSnapshots(year, month, dayOfMonth, hour)) {
-      long start = startDateTime.toInstant().toEpochMilli();
-      long end = endDateTime.toInstant().toEpochMilli() - 1;
+  public IntervalActivity getArchivedIntervalActivity(long start, long end, long groupInterval) {
+    try (ArchivedSnapshotsIterator it = archive.getArchivedSnapshots(start, end, groupInterval)) {
       return intervalActivity(it, start, end, ALL_ACTIVE_SESSIONS);
     } catch (IOException e) {
       throw new RuntimeException(e);

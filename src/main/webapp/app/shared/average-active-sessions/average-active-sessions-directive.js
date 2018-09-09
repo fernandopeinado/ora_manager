@@ -151,9 +151,8 @@
       }
     }
 
-    var x = d3.time.scale().domain(d3.extent(json.data, function(d) {
-      return d[0];
-    })).range([0, width]);
+    var xDomain = d3.extent(json.data, d => d[0]);
+    var x = d3.time.scale().domain(xDomain).range([0, width]);
     var y = d3.scale.linear().domain([0, maxY]).range([height, 0]).nice(yTicks);
 
     // --------------------------------------------------------------------
@@ -238,8 +237,13 @@
     // AXES
     // --------------------------------------------------------------------
 
+    var xTickFormat = '%H:%M';
+    if (xDomain[1].getTime() - xDomain[0].getTime() > 24 * 60 * 60 * 1000) {
+        xTickFormat = '%Y-%m-%d %H:%M';
+    }
+
     var xAxis = d3.svg.axis().scale(x).orient('bottom').tickFormat(
-        d3.time.format('%H:%M')).ticks(xTicks);
+        d3.time.format(xTickFormat)).ticks(xTicks);
     var yAxis = d3.svg.axis().scale(y).orient('left').ticks(yTicks);
 
     svg.append('g').attr('class', 'axis').attr('transform',

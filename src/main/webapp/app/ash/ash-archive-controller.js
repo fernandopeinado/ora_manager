@@ -27,6 +27,26 @@
 		return result;
 	}
 
+	var dateRegex = /^(\d{4})-(\d{1,2})-(\d{1,2}) (\d{1,2}):(\d{1,2}):(\d{1,2})$/;
+
+	function dateToString(date) {
+		var pad = n => n < 10 ? '0' + n : n;
+		return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate())
+				+ ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':'
+				+ pad(date.getSeconds());
+	}
+
+	function parseDate(string) {
+		var match = string.trim().match(dateRegex);
+		if (match) {
+			var components = match.slice(1)
+					.map(x => parseInt(x.startsWith('0') ? x.substring(1) : x));
+			components[1] -= 1; // month
+			return new Date(...components);
+		}
+		throw 'Not a valid date: ' + string;
+	}
+
 	function AshArchiveCtrl($scope, $routeParams, $location) {
 
 		function updateTopSql(data) {
@@ -48,21 +68,25 @@
 			$scope.topSessions = data;
 		}
 
-		$scope.year = parseInt($routeParams.year);
-		$scope.month = parseInt($routeParams.month);
-		$scope.day = parseInt($routeParams.day);
-		$scope.hour = parseInt($routeParams.hour);
+		$scope.dateRegex = dateRegex;
+		$scope.intervalStart = parseInt($routeParams.start);
+		$scope.intervalEnd = parseInt($routeParams.end);
 
-		if ([ $scope.year, $scope.month, $scope.day, $scope.hour ].some(isNaN)) {
-			var now = new Date(Date.now() - 60 * 60 * 1000);
-			$location.path('/ash-archive/' + now.getFullYear() + '/'
-					+ (now.getMonth() + 1) + '/' + now.getDate() + '/'
-					+ now.getHours());
+		if (isNaN($scope.intervalStart) || isNaN($scope.intervalEnd)) {
+			var end = new Date();
+			end.setMinutes(0, 0, 0);
+			end = end.getTime();
+			var start = end - 60 * 60 * 1000;
+
+			$location.search({ start: start, end: end });
 			return;
 		}
 
-		$scope.url = 'ws/ash/ash-archive/' + $scope.year + '/' + $scope.month
-				+ '/' + $scope.day + '/' + $scope.hour;
+		$scope.intervalStartString = dateToString(new Date($scope.intervalStart));
+		$scope.intervalEndString = dateToString(new Date($scope.intervalEnd));
+
+		$scope.url = 'ws/ash/ash-archive?start=' + $scope.intervalStart
+				+ '&end=' + $scope.intervalEnd;
 		$scope.series = series;
 		$scope.preprocessor = function(json) {
 			updateTopSql(json.topSql);
@@ -71,8 +95,28 @@
 		};
 
 		$scope.loadData = function() {
-			$location.path('/ash-archive/' + $scope.year + '/' + $scope.month
-					+ '/' + $scope.day + '/' + $scope.hour);
+			$location.search({
+				start: parseDate($scope.intervalStartString).getTime(),
+				end: parseDate($scope.intervalEndString).getTime()
+			});
+		};
+
+		$scope.goForward = function() {
+			var shift = $scope.intervalEnd - $scope.intervalStart;
+			if (shift > 0) {
+				$location.search({
+					start: $scope.intervalStart + shift, end: $scope.intervalEnd + shift
+				});
+			}
+		};
+
+		$scope.goBack = function() {
+			var shift = $scope.intervalEnd - $scope.intervalStart;
+			if (shift > 0) {
+				$location.search({
+					start: $scope.intervalStart - shift, end: $scope.intervalEnd - shift
+				});
+			}
 		};
 	}
 
