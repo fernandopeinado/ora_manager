@@ -1,13 +1,18 @@
 package br.com.cas10.oraman.agent.ash;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import br.com.cas10.oraman.OramanProperties;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -16,9 +21,12 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Iterator;
+import java.util.List;
 import org.junit.After;
 import org.junit.Test;
 
@@ -91,25 +99,45 @@ public class AshArchiveTest {
 
   @Test
   public void testCleanUpArchive() throws IOException {
-    Path file1 = ARCHIVE_PATH.resolve("2000-01-01-00");
-    Path file2 = ARCHIVE_PATH.resolve("2100-01-01-00");
+    int archiveMaxDays = 5;
 
-    assertFalse(Files.exists(file1));
-    assertFalse(Files.exists(file2));
+    Instant now =
+        LocalDateTime.parse("2018-03-10T15:30:00").atZone(ZoneId.systemDefault()).toInstant();
+    Clock clock = mock(Clock.class);
+    when(clock.instant()).thenReturn(now);
+
+    List<Path> shouldRemove = asList("2000-01-01-00", "2018-03-04-23").stream()
+        .map(ARCHIVE_PATH::resolve).collect(toList());
+    List<Path> shouldNotRemove = asList("2018-03-05-00", "2100-01-01-00").stream()
+        .map(ARCHIVE_PATH::resolve).collect(toList());
+
+    for (Path path : Iterables.concat(shouldRemove, shouldNotRemove)) {
+      assertTrue(Files.notExists(path));
+    }
 
     try {
       Files.createDirectories(ARCHIVE_PATH);
-      Files.createFile(file1);
-      Files.createFile(file2);
+      for (Path path : Iterables.concat(shouldRemove, shouldNotRemove)) {
+        Files.createFile(path);
+      }
 
-      AshArchive archive = new AshArchive(newOramanProperties());
+      OramanProperties properties = newOramanProperties();
+      properties.getArchive().setMaxDays(archiveMaxDays);
+      AshArchive archive = new AshArchive(properties);
+      archive.clock = clock;
+
       archive.cleanUpArchive();
 
-      assertFalse(Files.exists(file1));
-      assertTrue(Files.exists(file2));
+      for (Path path : shouldRemove) {
+        assertTrue(Files.notExists(path));
+      }
+      for (Path path : shouldNotRemove) {
+        assertTrue(Files.exists(path));
+      }
     } finally {
-      Files.deleteIfExists(file1);
-      Files.deleteIfExists(file2);
+      for (Path path : Iterables.concat(shouldRemove, shouldNotRemove)) {
+        Files.deleteIfExists(path);
+      }
     }
   }
 

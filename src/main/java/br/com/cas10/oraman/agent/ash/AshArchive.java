@@ -1,7 +1,5 @@
 package br.com.cas10.oraman.agent.ash;
 
-import static java.util.concurrent.TimeUnit.DAYS;
-
 import br.com.cas10.oraman.OramanProperties;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.UnmodifiableIterator;
@@ -18,6 +16,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -41,7 +40,6 @@ class AshArchive {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AshArchive.class);
 
-  private static final long ARCHIVE_SIZE_HOURS = DAYS.toHours(7);
   private static final DateTimeFormatter FILENAME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
   private static final Pattern FILENAME_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2}-\\d{2}");
@@ -50,11 +48,16 @@ class AshArchive {
   @Autowired
   private TaskScheduler scheduler;
 
+  @VisibleForTesting
+  Clock clock = Clock.systemDefaultZone();
+
   private final Path archivePath;
+  private final int archiveMaxDays;
 
   @Autowired
   AshArchive(OramanProperties properties) {
     this.archivePath = Paths.get(properties.getArchive().getDir());
+    this.archiveMaxDays = properties.getArchive().getMaxDays();
   }
 
   @PostConstruct
@@ -108,16 +111,15 @@ class AshArchive {
 
   @VisibleForTesting
   void cleanUpArchive() {
-    ZonedDateTime base = ZonedDateTime.now().minusHours(ARCHIVE_SIZE_HOURS);
+    String firstAllowedName = clock.instant().atZone(ZoneId.systemDefault()).toLocalDate()
+        .minusDays(archiveMaxDays).atStartOfDay().format(FILENAME_FORMATTER);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(archivePath)) {
       for (Path path : stream) {
         String fileName = path.getFileName().toString();
         if (!Files.isRegularFile(path) || !FILENAME_PATTERN.matcher(fileName).matches()) {
           continue;
         }
-        ZonedDateTime fileDateTime =
-            LocalDateTime.parse(fileName, FILENAME_FORMATTER).atZone(ZoneId.systemDefault());
-        if (fileDateTime.isBefore(base)) {
+        if (fileName.compareTo(firstAllowedName) < 0) {
           LOGGER.info(
               String.format("Removing file: %s", path.normalize().toAbsolutePath().toString()));
           Files.deleteIfExists(path);

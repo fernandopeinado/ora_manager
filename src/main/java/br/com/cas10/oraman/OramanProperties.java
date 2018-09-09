@@ -2,6 +2,7 @@ package br.com.cas10.oraman;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -46,6 +47,9 @@ public class OramanProperties {
 
     @NotNull
     private String dir;
+    @NotNull
+    @PositiveOrZero
+    private Integer maxDays = 7;
 
     public String getDir() {
       return dir;
@@ -53,6 +57,14 @@ public class OramanProperties {
 
     public void setDir(String dir) {
       this.dir = dir;
+    }
+
+    public Integer getMaxDays() {
+      return maxDays;
+    }
+
+    public void setMaxDays(Integer maxDays) {
+      this.maxDays = maxDays;
     }
   }
 
