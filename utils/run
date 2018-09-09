@@ -2,8 +2,10 @@
 
 set -euo pipefail
 
-cp ../src/main/assembly/oraman ../target/
-cp dev-config.yml ../target/config.yml
-cd ../target/
-./oraman run
+sysprops="-Doraman.home=$(readlink -f ../target)"
+sysprops+=" -Dspring.config.additional-location=$(readlink -f dev-config.yml)"
+sysprops+=" -Dspring.profiles.include=foreground"
+
+cd ..
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="$sysprops"
 
