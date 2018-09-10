@@ -1,7 +1,5 @@
 package br.com.cas10.oraman.oracle;
 
-import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
-
 import br.com.cas10.oraman.oracle.data.Wait;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -14,13 +12,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class Waits {
 
-  private final String waitClassesSql = loadSqlStatement("wait_classes.sql");
-  private final String waitsSql = loadSqlStatement("waits.sql");
+  private final String waitClassesSql;
+  private final String waitsSql;
 
   @Autowired
   private NamedParameterJdbcTemplate jdbc;
 
   private List<String> waitClasses;
+
+  @Autowired
+  public Waits(SqlFileLoader loader) {
+    waitClassesSql = loader.load("wait_classes.sql");
+    waitsSql = loader.load("waits.sql");
+  }
 
   @PostConstruct
   private void init() {

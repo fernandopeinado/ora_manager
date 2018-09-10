@@ -1,7 +1,5 @@
 package br.com.cas10.oraman.oracle;
 
-import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
-
 import br.com.cas10.oraman.oracle.data.Column;
 import br.com.cas10.oraman.oracle.data.Index;
 import br.com.cas10.oraman.oracle.data.Table;
@@ -123,15 +121,25 @@ public class Tables {
     }
   }
 
-  private final String allSchemasSql = loadSqlStatement("all_schemas.sql");
-  private final String allTablesSql = loadSqlStatement("all_tables.sql");
-  private final String tableSql = loadSqlStatement("table.sql");
-  private final String tableColumnsSql = loadSqlStatement("table_columns.sql");
-  private final String tableIndexesSql = loadSqlStatement("table_indexes.sql");
-  private final String tableSizeSql = loadSqlStatement("table_size.sql");
+  private final String allSchemasSql;
+  private final String allTablesSql;
+  private final String tableSql;
+  private final String tableColumnsSql;
+  private final String tableIndexesSql;
+  private final String tableSizeSql;
 
   @Autowired
   private NamedParameterJdbcTemplate jdbc;
+
+  @Autowired
+  public Tables(SqlFileLoader loader) {
+    allSchemasSql = loader.load("all_schemas.sql");
+    allTablesSql = loader.load("all_tables.sql");
+    tableSql = loader.load("table.sql");
+    tableColumnsSql = loader.load("table_columns.sql");
+    tableIndexesSql = loader.load("table_indexes.sql");
+    tableSizeSql = loader.load("table_size.sql");
+  }
 
   @Transactional(readOnly = true)
   public List<String> getSchemas() {
@@ -155,5 +163,4 @@ public class Tables {
         new SizeRowMapper(table));
     return table;
   }
-
 }

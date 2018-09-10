@@ -1,6 +1,5 @@
 package br.com.cas10.oraman.oracle;
 
-import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 import javax.annotation.PostConstruct;
@@ -12,10 +11,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class DatabaseSystem {
 
-  private final String instanceNumberSql = loadSqlStatement("instance_number.sql");
-  private final String checkExpressEditionSql = loadSqlStatement("check_express_edition.sql");
-  private final String numCpuCoresSql = loadSqlStatement("num_cpu_cores.sql");
-  private final String numCpuThreadsSql = loadSqlStatement("num_cpu_threads.sql");
+  private final String instanceNumberSql;
+  private final String checkExpressEditionSql;
+  private final String numCpuCoresSql;
+  private final String numCpuThreadsSql;
 
   @Autowired
   private NamedParameterJdbcTemplate jdbc;
@@ -23,6 +22,14 @@ public class DatabaseSystem {
   private int cpuCores;
   private int cpuThreads;
   private long instanceNumber;
+
+  @Autowired
+  public DatabaseSystem(SqlFileLoader loader) {
+    instanceNumberSql = loader.load("instance_number.sql");
+    checkExpressEditionSql = loader.load("check_express_edition.sql");
+    numCpuCoresSql = loader.load("num_cpu_cores.sql");
+    numCpuThreadsSql = loader.load("num_cpu_threads.sql");
+  }
 
   @PostConstruct
   private void init() {

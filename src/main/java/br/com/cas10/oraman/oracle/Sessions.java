@@ -1,6 +1,5 @@
 package br.com.cas10.oraman.oracle;
 
-import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.stream.Collectors.toList;
 
@@ -38,14 +37,14 @@ public class Sessions {
     return bean;
   };
 
-  private final String allSessionsSql = loadSqlStatement("all_sessions.sql");
-  private final String activeSessionsSql = loadSqlStatement("active_sessions.sql");
-  private final String lockedObjectsSql = loadSqlStatement("locked_objects.sql");
-  private final String sessionBySidSql = loadSqlStatement("session_by_sid.sql");
-  private final String sessionBySidAndSerialSql = loadSqlStatement("session_by_sid_and_serial.sql");
-  private final String globalSessionsByInstanceAndSidSql =
-      loadSqlStatement("global_sessions_by_instance_and_sid.sql");
-  private final String killSessionSql = loadSqlStatement("kill_session.sql");
+  private final String alterSystemPrivilegeSql;
+  private final String allSessionsSql;
+  private final String activeSessionsSql;
+  private final String lockedObjectsSql;
+  private final String sessionBySidSql;
+  private final String sessionBySidAndSerialSql;
+  private final String globalSessionsByInstanceAndSidSql;
+  private final String killSessionSql;
 
   @Autowired
   @VisibleForTesting
@@ -54,10 +53,22 @@ public class Sessions {
   @VisibleForTesting
   boolean sessionTerminationEnabled;
 
+  @Autowired
+  public Sessions(SqlFileLoader loader) {
+    alterSystemPrivilegeSql = loader.load("alter_system_privilege.sql");
+    allSessionsSql = loader.load("all_sessions.sql");
+    activeSessionsSql = loader.load("active_sessions.sql");
+    lockedObjectsSql = loader.load("locked_objects.sql");
+    sessionBySidSql = loader.load("session_by_sid.sql");
+    sessionBySidAndSerialSql = loader.load("session_by_sid_and_serial.sql");
+    globalSessionsByInstanceAndSidSql = loader.load("global_sessions_by_instance_and_sid.sql");
+    killSessionSql = loader.load("kill_session.sql");
+  }
+
   @PostConstruct
   private void init() {
-    Integer alterSystemPrivilegeResult = jdbc.getJdbcOperations()
-        .queryForObject(loadSqlStatement("alter_system_privilege.sql"), Integer.class);
+    Integer alterSystemPrivilegeResult =
+        jdbc.getJdbcOperations().queryForObject(alterSystemPrivilegeSql, Integer.class);
     sessionTerminationEnabled = alterSystemPrivilegeResult > 0;
   }
 

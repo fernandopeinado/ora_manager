@@ -1,7 +1,5 @@
 package br.com.cas10.oraman.oracle;
 
-import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
-
 import br.com.cas10.oraman.oracle.data.TablespaceUsage;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
@@ -23,7 +21,12 @@ public class Tablespaces {
     return bean;
   };
 
-  private final String tablespaceUsageSql = loadSqlStatement("tablespaces_usage.sql");
+  private final String tablespaceUsageSql;
+
+  @Autowired
+  public Tablespaces(SqlFileLoader loader) {
+    tablespaceUsageSql = loader.load("tablespaces_usage.sql");
+  }
 
   @Autowired
   private NamedParameterJdbcTemplate jdbc;
@@ -32,5 +35,4 @@ public class Tablespaces {
   public List<TablespaceUsage> getUsage() {
     return jdbc.query(tablespaceUsageSql, ImmutableMap.of(), TBLSPACE_USAGE_ROW_MAPPER);
   }
-
 }

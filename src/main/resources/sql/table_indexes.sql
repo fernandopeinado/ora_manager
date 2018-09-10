@@ -1,7 +1,7 @@
-select 
+select
 i.owner
 , i.index_name
-, i.table_name 
+, i.table_name
 , i.uniqueness
 , i.tablespace_name
 , i.logging
@@ -12,11 +12,10 @@ i.owner
 , i.sample_size
 , i.last_analyzed
 , c.column_name
-from 
-ALL_INDEXES i 
-inner join ALL_IND_COLUMNS c on i.owner = c.index_owner and i.index_name = c.index_name
-where 
+from
+{{ all_indexes }} i
+inner join {{ all_ind_columns }} c on i.owner = c.index_owner and i.index_name = c.index_name
+where
 i.owner = :owner
 and i.table_name = :tableName
 order by c.column_position
-

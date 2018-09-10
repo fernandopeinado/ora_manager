@@ -22,5 +22,5 @@ sum(cluster_wait_time) as cluster_wait_time,
 sum(concurrency_wait_time) as concurrency_wait_time,
 sum(user_io_wait_time) as user_io_wait_time
 
-from v$sql where sql_id = :sqlId
+from {{ v$sql }} where sql_id = :sqlId
 group by plan_hash_value

@@ -1,4 +1,4 @@
-select 
+select
 c.owner
 , c.table_name
 , c.column_name
@@ -10,7 +10,7 @@ c.owner
 , c.column_id
 , c.last_analyzed
 from
-ALL_TAB_COLUMNS c
-where 
+{{ all_tab_columns }} c
+where
 c.owner = :owner
 and c.table_name = :tableName

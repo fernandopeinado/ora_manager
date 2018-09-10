@@ -1,6 +1,5 @@
 package br.com.cas10.oraman.oracle;
 
-import static br.com.cas10.oraman.oracle.SqlFiles.loadSqlStatement;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import br.com.cas10.oraman.oracle.data.Cursor;
@@ -17,14 +16,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class Cursors {
 
-  private final String childCursorsSql = loadSqlStatement("execution_plans.sql");
-  private final String cursorBySqlId = loadSqlStatement("cursor_by_sqlid.sql");
-  private final String sqlFullTextBySqlId = loadSqlStatement("sql_fulltext.sql");
-  private final String planTableOutputBySqlIdAndChildNumber =
-      loadSqlStatement("plan_table_output.sql");
+  private final String childCursorsSql;
+  private final String cursorBySqlId;
+  private final String sqlFullTextBySqlId;
+  private final String planTableOutputBySqlIdAndChildNumber;
 
   @Autowired
   private NamedParameterJdbcTemplate jdbc;
+
+  @Autowired
+  public Cursors(SqlFileLoader loader) {
+    childCursorsSql = loader.load("execution_plans.sql");
+    cursorBySqlId = loader.load("cursor_by_sqlid.sql");
+    sqlFullTextBySqlId = loader.load("sql_fulltext.sql");
+    planTableOutputBySqlIdAndChildNumber = loader.load("plan_table_output.sql");
+  }
 
   /**
    * Returns details of the specified parent cursor or {@code null} if the cursor was not found.

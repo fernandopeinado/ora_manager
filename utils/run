@@ -6,6 +6,9 @@ sysprops="-Doraman.home=$(readlink -f ../target)"
 sysprops+=" -Dspring.config.additional-location=$(readlink -f dev-config.yml)"
 sysprops+=" -Dspring.profiles.include=foreground"
 
+[[ ${1-} == debug ]] &&
+        sysprops+=" -agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=y"
+
 cd ..
 mvn spring-boot:run -Dspring-boot.run.jvmArguments="$sysprops"
 

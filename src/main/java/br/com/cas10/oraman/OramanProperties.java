@@ -1,5 +1,7 @@
 package br.com.cas10.oraman;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
@@ -18,6 +20,8 @@ public class OramanProperties {
   private DataSource dataSource = new DataSource();
   @Valid
   private Archive archive = new Archive();
+  @NotNull
+  private List<ObjectMapping> objectMappings = new ArrayList<>();
 
   public String getHome() {
     return home;
@@ -41,6 +45,14 @@ public class OramanProperties {
 
   public void setArchive(Archive archive) {
     this.archive = archive;
+  }
+
+  public List<ObjectMapping> getObjectMappings() {
+    return objectMappings;
+  }
+
+  public void setObjectMappings(List<ObjectMapping> objectMappings) {
+    this.objectMappings = objectMappings;
   }
 
   public static class Archive {
@@ -99,6 +111,30 @@ public class OramanProperties {
 
     public void setPassword(String password) {
       this.password = password;
+    }
+  }
+
+  public static class ObjectMapping {
+
+    @NotNull
+    private String from;
+    @NotNull
+    private String to;
+
+    public String getFrom() {
+      return from;
+    }
+
+    public void setFrom(String from) {
+      this.from = from;
+    }
+
+    public String getTo() {
+      return to;
+    }
+
+    public void setTo(String to) {
+      this.to = to;
     }
   }
 }
