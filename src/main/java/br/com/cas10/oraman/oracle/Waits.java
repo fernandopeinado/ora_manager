@@ -1,22 +1,35 @@
 package br.com.cas10.oraman.oracle;
 
+import static br.com.cas10.oraman.oracle.OracleObject.V_EVENT_NAME;
+
 import br.com.cas10.oraman.oracle.data.Wait;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class Waits {
 
+  private static final Logger logger = LoggerFactory.getLogger(Waits.class);
+
+  /** Fallback list. Valid for Oracle 11 and 12 */
+  private static final List<String> WAIT_CLASSES =
+      ImmutableList.of("Administrative", "Application", "Cluster", "Commit", "Concurrency",
+          "Configuration", "Network", "Other", "Queueing", "Scheduler", "System I/O", "User I/O");
+
   private final String waitClassesSql;
   private final String waitsSql;
 
   @Autowired
-  private NamedParameterJdbcTemplate jdbc;
+  private AccessChecker accessChecker;
+  @Autowired
+  private JdbcTemplate jdbc;
 
   private List<String> waitClasses;
 
@@ -28,7 +41,14 @@ public class Waits {
 
   @PostConstruct
   private void init() {
-    List<String> list = jdbc.getJdbcOperations().queryForList(waitClassesSql, String.class);
+    List<String> list;
+    if (accessChecker.isQueryable(V_EVENT_NAME)) {
+      list = jdbc.queryForList(waitClassesSql, String.class);
+    } else {
+      logger.warn(
+          "v$event_name is not accessible. Falling back to the built-in list of wait classes");
+      list = WAIT_CLASSES;
+    }
     waitClasses = ImmutableList.copyOf(list);
   }
 
