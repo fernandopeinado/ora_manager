@@ -1,5 +1,6 @@
 package br.com.cas10.oraman.oracle;
 
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_OBJECTS;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.stream.Collectors.toList;
 
@@ -8,6 +9,7 @@ import br.com.cas10.oraman.oracle.data.GlobalSession;
 import br.com.cas10.oraman.oracle.data.LockedObject;
 import br.com.cas10.oraman.oracle.data.Session;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -47,9 +49,12 @@ public class Sessions {
   private final String killSessionSql;
 
   @Autowired
+  private AccessChecker accessChecker;
+  @Autowired
   @VisibleForTesting
   NamedParameterJdbcTemplate jdbc;
 
+  private boolean dbaObjectsAccessible;
   @VisibleForTesting
   boolean sessionTerminationEnabled;
 
@@ -70,6 +75,11 @@ public class Sessions {
     Integer alterSystemPrivilegeResult =
         jdbc.getJdbcOperations().queryForObject(alterSystemPrivilegeSql, Integer.class);
     sessionTerminationEnabled = alterSystemPrivilegeResult > 0;
+
+    dbaObjectsAccessible = accessChecker.isQueryable(DBA_OBJECTS);
+    if (!dbaObjectsAccessible) {
+      logger.warn("{} is not accessible", DBA_OBJECTS.name);
+    }
   }
 
   @Transactional(readOnly = true)
@@ -112,6 +122,9 @@ public class Sessions {
   }
 
   private List<LockedObject> getLockedObjects(long sessionId) {
+    if (!dbaObjectsAccessible) {
+      return ImmutableList.of();
+    }
     return jdbc.query(lockedObjectsSql, ImmutableMap.of("sid", sessionId), (rs, rowNum) -> {
       LockedObject lo = new LockedObject();
       lo.owner = rs.getString("owner");

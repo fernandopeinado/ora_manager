@@ -6,6 +6,8 @@ public enum OracleObject {
 
   DBA_FREE_SPACE("dba_free_space"),
 
+  DBA_OBJECTS("dba_objects"),
+
   V_EVENT_NAME("v$event_name"),
 
   V_SQLCOMMAND("v$sqlcommand"),
