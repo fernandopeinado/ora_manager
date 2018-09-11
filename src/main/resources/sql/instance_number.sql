@@ -1,1 +1,1 @@
-select instance_number from {{ v$instance }}
+select sys_context('USERENV', 'INSTANCE') from dual

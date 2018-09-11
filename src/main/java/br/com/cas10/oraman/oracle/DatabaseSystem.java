@@ -73,8 +73,7 @@ public class DatabaseSystem {
   }
 
   /**
-   * Returns the ID of the monitored instance, retrieved from {@code v$instance} (column
-   * {@code INSTANCE_NUMBER}).
+   * Returns the ID of the monitored instance ({@code INSTANCE_NUMBER}).
    */
   public long getInstanceNumber() {
     return instanceNumber;
