@@ -5,27 +5,35 @@
                 <thead>
                     <tr>
                         <th>Tablespace</th>
-                        <th>Used <div class="pull-right">{{usedMb}} Mb</div></th>
-                <th>Free <div class="pull-right">{{freeMb}} Mb</div></th>
-                <th>Total <div class="pull-right">{{totalMb}} Mb</div></th>
-                </tr>
+                        <th>Used <div class="pull-right">{{usedMb}} MiB</div></th>
+                        <th>Free <div class="pull-right">{{freeMb}} MiB</div></th>
+                        <th>Total <div class="pull-right">{{totalMb}} MiB</div></th>
+                    </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat-start="u in usages|orderBy:['tablespace']">
                         <td rowspan="2">{{u.tablespace}}</td>
-                        <td align="right">{{u.usedMb}} Mb</td>
-                        <td align="right">{{u.freeMb}} Mb</td>
-                        <td align="right">{{u.totalMb}} Mb</td>
+                        <td align="right">{{u.usedMb}} MiB</td>
+                        <td align="right">{{u.freeMb}} MiB</td>
+                        <td align="right">{{u.totalMb}} MiB</td>
                     </tr>
                     <tr ng-repeat-end>
                         <td colspan="3">
                             <div class="progress" style="margin-bottom: 0px;">
-                                <div class="progress-bar" role="progressbar" aria-valuenow="{{u.usagePct}}" aria-valuemin="0" aria-valuemax="100" style="width: {{u.usagePct}}%;">{{u.usagePct}}%</div>
+                                <div class="progress-bar" role="progressbar"
+                                    aria-valuenow="{{u.usagePct}}"
+                                    aria-valuemin="0" aria-valuemax="100"
+                                    style="width: {{u.usagePct}}%;">{{u.usagePct}}%</div>
                             </div>
                         </td>
-                    </tr>                    
+                    </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+    <div class="row" ng-show="usages != null && usages.length == 0">
+        <div class="col-md-12">
+            <div class="alert alert-warning" style="text-align: center">NOT AVAILABLE</div>
         </div>
     </div>
 </div>
