@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
 @Component
 class AshArchive {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AshArchive.class);
+  private static final Logger logger = LoggerFactory.getLogger(AshArchive.class);
 
   private static final DateTimeFormatter FILENAME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
@@ -82,7 +82,7 @@ class AshArchive {
         try {
           flushBuffer();
         } catch (IOException e) {
-          LOGGER.error("Error while archiving snapshots", e);
+          logger.error("Error while archiving snapshots", e);
         }
         buffer.clear();
       }
@@ -122,13 +122,13 @@ class AshArchive {
           continue;
         }
         if (fileName.compareTo(firstAllowedName) < 0) {
-          LOGGER.info(
+          logger.info(
               String.format("Removing file: %s", path.normalize().toAbsolutePath().toString()));
           Files.deleteIfExists(path);
         }
       }
     } catch (IOException e) {
-      LOGGER.error("Error while cleaning up the archive", e);
+      logger.error("Error while cleaning up the archive", e);
     }
   }
 

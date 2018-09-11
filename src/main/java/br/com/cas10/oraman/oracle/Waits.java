@@ -45,8 +45,8 @@ public class Waits {
     if (accessChecker.isQueryable(V_EVENT_NAME)) {
       list = jdbc.queryForList(waitClassesSql, String.class);
     } else {
-      logger.warn(
-          "v$event_name is not accessible. Falling back to the built-in list of wait classes");
+      logger.warn("{} is not accessible. Falling back to the built-in list of wait classes",
+          V_EVENT_NAME.name);
       list = WAIT_CLASSES;
     }
     waitClasses = ImmutableList.copyOf(list);

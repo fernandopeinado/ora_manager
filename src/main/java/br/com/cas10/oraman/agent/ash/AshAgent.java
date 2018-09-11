@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 class AshAgent {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AshAgent.class);
+  private static final Logger logger = LoggerFactory.getLogger(AshAgent.class);
 
   @VisibleForTesting
   static final int SNAPSHOT_SAMPLES = 15;
@@ -80,7 +80,7 @@ class AshAgent {
 
     long elapsedTimeMillis = System.currentTimeMillis() - timestamp;
     if (elapsedTimeMillis > 750) {
-      LOGGER.warn("Execution time: " + elapsedTimeMillis + "ms");
+      logger.warn("Execution time: " + elapsedTimeMillis + "ms");
     }
   }
 

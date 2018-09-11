@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class Sessions {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(Sessions.class);
+  private static final Logger logger = LoggerFactory.getLogger(Sessions.class);
 
   private static final RowMapper<SessionBean> SESSION_ROW_MAPPER = (rs, rownum) -> {
     SessionBean bean = new SessionBean();
@@ -165,7 +165,7 @@ public class Sessions {
     if (sessionTerminationEnabled) {
       jdbc.getJdbcOperations().execute(
           killSessionSql.replace(":fullSid", String.format("'%d,%d'", sessionId, serialNumber)));
-      LOGGER.info(String.format("Session killed: %d (SID), %d (Serial#)", sessionId, serialNumber));
+      logger.info(String.format("Session killed: %d (SID), %d (Serial#)", sessionId, serialNumber));
     }
   }
 

@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 class GlobalDefaultExceptionHandler {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(GlobalDefaultExceptionHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(GlobalDefaultExceptionHandler.class);
 
   @ExceptionHandler
   public void handleException(Exception e) throws Exception {
-    LOGGER.error("Error", e);
+    logger.error("Error", e);
     throw e;
   }
 }
