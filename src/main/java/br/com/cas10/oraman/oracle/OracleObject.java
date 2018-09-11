@@ -4,6 +4,8 @@ public enum OracleObject {
 
   V_EVENT_NAME("v$event_name"),
 
+  V_SQLCOMMAND("v$sqlcommand"),
+
   V_SYS_TIME_MODEL("v$sys_time_model"),
 
   V_SYSTEM_EVENT("v$system_event");

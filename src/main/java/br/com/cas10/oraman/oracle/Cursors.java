@@ -23,6 +23,8 @@ public class Cursors {
 
   @Autowired
   private NamedParameterJdbcTemplate jdbc;
+  @Autowired
+  private SqlCommands sqlCommands;
 
   @Autowired
   public Cursors(SqlFileLoader loader) {
@@ -43,7 +45,7 @@ public class Cursors {
       Cursor cursor = new Cursor();
       cursor.sqlId = sqlId;
       cursor.sqlText = rs.getString("sql_text");
-      cursor.command = rs.getString("command_name");
+      cursor.command = sqlCommands.getCommandName(rs.getInt("command_type"));
       return cursor;
     });
     return DataAccessUtils.singleResult(list);
