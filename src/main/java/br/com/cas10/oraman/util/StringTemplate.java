@@ -57,9 +57,8 @@ public class StringTemplate {
             String value = data.getValue(variableName);
             if (value == null) {
               throw new StringTemplateException(variableName, template);
-            } else {
-              out.append(value);
             }
+            out.append(value);
           } else {
             copy(template, variableStart, i + 1, out);
           }

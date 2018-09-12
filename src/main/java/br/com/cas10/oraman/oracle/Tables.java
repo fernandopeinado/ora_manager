@@ -1,12 +1,27 @@
 package br.com.cas10.oraman.oracle;
 
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_INDEXES;
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_IND_COLUMNS;
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_LOBS;
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_SEGMENTS;
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_TABLES;
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_TAB_COLUMNS;
+import static br.com.cas10.oraman.oracle.OracleObject.DBA_USERS;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+
 import br.com.cas10.oraman.oracle.data.Column;
 import br.com.cas10.oraman.oracle.data.Index;
 import br.com.cas10.oraman.oracle.data.Table;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import javax.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -15,6 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class Tables {
+
+  private static final Logger logger = LoggerFactory.getLogger(Tables.class);
 
   private static final RowMapper<Table> tableRowMapper = (rs, rowNum) -> {
     Table bean = new Table();
@@ -70,7 +87,11 @@ public class Tables {
   private final String tableIndexesSql;
 
   @Autowired
+  private AccessChecker accessChecker;
+  @Autowired
   private NamedParameterJdbcTemplate jdbc;
+
+  private boolean requiredObjectsAccessible;
 
   @Autowired
   public Tables(SqlFileLoader loader) {
@@ -81,8 +102,26 @@ public class Tables {
     tableIndexesSql = loader.load("table_indexes.sql");
   }
 
+  @PostConstruct
+  private void init() {
+    List<OracleObject> requiredObjects = asList(DBA_IND_COLUMNS, DBA_INDEXES, DBA_LOBS,
+        DBA_SEGMENTS, DBA_TAB_COLUMNS, DBA_TABLES, DBA_USERS);
+
+    Predicate<OracleObject> accessiblePredicate = accessChecker::isQueryable;
+    List<OracleObject> notAccessible =
+        requiredObjects.stream().filter(accessiblePredicate.negate()).collect(toList());
+
+    requiredObjectsAccessible = notAccessible.isEmpty();
+    if (!notAccessible.isEmpty()) {
+      logger.warn("Not accessible: {}", Joiner.on(", ").join(notAccessible));
+    }
+  }
+
   @Transactional(readOnly = true)
   public List<String> getSchemas() {
+    if (!requiredObjectsAccessible) {
+      return ImmutableList.of();
+    }
     return jdbc.getJdbcOperations().queryForList(allSchemasSql, String.class);
   }
 

@@ -17,7 +17,7 @@
             <tr><td>Index</td><td>{{table.indexSizeMb}} Mb</td></tr>
           </tbody>
         </table>
-        
+
         <h2>Columns</h2>
         <table class="table table-bordered table-condensed">
           <thead>
@@ -141,6 +141,11 @@
             </form>
           </div>
         </nav>
+      </div>
+    </div>
+    <div class="row" ng-show="schemas != null && schemas.length == 0">
+      <div class="col-md-12">
+        <div class="alert alert-warning" style="text-align: center">NOT AVAILABLE</div>
       </div>
     </div>
   </div>
