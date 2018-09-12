@@ -22,7 +22,11 @@ public enum OracleObject {
 
   DBA_USERS("dba_users"),
 
+  GV_SESSION("gv$session"),
+
   V_EVENT_NAME("v$event_name"),
+
+  V_LOCKED_OBJECT("v$locked_object"),
 
   V_SQLCOMMAND("v$sqlcommand"),
 

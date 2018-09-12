@@ -1,6 +1,8 @@
 package br.com.cas10.oraman.oracle;
 
 import static br.com.cas10.oraman.oracle.OracleObject.DBA_OBJECTS;
+import static br.com.cas10.oraman.oracle.OracleObject.GV_SESSION;
+import static br.com.cas10.oraman.oracle.OracleObject.V_LOCKED_OBJECT;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.stream.Collectors.toList;
 
@@ -54,7 +56,6 @@ public class Sessions {
   @VisibleForTesting
   NamedParameterJdbcTemplate jdbc;
 
-  private boolean dbaObjectsAccessible;
   @VisibleForTesting
   boolean sessionTerminationEnabled;
 
@@ -75,11 +76,6 @@ public class Sessions {
     Integer alterSystemPrivilegeResult =
         jdbc.getJdbcOperations().queryForObject(alterSystemPrivilegeSql, Integer.class);
     sessionTerminationEnabled = alterSystemPrivilegeResult > 0;
-
-    dbaObjectsAccessible = accessChecker.isQueryable(DBA_OBJECTS);
-    if (!dbaObjectsAccessible) {
-      logger.warn("{} is not accessible", DBA_OBJECTS.name);
-    }
   }
 
   @Transactional(readOnly = true)
@@ -104,11 +100,21 @@ public class Sessions {
     if (bean.isBlocked) {
       session.blockingSession = getGlobalSession(bean.blockingInstance, bean.blockingSession);
     }
-    session.lockedObjects = getLockedObjects(session.sid);
+    if (accessChecker.isQueryable(DBA_OBJECTS) && accessChecker.isQueryable(V_LOCKED_OBJECT)) {
+      session.lockedObjects = getLockedObjects(session.sid);
+    } else {
+      session.lockedObjects = ImmutableList.of();
+    }
     return session;
   }
 
   private GlobalSession getGlobalSession(long instanceNumber, long sessionId) {
+    if (!accessChecker.isQueryable(GV_SESSION)) {
+      GlobalSession session = new GlobalSession();
+      session.instanceNumber = instanceNumber;
+      session.sid = sessionId;
+      return session;
+    }
     return jdbc.queryForObject(globalSessionsByInstanceAndSidSql,
         ImmutableMap.of("instance", instanceNumber, "sid", sessionId), (rs, rowNum) -> {
           GlobalSession session = new GlobalSession();
@@ -122,9 +128,6 @@ public class Sessions {
   }
 
   private List<LockedObject> getLockedObjects(long sessionId) {
-    if (!dbaObjectsAccessible) {
-      return ImmutableList.of();
-    }
     return jdbc.query(lockedObjectsSql, ImmutableMap.of("sid", sessionId), (rs, rowNum) -> {
       LockedObject lo = new LockedObject();
       lo.owner = rs.getString("owner");
