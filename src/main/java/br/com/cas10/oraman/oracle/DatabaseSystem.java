@@ -1,11 +1,11 @@
 package br.com.cas10.oraman.oracle;
 
+import static br.com.cas10.oraman.oracle.OracleObject.V_OSSTAT;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcOperations;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,10 +17,12 @@ public class DatabaseSystem {
   private final String numCpuThreadsSql;
 
   @Autowired
-  private NamedParameterJdbcTemplate jdbc;
+  private AccessChecker accessChecker;
+  @Autowired
+  private JdbcTemplate jdbc;
 
-  private int cpuCores;
-  private int cpuThreads;
+  private Integer cpuCores;
+  private Integer cpuThreads;
   private long instanceNumber;
 
   @Autowired
@@ -33,42 +35,45 @@ public class DatabaseSystem {
 
   @PostConstruct
   private void init() {
-    JdbcOperations jdbcOps = jdbc.getJdbcOperations();
+    instanceNumber = jdbc.queryForObject(instanceNumberSql, Long.class);
 
-    instanceNumber = jdbcOps.queryForObject(instanceNumberSql, Long.class);
-
-    int xeQueryResult = jdbcOps.queryForObject(checkExpressEditionSql, Integer.class);
+    int xeQueryResult = jdbc.queryForObject(checkExpressEditionSql, Integer.class);
     boolean expressEdition = xeQueryResult > 0;
 
     if (expressEdition) {
       cpuCores = 1;
       cpuThreads = 1;
-    } else {
-      cpuThreads = jdbcOps.queryForObject(numCpuThreadsSql, Integer.class);
+    } else if (accessChecker.isQueryable(V_OSSTAT)) {
+      cpuThreads = jdbc.queryForObject(numCpuThreadsSql, Integer.class);
       // NUM_CPU_CORES is not always available (e.g., cloud environments)
-      cpuCores = getOnlyElement(jdbcOps.queryForList(numCpuCoresSql, Integer.class), cpuThreads);
+      cpuCores = getOnlyElement(jdbc.queryForList(numCpuCoresSql, Integer.class), cpuThreads);
     }
   }
 
   /**
-   * Returns the number of CPU cores available (the value of {@code NUM_CPU_CORES} on
-   * {@code v$osstat}). On Express Edition databases, returns {@code 1}.
+   * Returns the number of available CPU cores ({@code NUM_CPU_CORES} on {@code v$osstat}).
    *
-   * <p>Returns the value of {@code NUM_CPUS} if {@code NUM_CPU_CORES} is not available.
-   *
-   * @return the number of CPU cores available.
+   * <p>Special cases:
+   * <ul>
+   * <li>Returns 1 on XE databases</li>
+   * <li>Returns the value of {@code NUM_CPUS} if {@code NUM_CPU_CORES} is not available</li>
+   * <li>Returns {@code null} if {@code v$osstat} is not available</li>
+   * </ul>
    */
-  public int getCpuCores() {
+  public Integer getCpuCores() {
     return cpuCores;
   }
 
   /**
-   * Returns the number of CPUs available (the value of {@code NUM_CPUS} on {@code v$osstat}). On
-   * Express Edition databases, returns {@code 1}.
+   * Returns the number of available CPUs ({@code NUM_CPUS} on {@code v$osstat}).
    *
-   * @return the number of CPUs available.
+   * <p>Special cases:
+   * <ul>
+   * <li>Returns 1 on XE databases</li>
+   * <li>Returns {@code null} if {@code v$osstat} is not available</li>
+   * </ul>
    */
-  public int getCpuThreads() {
+  public Integer getCpuThreads() {
     return cpuThreads;
   }
 

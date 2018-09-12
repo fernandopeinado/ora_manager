@@ -143,13 +143,12 @@
     var maxY = d3.max(json.data, function(d) {
       return d3.sum(d[1]);
     }) || 1;
-    if (json.cpuThreads && json.cpuCores) {
-      if (maxY <= json.cpuCores) {
+    if (json.cpuCores && maxY <= json.cpuCores) {
         maxY = json.cpuCores;
-      } else if (maxY <= json.cpuThreads) {
+    } else if (json.cpuThreads && maxY <= json.cpuThreads) {
         maxY = json.cpuThreads;
-      }
     }
+    maxY = Math.max(maxY, 1);
 
     var xDomain = d3.extent(json.data, d => d[0]);
     var x = d3.time.scale().domain(xDomain).range([0, width]);
@@ -263,8 +262,10 @@
         'class': 'cpu ' + cssClass
       });
     }
-    if (json.cpuCores && json.cpuThreads) {
+    if (json.cpuCores) {
       cpuLine(json.cpuCores, 'cores');
+    }
+    if (json.cpuThreads) {
       cpuLine(json.cpuThreads, 'threads');
     }
 

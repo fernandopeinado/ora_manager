@@ -28,6 +28,8 @@ public enum OracleObject {
 
   V_LOCKED_OBJECT("v$locked_object"),
 
+  V_OSSTAT("v$osstat"),
+
   V_SQLCOMMAND("v$sqlcommand"),
 
   V_SYS_TIME_MODEL("v$sys_time_model"),
