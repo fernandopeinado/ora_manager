@@ -8,10 +8,7 @@ public class Table {
   public String owner;
   public String name;
   public String tablespace;
-  public Boolean logging;
   public Long rows;
-  public Long avgRowLength;
-  public Long sampleSize;
   public Date lastAnalyzed;
 
   public LinkedHashMap<String, Column> columns = new LinkedHashMap<>();

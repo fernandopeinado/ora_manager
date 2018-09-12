@@ -3,10 +3,10 @@ package br.com.cas10.oraman.oracle;
 import br.com.cas10.oraman.oracle.data.Column;
 import br.com.cas10.oraman.oracle.data.Index;
 import br.com.cas10.oraman.oracle.data.Table;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,117 +16,58 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class Tables {
 
-  private static final RowMapper<String> SCHEMA_ROW_MAPPER = (rs, rownum) -> {
-    return rs.getString("owner");
-  };
-
-  private static final RowMapper<Table> TABLE_ROW_MAPPER = (rs, rownum) -> {
+  private static final RowMapper<Table> tableRowMapper = (rs, rowNum) -> {
     Table bean = new Table();
     bean.owner = rs.getString("owner");
     bean.name = rs.getString("table_name");
     bean.tablespace = rs.getString("tablespace_name");
-    bean.logging = "YES".equalsIgnoreCase(rs.getString("logging"));
     bean.rows = rs.getLong("num_rows");
-    bean.avgRowLength = rs.getLong("avg_row_len");
-    bean.sampleSize = rs.getLong("sample_size");
     bean.lastAnalyzed = rs.getDate("last_analyzed");
     return bean;
   };
 
-  private static class TableColumnRowMapper implements RowMapper<Column> {
+  private static final RowMapper<Table> fullTableRowMapper = (rs, rowNum) -> {
+    Table bean = tableRowMapper.mapRow(rs, rowNum);
+    bean.dataSizeMb = rs.getDouble("table_bytes") / 1024 / 1024;
+    bean.lobSizeMb = rs.getDouble("lob_bytes") / 1024 / 1024;
+    bean.indexSizeMb = rs.getDouble("index_bytes") / 1024 / 1024;
+    return bean;
+  };
 
-    private Table table;
+  private static final RowMapper<Column> columnRowMapper = (rs, rowNum) -> {
+    Column bean = new Column();
+    bean.name = rs.getString("column_name");
+    bean.dataType = rs.getString("data_type");
+    bean.length = rs.getLong("data_length");
+    bean.precision = rs.getLong("data_precision");
+    bean.scale = rs.getLong("data_scale");
+    bean.nullable = "Y".equalsIgnoreCase(rs.getString("nullable"));
+    bean.lastAnalyzed = rs.getTimestamp("last_analyzed");
+    return bean;
+  };
 
-    public TableColumnRowMapper(Table table) {
-      this.table = table;
-    }
-
-    @Override
-    public Column mapRow(ResultSet rs, int i) throws SQLException {
-      Column bean = new Column();
-      bean.name = rs.getString("column_name");
-      bean.dataType = rs.getString("data_type");
-      bean.length = rs.getLong("data_length");
-      bean.precision = rs.getLong("data_precision");
-      bean.scale = rs.getLong("data_scale");
-      bean.nullable = "Y".equalsIgnoreCase(rs.getString("nullable"));
-      bean.id = rs.getLong("column_id");
-      bean.lastAnalyzed = rs.getTimestamp("last_analyzed");
-      table.columns.put(bean.name, bean);
-      return bean;
-    }
-  }
-
-  private static class IndexColumnRowMapper implements RowMapper<Index> {
-
-    private Table table;
-
-    public IndexColumnRowMapper(Table table) {
-      this.table = table;
-    }
-
-    @Override
-    public Index mapRow(ResultSet rs, int i) throws SQLException {
-      String name = rs.getString("index_name");
-      Index bean = table.indexes.get(name);
-      if (bean == null) {
-        bean = new Index();
-        bean.name = name;
-        bean.unique = "UNIQUE".equalsIgnoreCase(rs.getString("uniqueness"));
-        bean.tablespace = rs.getString("tablespace_name");
-        bean.logging = "YES".equalsIgnoreCase(rs.getString("logging"));
-        bean.blevel = rs.getLong("blevel");
-        bean.leafBlocks = rs.getLong("leaf_blocks");
-        bean.distinctKeys = rs.getLong("distinct_keys");
-        bean.rows = rs.getLong("num_rows");
-        bean.sampleSize = rs.getLong("sample_size");
-        bean.lastAnalyzed = rs.getTimestamp("last_analyzed");
-        table.indexes.put(bean.name, bean);
-      }
-      bean.columns.add(rs.getString("column_name"));
-      return bean;
-    }
-  }
-
-  private static class SizeRowMapper implements RowMapper<Object> {
-
-    private Table table;
-
-    public SizeRowMapper(Table table) {
-      this.table = table;
-      table.dataSizeMb = 0.0;
-      table.indexSizeMb = 0.0;
-      table.lobSizeMb = 0.0;
-    }
-
-    @Override
-    public Object mapRow(ResultSet rs, int i) throws SQLException {
-      String type = rs.getString("type");
-      String indexName = rs.getString("index_name");
-      Double sizeMb = rs.getDouble("sizeMb");
-      switch (type) {
-        case "TABLE":
-          table.dataSizeMb += sizeMb;
-          break;
-        case "INDEX":
-          table.indexSizeMb += sizeMb;
-          Index index = table.indexes.get(indexName);
-          index.sizeMb = sizeMb;
-          break;
-        default:
-          table.lobSizeMb += sizeMb;
-          break;
-      }
-      return sizeMb;
-    }
-  }
+  private static final RowMapper<Index> indexRowMapper = (rs, rowNum) -> {
+    Index bean = new Index();
+    bean.name = rs.getString("index_name");
+    bean.columns = ImmutableList.copyOf(rs.getString("columns").split(","));
+    bean.unique = "UNIQUE".equalsIgnoreCase(rs.getString("uniqueness"));
+    bean.tablespace = rs.getString("tablespace_name");
+    bean.logging = "YES".equalsIgnoreCase(rs.getString("logging"));
+    bean.blevel = rs.getLong("blevel");
+    bean.leafBlocks = rs.getLong("leaf_blocks");
+    bean.distinctKeys = rs.getLong("distinct_keys");
+    bean.rows = rs.getLong("num_rows");
+    bean.sampleSize = rs.getLong("sample_size");
+    bean.lastAnalyzed = rs.getTimestamp("last_analyzed");
+    bean.sizeMb = rs.getDouble("bytes") / 1024 / 1024;
+    return bean;
+  };
 
   private final String allSchemasSql;
   private final String allTablesSql;
   private final String tableSql;
   private final String tableColumnsSql;
   private final String tableIndexesSql;
-  private final String tableSizeSql;
 
   @Autowired
   private NamedParameterJdbcTemplate jdbc;
@@ -138,29 +79,27 @@ public class Tables {
     tableSql = loader.load("table.sql");
     tableColumnsSql = loader.load("table_columns.sql");
     tableIndexesSql = loader.load("table_indexes.sql");
-    tableSizeSql = loader.load("table_size.sql");
   }
 
   @Transactional(readOnly = true)
   public List<String> getSchemas() {
-    return jdbc.query(allSchemasSql, ImmutableMap.of(), SCHEMA_ROW_MAPPER);
+    return jdbc.getJdbcOperations().queryForList(allSchemasSql, String.class);
   }
 
   @Transactional(readOnly = true)
   public List<Table> getTables(String owner) {
-    return jdbc.query(allTablesSql, ImmutableMap.of("owner", owner), TABLE_ROW_MAPPER);
+    return jdbc.query(allTablesSql, ImmutableMap.of("owner", owner), tableRowMapper);
   }
 
   @Transactional(readOnly = true)
   public Table getFullTable(String owner, String tableName) {
-    Table table = jdbc.queryForObject(tableSql,
-        ImmutableMap.of("owner", owner, "tableName", tableName), TABLE_ROW_MAPPER);
-    jdbc.query(tableColumnsSql, ImmutableMap.of("owner", owner, "tableName", tableName),
-        new TableColumnRowMapper(table));
-    jdbc.query(tableIndexesSql, ImmutableMap.of("owner", owner, "tableName", tableName),
-        new IndexColumnRowMapper(table));
-    jdbc.query(tableSizeSql, ImmutableMap.of("owner", owner, "tableName", tableName),
-        new SizeRowMapper(table));
+    Map<String, ?> params = ImmutableMap.of("owner", owner, "tableName", tableName);
+
+    Table table = jdbc.queryForObject(tableSql, params, fullTableRowMapper);
+    jdbc.query(tableColumnsSql, params, columnRowMapper).stream()
+        .forEach(c -> table.columns.put(c.name, c));
+    jdbc.query(tableIndexesSql, params, indexRowMapper).stream()
+        .forEach(i -> table.indexes.put(i.name, i));
     return table;
   }
 }

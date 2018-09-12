@@ -7,7 +7,6 @@ public class Column {
 
   public String name;
   public String dataType;
-  public Long id;
   public Long length;
   public Long precision;
   public Long scale;

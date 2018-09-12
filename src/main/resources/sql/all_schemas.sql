@@ -1,5 +1,1 @@
-select
-username as owner
-from
-{{ all_users }}
-order by 1
+select username from {{ dba_users }} order by 1
