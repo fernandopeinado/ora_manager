@@ -22,6 +22,8 @@ public class OramanProperties {
   private Archive archive = new Archive();
   @NotNull
   private List<ObjectMapping> objectMappings = new ArrayList<>();
+  @NotNull
+  private AccessLog accessLog = new AccessLog();
 
   public String getHome() {
     return home;
@@ -53,6 +55,28 @@ public class OramanProperties {
 
   public void setObjectMappings(List<ObjectMapping> objectMappings) {
     this.objectMappings = objectMappings;
+  }
+
+  public AccessLog getAccessLog() {
+    return accessLog;
+  }
+
+  public void setAccessLog(AccessLog accessLog) {
+    this.accessLog = accessLog;
+  }
+
+  public static class AccessLog {
+
+    @NotNull
+    private Integer maxDays = 30;
+
+    public Integer getMaxDays() {
+      return maxDays;
+    }
+
+    public void setMaxDays(Integer maxDays) {
+      this.maxDays = maxDays;
+    }
   }
 
   public static class Archive {
