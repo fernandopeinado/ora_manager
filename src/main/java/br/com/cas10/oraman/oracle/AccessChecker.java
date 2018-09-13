@@ -2,13 +2,17 @@ package br.com.cas10.oraman.oracle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccessChecker {
@@ -22,7 +26,27 @@ public class AccessChecker {
   @Autowired
   private ObjectMappings mappings;
 
-  private final ConcurrentHashMap<String, Boolean> queryableCache = new ConcurrentHashMap<>();
+  private Map<OracleObject, Boolean> queryable;
+
+  @PostConstruct
+  private void init() {
+    List<String> notAccessible = new ArrayList<>();
+    EnumMap<OracleObject, Boolean> queryableTemp = new EnumMap<>(OracleObject.class);
+    for (OracleObject object : OracleObject.values()) {
+      String testQuery = String.format(QUERYABLE_TEMPLATE, mappings.lookup(object.name));
+      try {
+        jdbc.queryForList(testQuery, Integer.class);
+        queryableTemp.put(object, true);
+      } catch (Exception e) {
+        queryableTemp.put(object, false);
+        notAccessible.add(object.name);
+      }
+    }
+    queryable = ImmutableMap.copyOf(queryableTemp);
+    if (!notAccessible.isEmpty()) {
+      logger.warn("Not accessible: {}. Some features will not be available", notAccessible);
+    }
+  }
 
   /**
    * Checks if the application can execute SELECT statements on the specified object.
@@ -30,25 +54,7 @@ public class AccessChecker {
    * @param object an object (table, view, synonym, etc.).
    * @return if the object can be accessed.
    */
-  @Transactional(readOnly = true)
   public boolean isQueryable(OracleObject object) {
-    checkNotNull(object);
-
-    String cacheKey = object.name.toLowerCase();
-    Boolean queryable = queryableCache.get(cacheKey);
-    if (queryable != null) {
-      return queryable;
-    }
-
-    String testQuery = String.format(QUERYABLE_TEMPLATE, mappings.lookup(object.name));
-    try {
-      jdbc.queryForList(testQuery, Integer.class);
-      queryable = true;
-    } catch (Exception e) {
-      logger.debug("Access check failed for object: " + object.name, e);
-      queryable = false;
-    }
-    queryableCache.put(cacheKey, queryable);
-    return queryable;
+    return queryable.get(checkNotNull(object));
   }
 }

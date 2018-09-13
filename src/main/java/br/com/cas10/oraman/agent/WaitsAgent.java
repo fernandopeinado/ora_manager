@@ -11,24 +11,18 @@ import br.com.cas10.oraman.oracle.Waits;
 import br.com.cas10.oraman.util.DeltaBuffer;
 import br.com.cas10.oraman.util.Snapshot;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 @Component
 public class WaitsAgent {
-
-  private static final Logger logger = LoggerFactory.getLogger(WaitsAgent.class);
 
   @VisibleForTesting
   static final long SAMPLING_INTERVAL_MILLIS = SECONDS.toMillis(15);
@@ -49,19 +43,8 @@ public class WaitsAgent {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     waitClasses = builder.add(CPU_CLASS).addAll(waits.getWaitClasses()).build();
 
-    List<String> notAccessible = new ArrayList<>();
-    if (!accessChecker.isQueryable(V_SYS_TIME_MODEL)) {
-      notAccessible.add(V_SYS_TIME_MODEL.name);
-    }
-    if (!accessChecker.isQueryable(V_SYSTEM_EVENT)) {
-      notAccessible.add(V_SYSTEM_EVENT.name);
-    }
-
-    if (notAccessible.isEmpty()) {
+    if (accessChecker.isQueryable(V_SYS_TIME_MODEL) && accessChecker.isQueryable(V_SYSTEM_EVENT)) {
       scheduler.scheduleAtFixedRate(this::run, SAMPLING_INTERVAL_MILLIS);
-    } else {
-      logger.warn("Not accessible: {}. WaitsAgent will not be started.",
-          Joiner.on(", ").join(notAccessible));
     }
   }
 
