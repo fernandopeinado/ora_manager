@@ -18,7 +18,7 @@ is_running() {
 oraman_start() {
     is_running && { echo "Already running (PID: $(cat "$pid_file"))"; return 0; }
     nohup $JAVA_HOME/bin/java $ORAMAN_OPTS $ORAMAN_SYS_PROPS -jar "$oraman_war_file" \
-            </dev/null >/dev/null 2>&1 &
+            </dev/null >"$logs_dir/oraman.out" 2>&1 &
     echo $! > "$pid_file"
 }
 
@@ -31,6 +31,7 @@ oraman_stop() {
 oraman_home=$(dirname "$(readlink -f "$BASH_SOURCE")")
 oraman_war_file=$(echo "$oraman_home"/oraman-*.war)
 pid_file="$oraman_home/oraman.pid"
+logs_dir="$oraman_home/logs"
 
 if [[ -z ${ORAMAN_OPTS-} ]]; then
     ORAMAN_OPTS="-Xms16m -Xmx128m -XX:MaxHeapFreeRatio=50"
@@ -41,7 +42,7 @@ if [[ -z ${ORAMAN_SYS_PROPS:-} ]]; then
 fi
 
 mkdir -p "$oraman_home/data"
-mkdir -p "$oraman_home/logs"
+mkdir -p "$logs_dir"
 
 case "${1-}" in
     run) oraman_run ;; start) oraman_start ;; stop) oraman_stop ;; *) usage ;;
