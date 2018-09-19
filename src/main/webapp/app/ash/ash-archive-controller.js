@@ -40,7 +40,7 @@
 		var match = string.trim().match(dateRegex);
 		if (match) {
 			var components = match.slice(1)
-					.map(x => parseInt(x.startsWith('0') ? x.substring(1) : x));
+					.map(x => parseInt(x.length > 1 && x.startsWith('0') ? x.substring(1) : x));
 			components[1] -= 1; // month
 			return new Date(...components);
 		}
