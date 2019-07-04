@@ -15,6 +15,12 @@
           <span class="glyphicon glyphicon-remove form-control-feedback"
               ng-hide="dateRegex.test(intervalEndString.trim())" />
         </div>
+        <select ng-model="topQueriesCount" 
+          ng-options="opt as opt for opt in topQueriesCountOptions"
+          class="form-control" 
+          style="width:80px;display:inline-block">
+        </select>
+
         <button type="button" class="btn btn-primary" ng-click="loadData()">Load</button>
 
         <button type="button" class="btn" style="float: right; margin-left: 10px" title="Foward"

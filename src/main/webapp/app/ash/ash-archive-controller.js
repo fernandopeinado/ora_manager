@@ -71,6 +71,8 @@
 		$scope.dateRegex = dateRegex;
 		$scope.intervalStart = parseInt($routeParams.start);
 		$scope.intervalEnd = parseInt($routeParams.end);
+		$scope.topQueriesCountOptions = [10, 25, 50, 100];
+		$scope.topQueriesCount = $routeParams.topQueriesCount ? parseInt($routeParams.topQueriesCount) : 10;
 
 		if (isNaN($scope.intervalStart) || isNaN($scope.intervalEnd)) {
 			var end = new Date();
@@ -78,7 +80,7 @@
 			end = end.getTime();
 			var start = end - 60 * 60 * 1000;
 
-			$location.search({ start: start, end: end });
+			$location.search({ start: start, end: end, topQueriesCount: $scope.topQueriesCount });
 			return;
 		}
 
@@ -86,7 +88,7 @@
 		$scope.intervalEndString = dateToString(new Date($scope.intervalEnd));
 
 		$scope.url = 'ws/ash/ash-archive?start=' + $scope.intervalStart
-				+ '&end=' + $scope.intervalEnd;
+				+ '&end=' + $scope.intervalEnd + '&topQueriesCount=' + $scope.topQueriesCount;
 		$scope.series = series;
 		$scope.preprocessor = function(json) {
 			updateTopSql(json.topSql);
@@ -97,7 +99,8 @@
 		$scope.loadData = function() {
 			$location.search({
 				start: parseDate($scope.intervalStartString).getTime(),
-				end: parseDate($scope.intervalEndString).getTime()
+				end: parseDate($scope.intervalEndString).getTime(),
+				topQueriesCount: $scope.topQueriesCount
 			});
 		};
 
@@ -105,7 +108,9 @@
 			var shift = $scope.intervalEnd - $scope.intervalStart;
 			if (shift > 0) {
 				$location.search({
-					start: $scope.intervalStart + shift, end: $scope.intervalEnd + shift
+					start: $scope.intervalStart + shift, 
+					end: $scope.intervalEnd + shift, 
+					topQueriesCount: $scope.topQueriesCount
 				});
 			}
 		};
@@ -114,7 +119,9 @@
 			var shift = $scope.intervalEnd - $scope.intervalStart;
 			if (shift > 0) {
 				$location.search({
-					start: $scope.intervalStart - shift, end: $scope.intervalEnd - shift
+					start: $scope.intervalStart - shift, 
+					end: $scope.intervalEnd - shift,
+					topQueriesCount: $scope.topQueriesCount
 				});
 			}
 		};

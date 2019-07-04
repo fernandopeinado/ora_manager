@@ -27,8 +27,7 @@
 		return result;
 	}
 
-	function AshCtrl($scope, $http) {
-
+	function AshCtrl($scope, $http) {		
 		function updateTopSql(data) {
 			var top = (data.length > 0) ? data[0].activity : null;
 			data.forEach(function(sql) {
@@ -73,11 +72,16 @@
 			$scope.cachedAshData = json;
 			return json.averageActiveSessions;
 		};
-		$scope.selectedInterval = {};
+
+		$scope.topQueriesCountOptions = [10, 25, 50, 100];
+		$scope.selectedInterval = {
+			topQueriesCount: 10
+		};
 
 		$scope.$watchCollection('selectedInterval', function() {
 			var selStart = $scope.selectedInterval.start;
 			var selEnd = $scope.selectedInterval.end;
+			var topQueriesCount = $scope.selectedInterval.topQueriesCount;
 
 			// Page initialization
 			if (!selStart || !selEnd)
@@ -85,13 +89,14 @@
 
 			// Cache hit
 			if (selStart.getTime() == $scope.cachedAshData.intervalStart
-					&& selEnd.getTime() == $scope.cachedAshData.intervalEnd) {
+					&& selEnd.getTime() == $scope.cachedAshData.intervalEnd
+					&& topQueriesCount == $scope.cachedAshData.topQueriesCount) {
 				updateIntervalData($scope.cachedAshData);
 				return;
 			}
 
 			var url = 'ws/ash/ash-interval?start=' + selStart.getTime()
-					+ '&end=' + selEnd.getTime();
+					+ '&end=' + selEnd.getTime() + '&topQueriesCount=' + topQueriesCount;
 			$http.get(url).success(updateIntervalData);
 		});
 	}

@@ -18,7 +18,13 @@
   <div class="row ash-top-activity">
     <div class="col-md-6">
       <table class="table table-bordered table-condensed table-striped">
-        <caption>Top SQL</caption>
+        <caption>Top SQL -
+          <select ng-model="selectedInterval.topQueriesCount" 
+            ng-options="opt as opt for opt in topQueriesCountOptions"
+            class="form-control" 
+            style="width:80px;display:inline-block">
+          </select>
+        </caption>
         <thead>
           <tr>
             <th>SQL ID</th>

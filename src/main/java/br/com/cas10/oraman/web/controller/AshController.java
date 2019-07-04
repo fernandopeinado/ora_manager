@@ -47,7 +47,7 @@ class AshController {
       intervalEnd = Iterables.getLast(snapshots).getTimestamp();
       intervalStart = Math.max(snapshots.get(0).getTimestamp(), intervalEnd - FIVE_MINUTES);
     }
-    IntervalActivity intervalActivity = ash.getIntervalActivity(intervalStart, intervalEnd);
+    IntervalActivity intervalActivity = ash.getIntervalActivity(intervalStart, intervalEnd, 10);
 
     Map<String, Object> response = new LinkedHashMap<>();
     putAasData(snapshots, response);
@@ -57,28 +57,36 @@ class AshController {
 
   @RequestMapping(value = "/ash/ash-archive", method = GET)
   Map<String, ?> ashArchiveInterval(@RequestParam("start") Long start,
-      @RequestParam("end") Long end) {
+      @RequestParam("end") Long end,
+      @RequestParam(value = "topQueriesCount", required = false, defaultValue = "10")
+      Integer topQueriesCount) {
     long groupInterval = Math.max((end - start) / 240, 15_000);
-    IntervalActivity intervalActivity = ash.getArchivedIntervalActivity(start, end, groupInterval);
+    IntervalActivity intervalActivity = ash.getArchivedIntervalActivity(
+            start, end, groupInterval,topQueriesCount);
 
     Map<String, Object> response = new LinkedHashMap<>();
     putAasData(intervalActivity.waitClassesSnapshots, response);
     putIntervalData(intervalActivity, response);
+    response.put("topQueriesCount", topQueriesCount);
     return response;
   }
 
   @RequestMapping(value = "/ash/ash-interval", method = GET)
-  Map<String, ?> ashInterval(@RequestParam("start") Long start, @RequestParam("end") Long end) {
-    IntervalActivity intervalActivity = ash.getIntervalActivity(start, end);
+  Map<String, ?> ashInterval(@RequestParam("start") Long start,
+      @RequestParam("end") Long end,
+      @RequestParam(value = "topQueriesCount", required = false, defaultValue = "10")
+      Integer topQueriesCount) {
+    IntervalActivity intervalActivity = ash.getIntervalActivity(start, end, topQueriesCount);
 
     Map<String, Object> response = new LinkedHashMap<>();
     putIntervalData(intervalActivity, response);
+    response.put("topQueriesCount", topQueriesCount);
     return response;
   }
 
   @RequestMapping(value = "/ash/ash-sql/{sqlId}", method = GET)
   Map<String, ?> ashSql(@PathVariable("sqlId") String sqlId) {
-    IntervalActivity activity = ash.getActivity(s -> sqlId.equals(s.sqlId));
+    IntervalActivity activity = ash.getActivity(s -> sqlId.equals(s.sqlId), 10);
 
     Map<String, Object> response = new LinkedHashMap<>();
     putEventsAasData(activity.eventsSnapshots, response);
@@ -107,7 +115,7 @@ class AshController {
     String serialNumberStr = serialNumber.toString();
 
     IntervalActivity activity =
-        ash.getActivity(s -> sidStr.equals(s.sid) && serialNumberStr.equals(s.serialNumber));
+        ash.getActivity(s -> sidStr.equals(s.sid) && serialNumberStr.equals(s.serialNumber), 10);
 
     Map<String, Object> response = new LinkedHashMap<>();
     putEventsAasData(activity.eventsSnapshots, response);

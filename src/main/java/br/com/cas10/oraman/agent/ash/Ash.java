@@ -57,10 +57,12 @@ public class Ash {
    * Returns activity data from the snapshots currently in memory.
    *
    * @param activeSessionFilter a predicate for session filtering
+   * @param topQueriesCount number of statements to return
    * @return activity data for the sessions that satisfy the predicate
    */
   @Transactional(readOnly = true)
-  public IntervalActivity getActivity(Predicate<ActiveSession> activeSessionFilter) {
+  public IntervalActivity getActivity(Predicate<ActiveSession> activeSessionFilter,
+      int topQueriesCount) {
     checkNotNull(activeSessionFilter);
 
     List<AshSnapshot> snapshots = agent.getSnapshots();
@@ -68,7 +70,7 @@ public class Ash {
     long start = snapshots.isEmpty() ? 0 : snapshots.get(0).timestamp;
     long end = snapshots.isEmpty() ? 0 : Iterables.getLast(snapshots).timestamp;
 
-    return intervalActivity(snapshots.iterator(), start, end, activeSessionFilter);
+    return intervalActivity(snapshots.iterator(), start, end, activeSessionFilter, topQueriesCount);
   }
 
   /**
@@ -78,18 +80,19 @@ public class Ash {
    * the interval {@code [start, end]}. The returned object contains
    * <ul>
    * <li>snapshots with the average active sessions by wait class,</li>
-   * <li>top 10 SQL statements in the interval,</li>
-   * <li>top 10 sessions in the interval.</li>
+   * <li>top {@code topQueriesCount} SQL statements in the interval,</li>
+   * <li>top {@code topQueriesCount} sessions in the interval.</li>
    * </ul>
    *
    * @param start interval start.
    * @param end interval end.
+   * @param topQueriesCount number of statements to return
    * @return the activity data for the specified interval.
    */
   @Transactional(readOnly = true)
-  public IntervalActivity getIntervalActivity(long start, long end) {
+  public IntervalActivity getIntervalActivity(long start, long end, int topQueriesCount) {
     List<AshSnapshot> snapshots = agent.getSnapshots();
-    return intervalActivity(snapshots.iterator(), start, end, ALL_ACTIVE_SESSIONS);
+    return intervalActivity(snapshots.iterator(), start, end, ALL_ACTIVE_SESSIONS, topQueriesCount);
   }
 
   /**
@@ -108,19 +111,24 @@ public class Ash {
    * @param start interval start.
    * @param end interval end.
    * @param groupInterval the span of snapshot groups in milliseconds.
+   * @param topQueriesCount number of statements to return
    * @return the activity data for the specified interval.
    */
   @Transactional(readOnly = true)
-  public IntervalActivity getArchivedIntervalActivity(long start, long end, long groupInterval) {
+  public IntervalActivity getArchivedIntervalActivity(long start, long end, long groupInterval,
+      int topQueriesCount) {
     try (ArchivedSnapshotsIterator it = archive.getArchivedSnapshots(start, end, groupInterval)) {
-      return intervalActivity(it, start, end, ALL_ACTIVE_SESSIONS);
+      return intervalActivity(it, start, end, ALL_ACTIVE_SESSIONS, topQueriesCount);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   private IntervalActivity intervalActivity(Iterator<AshSnapshot> snapshots, long start, long end,
-      Predicate<ActiveSession> activeSessionFilter) {
+      Predicate<ActiveSession> activeSessionFilter, int topQueriesCount) {
+    if (topQueriesCount <= 0) {
+      topQueriesCount = 10;
+    }
     int totalSamples = 0;
     int totalActivity = 0;
     List<Snapshot<Double>> eventsSnapshots = new ArrayList<>();
@@ -168,7 +176,7 @@ public class Ash {
     Ordering<SqlActivity.Builder> sqlOrdering =
         Ordering.from((a, b) -> Integer.compare(a.getActivity(), b.getActivity()));
     List<SqlActivity> topSql = new ArrayList<>();
-    for (SqlActivity.Builder builder : sqlOrdering.greatestOf(sqlMap.values(), 10)) {
+    for (SqlActivity.Builder builder : sqlOrdering.greatestOf(sqlMap.values(), topQueriesCount)) {
       Cursor cursor = builder.getSqlId() == null ? null : cursors.getCursor(builder.getSqlId());
       String sqlText = cursor == null ? null : cursor.sqlText;
       String command = cursor == null ? null : cursor.command;
@@ -179,7 +187,7 @@ public class Ash {
         Ordering.from((a, b) -> Integer.compare(a.getActivity(), b.getActivity()));
     List<SessionActivity> topSessions = new ArrayList<>();
     for (SessionActivity.Builder builder : sessionsOrdering.greatestOf(sessionsTable.values(),
-        10)) {
+            10)) {
       topSessions.add(builder.build(totalActivity));
     }
 

@@ -67,7 +67,7 @@ public class AshTest {
     setField(ash, "agent", agent);
     setField(ash, "cursors", mock(Cursors.class));
 
-    IntervalActivity activity = ash.getActivity(filter);
+    IntervalActivity activity = ash.getActivity(filter, 10);
 
     assertEquals(1, activity.intervalStart);
     assertEquals(3, activity.intervalEnd);
@@ -132,7 +132,7 @@ public class AshTest {
     setField(ash, "agent", agent);
     setField(ash, "cursors", mock(Cursors.class));
 
-    IntervalActivity activity = ash.getActivity(filter);
+    IntervalActivity activity = ash.getActivity(filter, 10);
 
     assertEquals(1, activity.intervalStart);
     assertEquals(3, activity.intervalEnd);
@@ -208,7 +208,7 @@ public class AshTest {
     setField(ash, "agent", agent);
     setField(ash, "cursors", mock(Cursors.class));
 
-    IntervalActivity activity = ash.getIntervalActivity(2, 4);
+    IntervalActivity activity = ash.getIntervalActivity(2, 4, 10);
 
     assertEquals(2, activity.intervalStart);
     assertEquals(4, activity.intervalEnd);
