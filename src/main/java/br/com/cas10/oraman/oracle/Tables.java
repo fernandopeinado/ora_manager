@@ -61,7 +61,11 @@ public class Tables {
   private static final RowMapper<Index> indexRowMapper = (rs, rowNum) -> {
     Index bean = new Index();
     bean.name = rs.getString("index_name");
-    bean.columns = ImmutableList.copyOf(rs.getString("columns").split(","));
+    String columnsValue = rs.getString("columns");
+    if (columnsValue == null) {
+        columnsValue = "-";
+    }
+    bean.columns = ImmutableList.copyOf(columnsValue.split(","));
     bean.unique = "UNIQUE".equalsIgnoreCase(rs.getString("uniqueness"));
     bean.tablespace = rs.getString("tablespace_name");
     bean.logging = "YES".equalsIgnoreCase(rs.getString("logging"));
